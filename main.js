@@ -939,13 +939,48 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const trailColors = [0xfffbe6, 0xffe49a, 0xffc870];
     const boostTrailColors = [0xfff8c0, 0xffd66b, 0xff9a2a];
 
-    const BOOST_FUEL_PER_RING = 0.3;
-    const RAINBOW_RING_MULTIPLIER = 3;
-    const TRAIL_PER_BOOST_SECOND = 10;
-    const BOOST_TRAIL_MULTIPLIER = 30;
-    const TRAIL_SPAWN_RATE = 12;
-    const BOOST_SPEED_MULTIPLIER = 3;
-    const TRAIL_MAX = 200;
+    const BOOST_FUEL_PER_RING = 0.5; // 通常リング1個で増えるブースト燃料の秒数。
+    const RAINBOW_RING_MULTIPLIER = 5; // レインボーリング報酬の通常リング比。
+    const TRAIL_PER_BOOST_SECOND = 10; // 燃料1秒ぶんを通常時の光の粒何個として見せるか。
+    const BOOST_TRAIL_MULTIPLIER = 100; // ブースト中の噴射粒の発生倍率。
+    const TRAIL_SPAWN_RATE = 30; // 光の粒を1秒あたり何個ペースで生成するか。
+    const BOOST_SPEED_MULTIPLIER = 3; // ブースト中の上下左右移動速度倍率。
+    const TRAIL_MAX = 500; // 同時に残せる光の粒の最大数。
+
+    const TRAIL_RAINBOW_TINT_MAX = 1.0; // レインボー中に噴射粒へ混ぜる虹色の最大量。
+    const TRAIL_RAINBOW_HUE_RANDOM = 0.3; // 噴射粒の虹色をランダムにずらす幅。
+    const TRAIL_RAINBOW_SATURATION = 1.0; // 噴射粒に混ぜる虹色の彩度。
+    const TRAIL_RAINBOW_LIGHTNESS = 0.64; // 噴射粒に混ぜる虹色の明るさ。
+    const TRAIL_BOOST_SPREAD = 1.8; // ブースト中に噴射粒の発生位置を広げる倍率。
+    const TRAIL_OPACITY_NORMAL = 0.85; // 通常時の噴射粒の不透明度。
+    const TRAIL_OPACITY_BOOST = 0.68; // ブースト中の噴射粒の不透明度。
+    const TRAIL_OFFSET_X = 0.32; // 噴射粒の左右方向の発生幅。
+    const TRAIL_OFFSET_Y = 0.5; // 噴射粒の上下方向の発生幅。
+    const TRAIL_OFFSET_Y_BASE = -0.45; // 噴射粒の発生位置を機体中心から下へずらす量。
+    const TRAIL_OFFSET_Z_BASE = 0.45; // 噴射粒の発生位置を機体後方へずらす量。
+    const TRAIL_OFFSET_Z_RANDOM = 0.6; // 噴射粒の後方発生位置のランダム幅。
+    const TRAIL_OFFSET_Z_BOOST = 0.9; // ブースト中に後方発生位置をさらに広げる量。
+    const TRAIL_ANGLE_SPREAD = 0.95; // 噴射粒が左右へ散る角度幅。
+    const TRAIL_ANGLE_BOOST_SPREAD = 1.35; // ブースト中に左右の散り方を広げる倍率。
+    const TRAIL_ANGLE_Y_SPREAD = 0.55; // 噴射粒が上下へ散る角度幅。
+    const TRAIL_ANGLE_Y_BOOST_SPREAD = 1.65; // ブースト中に上下の散り方を広げる倍率。
+    const TRAIL_SPEED_BASE = 2.7; // 噴射粒の基本速度。
+    const TRAIL_SPEED_RANDOM = 2.4; // 噴射粒の速度に足すランダム幅。
+    const TRAIL_SPEED_BOOST = 0.9; // ブースト中に噴射粒速度へ足す量。
+    const TRAIL_BACKWARD_SPEED_MULTIPLIER = 1; // 噴射粒が後ろへ流れる速度倍率。
+    const TRAIL_INPUT_DRIFT = 0.18; // 機体操作と逆方向へ噴射粒を少し流す量。
+    const TRAIL_VERTICAL_SPEED_SCALE = 0.5; // 上下方向の噴射速度を抑える倍率。
+    const TRAIL_VERTICAL_DRIFT = -0.16; // 噴射粒を少し下向きへ流す量。
+    const TRAIL_VERTICAL_BOOST_LIFT = 0.1; // ブースト中に噴射粒を少し上向きへ戻す量。
+    const TRAIL_LIFE_BASE = 1.6; // 噴射粒の基本寿命。
+    const TRAIL_LIFE_RANDOM = 1.2; // 噴射粒の寿命に足すランダム幅。
+    const TRAIL_LIFE_BOOST = 0.55; // ブースト中に噴射粒の寿命へ足す量。
+    const TRAIL_START_SCALE_BASE = 0.28; // 噴射粒の出始めの基本サイズ。
+    const TRAIL_START_SCALE_RANDOM = 0.18; // 噴射粒の出始めサイズに足すランダム幅。
+    const TRAIL_START_SCALE_BOOST = 0.05; // ブースト中に出始めサイズへ足す量。
+    const TRAIL_END_SCALE_GROWTH = 1.4; // 噴射粒が消えるまでに広がる基本量。
+    const TRAIL_END_SCALE_RANDOM = 1.2; // 噴射粒の広がりに足すランダム幅。
+    const TRAIL_END_SCALE_BOOST = 1.2; // ブースト中に噴射粒の広がりへ足す量。
     const colorNormal = {
       body: new THREE.Color(0x6fb0ff),
       bodyEmissive: new THREE.Color(0x2a6fe0),
@@ -1074,19 +1109,19 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function spawnOneTrail(boostAmount = state.boost) {
-      const rbTrail = Math.min(0.18, state.rainbowTimer / 8 * 0.18);
+      const rbTrail = Math.min(TRAIL_RAINBOW_TINT_MAX, state.rainbowTimer / 8 * TRAIL_RAINBOW_TINT_MAX);
       const colorIdx = Math.floor(Math.random() * trailColors.length);
       const trailColor = new THREE.Color(trailColors[colorIdx]).lerp(new THREE.Color(boostTrailColors[colorIdx]), boostAmount);
       if (rbTrail > 0) {
-        const hue = (clock.elapsedTime * 0.35 + Math.random() * 0.3) % 1;
-        trailColor.lerp(new THREE.Color().setHSL(hue, 0.46, 0.64), rbTrail);
+        const hue = (clock.elapsedTime * 0.35 + Math.random() * TRAIL_RAINBOW_HUE_RANDOM) % 1;
+        trailColor.lerp(new THREE.Color().setHSL(hue, TRAIL_RAINBOW_SATURATION, TRAIL_RAINBOW_LIGHTNESS), rbTrail);
       }
-      const spread = 1 + boostAmount * 1.8;
+      const spread = 1 + boostAmount * TRAIL_BOOST_SPREAD;
       const mat = new THREE.SpriteMaterial({
         map: sparkleTexture,
         color: trailColor,
         transparent: true,
-        opacity: THREE.MathUtils.lerp(0.85, 0.68, boostAmount),
+        opacity: THREE.MathUtils.lerp(TRAIL_OPACITY_NORMAL, TRAIL_OPACITY_BOOST, boostAmount),
         depthTest: false,
         depthWrite: false,
         fog: false,
@@ -1094,23 +1129,23 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       });
       const p = new THREE.Sprite(mat);
       p.position.set(
-        ship.position.x + (Math.random() - 0.5) * 0.32 * spread,
-        ship.position.y - 0.45 + (Math.random() - 0.5) * 0.5 * spread,
-        ship.position.z + 0.45 + Math.random() * (0.6 + boostAmount * 0.9)
+        ship.position.x + (Math.random() - 0.5) * TRAIL_OFFSET_X * spread,
+        ship.position.y + TRAIL_OFFSET_Y_BASE + (Math.random() - 0.5) * TRAIL_OFFSET_Y * spread,
+        ship.position.z + TRAIL_OFFSET_Z_BASE + Math.random() * (TRAIL_OFFSET_Z_RANDOM + boostAmount * TRAIL_OFFSET_Z_BOOST)
       );
-      const angle = (Math.random() - 0.5) * 0.95 * (1 + boostAmount * 1.35);
-      const angleY = (Math.random() - 0.5) * 0.55 * (1 + boostAmount * 1.65);
-      const speed = 2.7 + Math.random() * 2.4 + boostAmount * 0.9;
+      const angle = (Math.random() - 0.5) * TRAIL_ANGLE_SPREAD * (1 + boostAmount * TRAIL_ANGLE_BOOST_SPREAD);
+      const angleY = (Math.random() - 0.5) * TRAIL_ANGLE_Y_SPREAD * (1 + boostAmount * TRAIL_ANGLE_Y_BOOST_SPREAD);
+      const speed = TRAIL_SPEED_BASE + Math.random() * TRAIL_SPEED_RANDOM + boostAmount * TRAIL_SPEED_BOOST;
       p.userData.velocity = new THREE.Vector3(
-        Math.sin(angle) * speed - input.x * 0.18,
-        Math.sin(angleY) * speed * 0.5 - 0.16 + boostAmount * 0.1,
-        Math.cos(angle) * speed
+        Math.sin(angle) * speed - input.x * TRAIL_INPUT_DRIFT,
+        Math.sin(angleY) * speed * TRAIL_VERTICAL_SPEED_SCALE + TRAIL_VERTICAL_DRIFT + boostAmount * TRAIL_VERTICAL_BOOST_LIFT,
+        Math.cos(angle) * speed * TRAIL_BACKWARD_SPEED_MULTIPLIER
       );
-      p.userData.life = 1.6 + Math.random() * 1.2 + boostAmount * 0.55;
+      p.userData.life = TRAIL_LIFE_BASE + Math.random() * TRAIL_LIFE_RANDOM + boostAmount * TRAIL_LIFE_BOOST;
       p.userData.maxLife = p.userData.life;
       p.userData.trail = true;
-      p.userData.startScale = 0.28 + Math.random() * 0.18 + boostAmount * 0.05;
-      p.userData.endScale = p.userData.startScale + 1.4 + Math.random() * 1.2 + boostAmount * 1.2;
+      p.userData.startScale = TRAIL_START_SCALE_BASE + Math.random() * TRAIL_START_SCALE_RANDOM + boostAmount * TRAIL_START_SCALE_BOOST;
+      p.userData.endScale = p.userData.startScale + TRAIL_END_SCALE_GROWTH + Math.random() * TRAIL_END_SCALE_RANDOM + boostAmount * TRAIL_END_SCALE_BOOST;
       p.renderOrder = 4;
       p.scale.setScalar(p.userData.startScale);
       scene.add(p);
