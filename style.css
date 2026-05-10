@@ -169,6 +169,30 @@
       gap: 10px;
     }
 
+    .howtoplay {
+      position: fixed;
+      left: 50%;
+      bottom: 96px;
+      transform: translateX(-50%);
+      width: min(480px, calc(100vw - 32px));
+      font-family: "Noto Serif JP", serif;
+      max-width: 480px;
+      margin: 0;
+      color: rgb(255, 255, 255);
+      font-size: 12px;
+      line-height: 1.85;
+      text-align: center;
+      text-shadow: 0 2px 16px rgba(2, 8, 24, 0.55);
+    }
+
+    .howtoplay small {
+      font-size: inherit;
+    }
+
+    .center.is-result .howtoplay {
+      display: none;
+    }
+
     .primary,
     .ghost {
       font-family: "Noto Sans", Arial, sans-serif;
