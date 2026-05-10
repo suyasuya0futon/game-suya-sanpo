@@ -889,7 +889,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const trailColors = [0xfffbe6, 0xffe49a, 0xffc870];
     const boostTrailColors = [0xfff8c0, 0xffd66b, 0xff9a2a];
 
-    const TRAIL_PER_RING = 10;
+    const BOOST_FUEL_PER_RING = 0.1;
+    const RAINBOW_RING_MULTIPLIER = 5;
+    const TRAIL_PER_BOOST_SECOND = 10;
+    const BOOST_TRAIL_MULTIPLIER = 5;
+    const BOOST_SPEED_MULTIPLIER = 3;
     const TRAIL_MAX = 200;
     const colorNormal = {
       body: new THREE.Color(0x6fb0ff),
@@ -1137,8 +1141,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function collect(item, index) {
       state.rings += 1;
-      state.boostFuel += 1;
       const isRainbow = item.userData.rainbow;
+      const rewardMultiplier = isRainbow ? RAINBOW_RING_MULTIPLIER : 1;
+      state.boostFuel += BOOST_FUEL_PER_RING * rewardMultiplier;
       burst(item.position, isRainbow ? 0xffffff : 0xffd66b, isRainbow ? 36 : 24);
       if (isRainbow) {
         rainbowTone();
@@ -1183,7 +1188,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function stepObjects(dt) {
-      const forward = (state.speed + state.boost * 10) * dt;
+      const forward = state.speed * dt;
       state.distance += forward;
       grid.position.z = -62 + (state.distance % 7);
 
@@ -1358,10 +1363,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         sleeveR.children[2].material.color.lerpColors(colorNormal.sleeve2, colorBoost.sleeve2, b);
         applyRainbow(sleeveR.children[2].material.color, 0.8);
         state.speed += ((17 + state.score / 14000) - state.speed) * dt * 0.06;
+        const boostSpeedFactor = 1 + state.boost * (BOOST_SPEED_MULTIPLIER - 1);
 
         const floatBob = Math.sin(clock.elapsedTime * 1.6 + ship.position.x * 0.08) * dt * 0.55;
-        ship.position.x = THREE.MathUtils.clamp(ship.position.x + input.x * dt * 10.5, -10.5, 10.5);
-        ship.position.y = THREE.MathUtils.clamp(ship.position.y + input.y * dt * 11.2 + floatBob, -34, 88);
+        ship.position.x = THREE.MathUtils.clamp(ship.position.x + input.x * dt * 10.5 * boostSpeedFactor, -10.5, 10.5);
+        ship.position.y = THREE.MathUtils.clamp(ship.position.y + input.y * dt * 11.2 * boostSpeedFactor + floatBob, -34, 88);
         ship.rotation.z += ((-input.x * 0.48) - ship.rotation.z) * dt * 8;
         ship.rotation.x += ((input.y * 0.22) - ship.rotation.x) * dt * 6;
         ship.rotation.y = Math.sin(clock.elapsedTime * 4.8) * 0.035;
@@ -1393,12 +1399,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         shipShadow.position.set(ship.position.x, ground.position.y + 0.06, ship.position.z);
         const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
         shipShadow.scale.set(shadowSize * (1 + state.boost * 0.4), shadowSize, 1);
-        const trailTarget = Math.min(TRAIL_MAX, Math.floor(state.boostFuel * TRAIL_PER_RING));
+        const baseTrailTarget = Math.floor(state.boostFuel * TRAIL_PER_BOOST_SECOND);
+        const trailTarget = Math.min(TRAIL_MAX, baseTrailTarget * (boosting ? BOOST_TRAIL_MULTIPLIER : 1));
         let aliveTrail = 0;
         for (const p of particles) if (p.userData.trail) aliveTrail += 1;
         const deficit = trailTarget - aliveTrail;
         if (deficit > 0) {
-          const toSpawn = Math.min(deficit, 6);
+          const toSpawn = Math.min(deficit, boosting ? 30 : 6);
           for (let s = 0; s < toSpawn; s += 1) spawnOneTrail();
         } else if (deficit < 0) {
           let toShorten = -deficit;
