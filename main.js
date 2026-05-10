@@ -1394,6 +1394,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       h1.textContent = title;
       h1.hidden = !title;
       menu.querySelector(".lead").textContent = detail;
+      const resultScoreEl = document.querySelector("#resultScore");
+      if (resultScoreEl) resultScoreEl.textContent = `SCORE：${String(state.score).padStart(8, "0")}`;
       startBtn.textContent = "RETRY";
       if (practiceBtn) practiceBtn.textContent = "";
     }
@@ -1458,7 +1460,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       scene.remove(item);
       hazards.splice(index, 1);
       if (state.shield <= 0) {
-        endGame("Crash", `Score ${state.score.toLocaleString("ja-JP")}。シールドが尽きました。`);
+        endGame("Crash", "シールドが尽きました。");
       }
     }
 
