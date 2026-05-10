@@ -1059,7 +1059,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       state.lastRing.x = nextX;
       state.lastRing.y = nextY;
-      pickup.position.set(nextX, nextY, -72 - Math.random() * 18);
+      pickup.position.set(
+        nextX,
+        nextY,
+        tuning.PICKUP_SPAWN_Z_BASE - Math.random() * tuning.PICKUP_SPAWN_Z_RANDOM
+      );
       pickup.rotation.set(0, 0, Math.random() * Math.PI);
       pickup.userData.value = 100;
       pickup.userData.innerRadius = getPickupPassRadius(isRainbow);
