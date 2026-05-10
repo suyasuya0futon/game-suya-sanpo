@@ -828,14 +828,38 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     shipShadow.scale.set(3, 3, 1);
     scene.add(shipShadow);
 
-    const pickupGeo = new THREE.TorusGeometry(3.05, 0.06, 12, 128);
+    const PICKUP_RING_RADIUS = 6.0; // 通常リングの中心半径。
+    const PICKUP_RING_TUBE_RADIUS = 0.06; // 通常リングの線の太さ。
+    const PICKUP_RING_RADIAL_SEGMENTS = 12; // 通常リング断面の分割数。
+    const PICKUP_RING_TUBULAR_SEGMENTS = 128; // 通常リング円周の分割数。
+    const PICKUP_RING_PASS_MARGIN = 0.27; // 見た目の内側より少し小さくする通過判定の余白。
+    const RAINBOW_RING_RADIUS = PICKUP_RING_RADIUS; // レインボーリング本体の中心半径。
+    const RAINBOW_RING_TUBE_RADIUS = 0.095; // レインボーリング本体の線の太さ。
+    const RAINBOW_RING_RADIAL_SEGMENTS = 14; // レインボーリング本体断面の分割数。
+    const RAINBOW_RING_TUBULAR_SEGMENTS = 24; // レインボーリング1色ぶんの円周分割数。
+    const RAINBOW_RING_GLOW_RADIUS = 3.08; // レインボーリング外側グローの中心半径。
+    const RAINBOW_RING_GLOW_TUBE_RADIUS = 0.24; // レインボーリング外側グローの太さ。
+    const RAINBOW_RING_GLOW_RADIAL_SEGMENTS = 12; // レインボーリング外側グロー断面の分割数。
+    const RAINBOW_RING_SEGMENTS = 7; // レインボーリングを何色の弧に分けるか。
+    const RAINBOW_RING_ARC_COVERAGE = 0.94; // 各色の弧を円周1区間の何割まで描くか。
+    const SPARKLE_RING_RADIUS = 6.2; // リング周囲の光の粒が並ぶ基本半径。
+    const SPARKLE_RING_RADIUS_RANDOM = 0.55; // リング周囲の光の粒の半径方向のばらつき。
+    const SPARKLE_RING_ANGLE_RANDOM = 0.18; // リング周囲の光の粒の角度ばらつき。
+    const SPARKLE_RING_Z_RANDOM = 0.12; // リング周囲の光の粒の奥行きばらつき。
+    const SPARKLE_RING_ANGULAR_SPEED = 0.4; // リング周囲の光の粒が回る速度のばらつき。
+    const pickupGeo = new THREE.TorusGeometry(
+      PICKUP_RING_RADIUS,
+      PICKUP_RING_TUBE_RADIUS,
+      PICKUP_RING_RADIAL_SEGMENTS,
+      PICKUP_RING_TUBULAR_SEGMENTS
+    );
     const pickupMat = new THREE.MeshBasicMaterial({
       color: 0xffd84d,
       fog: false,
       depthTest: false
     });
-    const SPARKLE_COUNT = 40;
-    const RAINBOW_SPARKLE_COUNT = 96;
+    const SPARKLE_COUNT = 40; // 通常リング周囲の光の粒数。
+    const RAINBOW_SPARKLE_COUNT = 96; // レインボーリング周囲の光の粒数。
     const sparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
       color: 0xffe9a8,
@@ -867,15 +891,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const baseRadius = new Float32Array(count);
       const angularSpeed = new Float32Array(count);
       for (let i = 0; i < count; i += 1) {
-        const a = (i / count) * Math.PI * 2 + Math.random() * 0.18;
-        const r = 3.0 + (Math.random() - 0.5) * 0.55;
+        const a = (i / count) * Math.PI * 2 + Math.random() * SPARKLE_RING_ANGLE_RANDOM;
+        const r = SPARKLE_RING_RADIUS + (Math.random() - 0.5) * SPARKLE_RING_RADIUS_RANDOM;
         baseAngle[i] = a;
         baseRadius[i] = r;
         phase[i] = Math.random() * Math.PI * 2;
-        angularSpeed[i] = (Math.random() - 0.5) * 0.4;
+        angularSpeed[i] = (Math.random() - 0.5) * SPARKLE_RING_ANGULAR_SPEED;
         positions[i * 3] = Math.cos(a) * r;
         positions[i * 3 + 1] = Math.sin(a) * r;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 0.12;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * SPARKLE_RING_Z_RANDOM;
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -890,7 +914,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function createRainbowPickupRing(hueBase = 0) {
       const group = new THREE.Group();
-      const segments = 7;
+      const segments = RAINBOW_RING_SEGMENTS;
       const arc = (Math.PI * 2) / segments;
       for (let i = 0; i < segments; i += 1) {
         const color = new THREE.Color().setHSL((hueBase + i / segments) % 1, 1.0, 0.58);
@@ -909,13 +933,31 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           opacity: 0.34,
           blending: THREE.AdditiveBlending
         });
-        const segment = new THREE.Mesh(new THREE.TorusGeometry(3.05, 0.095, 14, 24, arc * 0.94), material);
-        const glow = new THREE.Mesh(new THREE.TorusGeometry(3.08, 0.24, 12, 24, arc * 0.94), glowMaterial);
+        const segment = new THREE.Mesh(new THREE.TorusGeometry(
+          RAINBOW_RING_RADIUS,
+          RAINBOW_RING_TUBE_RADIUS,
+          RAINBOW_RING_RADIAL_SEGMENTS,
+          RAINBOW_RING_TUBULAR_SEGMENTS,
+          arc * RAINBOW_RING_ARC_COVERAGE
+        ), material);
+        const glow = new THREE.Mesh(new THREE.TorusGeometry(
+          RAINBOW_RING_GLOW_RADIUS,
+          RAINBOW_RING_GLOW_TUBE_RADIUS,
+          RAINBOW_RING_GLOW_RADIAL_SEGMENTS,
+          RAINBOW_RING_TUBULAR_SEGMENTS,
+          arc * RAINBOW_RING_ARC_COVERAGE
+        ), glowMaterial);
         segment.rotation.z = i * arc;
         glow.rotation.z = i * arc;
         group.add(glow, segment);
       }
       return group;
+    }
+
+    function getPickupPassRadius(isRainbow) {
+      const ringRadius = isRainbow ? RAINBOW_RING_RADIUS : PICKUP_RING_RADIUS;
+      const tubeRadius = isRainbow ? RAINBOW_RING_TUBE_RADIUS : PICKUP_RING_TUBE_RADIUS;
+      return Math.max(0.1, ringRadius - tubeRadius - PICKUP_RING_PASS_MARGIN);
     }
 
     function disposeRenderable(object) {
@@ -1082,7 +1124,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       pickup.position.set(nextX, nextY, -72 - Math.random() * 18);
       pickup.rotation.set(0, 0, Math.random() * Math.PI);
       pickup.userData.value = 100;
-      pickup.userData.innerRadius = 2.72;
+      pickup.userData.innerRadius = getPickupPassRadius(isRainbow);
       pickup.userData.rainbow = isRainbow;
       scene.add(pickup);
       pickups.push(pickup);
