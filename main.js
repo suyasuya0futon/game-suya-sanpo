@@ -631,6 +631,19 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     groundObjects.push(ground);
+    {
+      const seen = new Set();
+      const fadeMaterials = [];
+      ground.traverse((child) => {
+        if (child.material && !seen.has(child.material)) {
+          seen.add(child.material);
+          child.material.transparent = true;
+          child.material.userData.baseOpacity = child.material.opacity;
+          fadeMaterials.push(child.material);
+        }
+      });
+      ground.userData.fadeMaterials = fadeMaterials;
+    }
 
     for (let i = 0; i < 36; i += 1) {
       const cloud = new THREE.Mesh(
@@ -1396,7 +1409,22 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       for (const item of groundObjects) {
         item.position.z += forward * 0.4;
-        if (item.position.z > 80) item.position.z -= 320;
+        if (item.position.z > 80) item.position.z -= tuning.GROUND_WRAP_DISTANCE;
+        const fadeMaterials = item.userData.fadeMaterials;
+        if (fadeMaterials) {
+          const z = item.position.z;
+          let factor;
+          if (z >= tuning.GROUND_FADE_NEAR_Z) factor = 1;
+          else if (z <= tuning.GROUND_FADE_FAR_Z) factor = tuning.GROUND_FADE_MIN_OPACITY;
+          else {
+            const t = (z - tuning.GROUND_FADE_FAR_Z) / (tuning.GROUND_FADE_NEAR_Z - tuning.GROUND_FADE_FAR_Z);
+            factor = THREE.MathUtils.lerp(tuning.GROUND_FADE_MIN_OPACITY, 1, t);
+          }
+          for (let m = 0; m < fadeMaterials.length; m += 1) {
+            const mat = fadeMaterials[m];
+            mat.opacity = mat.userData.baseOpacity * factor;
+          }
+        }
       }
 
       state.spawnTimer -= dt;
