@@ -1383,6 +1383,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       } else {
         sparkleTone();
       }
+      const halo = item.children[1];
+      if (halo) halo.visible = false;
     }
 
     function hit(item, index) {
