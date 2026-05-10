@@ -889,7 +889,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const shipLight = new THREE.PointLight(0x4f9bff, 2.6, 12);
     shipLight.position.set(0, 0.2, 0.2);
     ship.add(shipLight);
-    ship.position.set(0, 26, 4);
+    ship.position.set(0, 26, 7);
     scene.add(ship);
 
     const shadowTexture = (() => {
@@ -1313,7 +1313,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.ended = false;
       setShipCrashed(false);
       menu.classList.remove("is-result");
-      ship.position.set(0, 26, 4);
+      ship.position.set(0, 26, 7);
       ship.rotation.set(0, 0, 0);
       menu.hidden = true;
       updateHud();
@@ -1667,8 +1667,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
         const shadowAlt = ship.position.y - ground.position.y;
         const shadowVisibility = 1 - THREE.MathUtils.smoothstep(shadowAlt, 4, 45);
+        const shadowZ = ship.position.z - tuning.SHIP_SHADOW_OFFSET_Z;
         const lx = ship.position.x - ground.position.x;
-        const lz = ship.position.z - ground.position.z;
+        const lz = shadowZ - ground.position.z;
         let coverage = 0;
         for (const f of islandFootprints) {
           const dx = (lx - f.x) / f.rx;
@@ -1678,7 +1679,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           if (c > coverage) coverage = c;
         }
         shipShadow.material.opacity = 0.65 * shadowVisibility * coverage;
-        shipShadow.position.set(ship.position.x, ground.position.y + 0.06, ship.position.z);
+        shipShadow.position.set(ship.position.x, ground.position.y + 0.06, shadowZ);
         const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
         shipShadow.scale.set(shadowSize * 1.6 * (1 + state.boost * 0.4), shadowSize, 1);
         const baseTrailTarget = Math.floor(state.boostFuel * tuning.TRAIL_PER_BOOST_SECOND);
