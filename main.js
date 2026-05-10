@@ -1517,7 +1517,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           const idx = total - state.rainbowQueue;
           spawnPickup({ rainbow: true, hue: 0.1 + (idx / total) * 0.75, idx });
           state.rainbowQueue -= 1;
-          state.spawnTimer = state.rainbowQueue > 0 ? 0.45 : 2.4 + Math.random() * 2.0;
+          state.spawnTimer = state.rainbowQueue > 0 ? tuning.RAINBOW_RING_SPAWN_INTERVAL : 2.4 + Math.random() * 2.0;
         } else {
           spawnPickup();
           if (Math.random() < 0.07) {
