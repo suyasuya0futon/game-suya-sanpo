@@ -3,10 +3,6 @@
 
     const canvas = document.querySelector("#game");
     const scoreEl = document.querySelector("#score");
-    const comboEl = document.querySelector("#combo");
-    const shieldText = document.querySelector("#shieldText");
-    const shieldBar = document.querySelector("#shieldBar");
-    const timeEl = document.querySelector("#time");
     const menu = document.querySelector("#menu");
     const startBtn = document.querySelector("#start");
     const practiceBtn = document.querySelector("#practice");
@@ -1403,14 +1399,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function updateHud() {
-      scoreEl.textContent = state.rings.toLocaleString("ja-JP");
-      comboEl.textContent = "";
-      shieldText.textContent = "";
-      shieldBar.style.transform = `scaleX(${Math.max(0, state.shield) / 100})`;
-      shieldBar.style.background = state.shield < 34
-        ? "linear-gradient(90deg, var(--red), var(--amber))"
-        : "linear-gradient(90deg, var(--lime), var(--cyan))";
-      timeEl.textContent = "∞";
+      scoreEl.textContent = `SCORE：${String(state.score).padStart(8, "0")}`;
     }
 
     function updateInput() {
@@ -1437,6 +1426,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       item.userData.collected = true;
       state.rings += 1;
       const isRainbow = item.userData.rainbow;
+      const boostMul = state.boost > 0.5 ? 2 : 1;
+      state.score += Math.floor(tuning.BOOST_FUEL_PER_RING * tuning.TRAIL_PER_BOOST_SECOND * (isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1) * boostMul);
       const rewardMultiplier = isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1;
       state.boostFuel += tuning.BOOST_FUEL_PER_RING * rewardMultiplier;
       state.boostEmptyLatched = false;

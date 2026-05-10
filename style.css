@@ -51,20 +51,15 @@
     }
 
     .topbar {
-      display: none;
-      grid-template-columns: repeat(4, minmax(96px, 1fr));
-      gap: 10px;
-      max-width: 760px;
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      text-align: right;
+      pointer-events: none;
     }
 
     .meter {
-      min-height: 62px;
-      padding: 10px 12px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      backdrop-filter: blur(16px);
-      border-radius: 8px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+      text-shadow: 0 2px 12px rgba(2, 8, 24, 0.55);
     }
 
     .meter span {
@@ -76,8 +71,10 @@
 
     .meter strong {
       display: block;
-      margin-top: 4px;
-      font-size: clamp(19px, 2.6vw, 28px);
+      margin-top: 0;
+      font-family: "Press Start 2P", system-ui, monospace;
+      font-size: clamp(12px, 1.6vw, 18px);
+      font-weight: 400;
       line-height: 1;
       letter-spacing: 0;
       font-variant-numeric: tabular-nums;
@@ -374,11 +371,6 @@
     @media (max-width: 720px) {
       .hud {
         padding: 12px;
-      }
-
-      .topbar {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-width: none;
       }
 
       .meter {
