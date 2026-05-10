@@ -672,13 +672,40 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const cv = document.createElement("canvas");
       cv.width = cv.height = size;
       const ctx = cv.getContext("2d");
-      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-      grad.addColorStop(0.0, "rgba(255,255,255,0.55)");
-      grad.addColorStop(0.18, "rgba(255,255,255,0.32)");
-      grad.addColorStop(0.45, "rgba(255,255,255,0.12)");
-      grad.addColorStop(1.0, "rgba(255,255,255,0)");
-      ctx.fillStyle = grad;
+      const cx = size / 2;
+      const cy = size / 2;
+      ctx.clearRect(0, 0, size, size);
+      ctx.globalCompositeOperation = "lighter";
+      ctx.filter = "blur(3px)";
+
+      const hGrad = ctx.createLinearGradient(0, cy, size, cy);
+      hGrad.addColorStop(0, "rgba(255,255,255,0)");
+      hGrad.addColorStop(0.5, "rgba(255,255,255,0.9)");
+      hGrad.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = hGrad;
+      ctx.fillRect(0, cy - 1.5, size, 3);
+
+      const vGrad = ctx.createLinearGradient(cx, 0, cx, size);
+      vGrad.addColorStop(0, "rgba(255,255,255,0)");
+      vGrad.addColorStop(0.5, "rgba(255,255,255,0.9)");
+      vGrad.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = vGrad;
+      ctx.fillRect(cx - 1.5, 0, 3, size);
+
+      const dotGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.14);
+      dotGrad.addColorStop(0, "rgba(255,255,255,1)");
+      dotGrad.addColorStop(0.45, "rgba(255,255,255,0.55)");
+      dotGrad.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = dotGrad;
       ctx.fillRect(0, 0, size, size);
+
+      const haloGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.6);
+      haloGrad.addColorStop(0, "rgba(255,255,255,0.42)");
+      haloGrad.addColorStop(0.55, "rgba(255,255,255,0.16)");
+      haloGrad.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = haloGrad;
+      ctx.fillRect(0, 0, size, size);
+
       const tex = new THREE.CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace;
       return tex;
@@ -950,7 +977,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
     const sparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
-      color: 0xffe9a8,
+      color: 0xffd84d,
       size: 1.8,
       transparent: true,
       opacity: 0.55,
