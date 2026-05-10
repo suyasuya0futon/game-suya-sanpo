@@ -1364,7 +1364,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       return dz < depth && Math.hypot(dx, dy) < radius;
     }
 
-    function collect(item, index) {
+    function collect(item) {
+      if (item.userData.collected) return;
+      item.userData.collected = true;
       state.rings += 1;
       const isRainbow = item.userData.rainbow;
       const rewardMultiplier = isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1;
@@ -1381,17 +1383,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       } else {
         sparkleTone();
       }
-      const ring = item.children[0];
-      const halo = item.children[1];
-      if (halo && halo.geometry) halo.geometry.dispose();
-      if (isRainbow) {
-        if (ring) disposeRenderable(ring);
-      } else if (ring && ring.material) {
-        ring.material.dispose();
-      }
-      if (halo && halo.material) halo.material.dispose();
-      scene.remove(item);
-      pickups.splice(index, 1);
     }
 
     function hit(item, index) {
@@ -1505,7 +1496,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
           pos.needsUpdate = true;
         }
-        if (isShipThroughRing(item)) collect(item, i);
+        if (!item.userData.collected && isShipThroughRing(item)) collect(item);
         else if (item.position.z > 36) {
           if (halo && halo.geometry) halo.geometry.dispose();
           const r = item.children[0];
