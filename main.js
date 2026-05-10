@@ -103,6 +103,8 @@
       invulnerable: 0,
       boost: 0,
       boostFuel: 0,
+      boostEmptyLatched: false,
+      trailSpawnCarry: 0,
       rainbowTimer: 0,
       rainbowQueue: 0,
       muted: false,
@@ -333,6 +335,54 @@
       });
       window.setTimeout(() => tone(3951, 0.22, "sine", 0.026), 220);
       window.setTimeout(() => tone(4699, 0.18, "triangle", 0.018), 260);
+    }
+
+    function emptyBoostClick() {
+      if (state.muted || audioCtx.state !== "running") return;
+      const start = audioCtx.currentTime;
+      const duration = 0.026;
+      const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i += 1) {
+        const falloff = 1 - i / bufferSize;
+        data[i] = (Math.random() * 2 - 1) * falloff * falloff;
+      }
+      const source = audioCtx.createBufferSource();
+      const highpass = audioCtx.createBiquadFilter();
+      const bandpass = audioCtx.createBiquadFilter();
+      const envelope = audioCtx.createGain();
+      const tick = audioCtx.createOscillator();
+      const tickGain = audioCtx.createGain();
+      highpass.type = "highpass";
+      highpass.frequency.value = 5200;
+      bandpass.type = "bandpass";
+      bandpass.frequency.value = 7600;
+      bandpass.Q.value = 8;
+      envelope.gain.setValueAtTime(0.0001, start);
+      envelope.gain.linearRampToValueAtTime(0.026, start + 0.001);
+      envelope.gain.exponentialRampToValueAtTime(0.001, start + duration);
+      source.buffer = buffer;
+      source.connect(highpass);
+      highpass.connect(bandpass);
+      bandpass.connect(envelope);
+      envelope.connect(masterGain);
+      tick.type = "square";
+      tick.frequency.setValueAtTime(3100, start);
+      tickGain.gain.setValueAtTime(0.010, start);
+      tickGain.gain.exponentialRampToValueAtTime(0.001, start + 0.006);
+      tick.connect(tickGain);
+      tickGain.connect(masterGain);
+      source.start(start);
+      source.stop(start + duration + 0.01);
+      tick.start(start);
+      tick.stop(start + 0.008);
+    }
+
+    function playEmptyBoostOnce() {
+      if (state.boostEmptyLatched) return;
+      state.boostEmptyLatched = true;
+      emptyBoostClick();
     }
 
     const ambient = new THREE.HemisphereLight(0xd7c6c5, 0x171f46, 1.45);
@@ -889,10 +939,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const trailColors = [0xfffbe6, 0xffe49a, 0xffc870];
     const boostTrailColors = [0xfff8c0, 0xffd66b, 0xff9a2a];
 
-    const BOOST_FUEL_PER_RING = 0.1;
-    const RAINBOW_RING_MULTIPLIER = 5;
+    const BOOST_FUEL_PER_RING = 0.3;
+    const RAINBOW_RING_MULTIPLIER = 3;
     const TRAIL_PER_BOOST_SECOND = 10;
-    const BOOST_TRAIL_MULTIPLIER = 5;
+    const BOOST_TRAIL_MULTIPLIER = 30;
+    const TRAIL_SPAWN_RATE = 12;
     const BOOST_SPEED_MULTIPLIER = 3;
     const TRAIL_MAX = 200;
     const colorNormal = {
@@ -1022,19 +1073,20 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     }
 
-    function spawnOneTrail() {
+    function spawnOneTrail(boostAmount = state.boost) {
       const rbTrail = Math.min(0.18, state.rainbowTimer / 8 * 0.18);
       const colorIdx = Math.floor(Math.random() * trailColors.length);
-      const trailColor = new THREE.Color(trailColors[colorIdx]).lerp(new THREE.Color(boostTrailColors[colorIdx]), state.boost);
+      const trailColor = new THREE.Color(trailColors[colorIdx]).lerp(new THREE.Color(boostTrailColors[colorIdx]), boostAmount);
       if (rbTrail > 0) {
         const hue = (clock.elapsedTime * 0.35 + Math.random() * 0.3) % 1;
         trailColor.lerp(new THREE.Color().setHSL(hue, 0.46, 0.64), rbTrail);
       }
+      const spread = 1 + boostAmount * 1.8;
       const mat = new THREE.SpriteMaterial({
         map: sparkleTexture,
         color: trailColor,
         transparent: true,
-        opacity: 0.85,
+        opacity: THREE.MathUtils.lerp(0.85, 0.68, boostAmount),
         depthTest: false,
         depthWrite: false,
         fog: false,
@@ -1042,23 +1094,23 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       });
       const p = new THREE.Sprite(mat);
       p.position.set(
-        ship.position.x + (Math.random() - 0.5) * 0.32,
-        ship.position.y - 0.45 + (Math.random() - 0.5) * 0.5,
-        ship.position.z + 0.55 + Math.random() * 0.6
+        ship.position.x + (Math.random() - 0.5) * 0.32 * spread,
+        ship.position.y - 0.45 + (Math.random() - 0.5) * 0.5 * spread,
+        ship.position.z + 0.45 + Math.random() * (0.6 + boostAmount * 0.9)
       );
-      const angle = (Math.random() - 0.5) * 0.95;
-      const angleY = (Math.random() - 0.5) * 0.55;
-      const speed = 3.0 + Math.random() * 2.5 + state.boost * 1.6;
+      const angle = (Math.random() - 0.5) * 0.95 * (1 + boostAmount * 1.35);
+      const angleY = (Math.random() - 0.5) * 0.55 * (1 + boostAmount * 1.65);
+      const speed = 2.7 + Math.random() * 2.4 + boostAmount * 0.9;
       p.userData.velocity = new THREE.Vector3(
         Math.sin(angle) * speed - input.x * 0.18,
-        Math.sin(angleY) * speed * 0.5 - 0.3,
+        Math.sin(angleY) * speed * 0.5 - 0.16 + boostAmount * 0.1,
         Math.cos(angle) * speed
       );
-      p.userData.life = 1.6 + Math.random() * 1.2;
+      p.userData.life = 1.6 + Math.random() * 1.2 + boostAmount * 0.55;
       p.userData.maxLife = p.userData.life;
       p.userData.trail = true;
-      p.userData.startScale = 0.28 + Math.random() * 0.18;
-      p.userData.endScale = p.userData.startScale + 1.4 + Math.random() * 1.2;
+      p.userData.startScale = 0.28 + Math.random() * 0.18 + boostAmount * 0.05;
+      p.userData.endScale = p.userData.startScale + 1.4 + Math.random() * 1.2 + boostAmount * 1.2;
       p.renderOrder = 4;
       p.scale.setScalar(p.userData.startScale);
       scene.add(p);
@@ -1081,6 +1133,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.invulnerable = 1.0;
       state.boost = 0;
       state.boostFuel = 0;
+      state.boostEmptyLatched = false;
+      state.trailSpawnCarry = 0;
       state.rainbowTimer = 0;
       state.rainbowQueue = 0;
       state.lastRing = { x: 0, y: 26 };
@@ -1144,6 +1198,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const isRainbow = item.userData.rainbow;
       const rewardMultiplier = isRainbow ? RAINBOW_RING_MULTIPLIER : 1;
       state.boostFuel += BOOST_FUEL_PER_RING * rewardMultiplier;
+      state.boostEmptyLatched = false;
       burst(item.position, isRainbow ? 0xffffff : 0xffd66b, isRainbow ? 36 : 24);
       if (isRainbow) {
         rainbowTone();
@@ -1322,8 +1377,16 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
       if (state.running) {
         state.invulnerable = Math.max(0, state.invulnerable - dt);
-        const boosting = keys.has("Space") && state.boostFuel > 0;
-        if (boosting) state.boostFuel = Math.max(0, state.boostFuel - dt);
+        const wantsBoost = keys.has("Space");
+        const boosting = wantsBoost && state.boostFuel > 0;
+        if (boosting) {
+          state.boostFuel = Math.max(0, state.boostFuel - dt);
+          if (state.boostFuel <= 0) playEmptyBoostOnce();
+        } else if (wantsBoost) {
+          playEmptyBoostOnce();
+        } else {
+          state.boostEmptyLatched = false;
+        }
         state.boost += ((boosting ? 1 : 0) - state.boost) * Math.min(1, dt * 7);
 
         state.rainbowTimer = Math.max(0, state.rainbowTimer - dt);
@@ -1405,9 +1468,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         for (const p of particles) if (p.userData.trail) aliveTrail += 1;
         const deficit = trailTarget - aliveTrail;
         if (deficit > 0) {
-          const toSpawn = Math.min(deficit, boosting ? 30 : 6);
-          for (let s = 0; s < toSpawn; s += 1) spawnOneTrail();
+          const spawnRate = TRAIL_SPAWN_RATE * (boosting ? BOOST_TRAIL_MULTIPLIER : 1);
+          state.trailSpawnCarry += dt * spawnRate;
+          const toSpawn = Math.min(deficit, Math.floor(state.trailSpawnCarry));
+          state.trailSpawnCarry -= toSpawn;
+          for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(boosting ? Math.max(0.75, state.boost) : state.boost);
         } else if (deficit < 0) {
+          state.trailSpawnCarry = 0;
           let toShorten = -deficit;
           for (let i = 0; i < particles.length && toShorten > 0; i += 1) {
             const p = particles[i];
@@ -1417,6 +1484,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
               toShorten -= 1;
             }
           }
+        } else {
+          state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
         }
 
         camera.position.x += (ship.position.x * 0.42 - camera.position.x) * dt * 2.4;
@@ -1464,7 +1533,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (event.code === "Space") event.preventDefault();
       if (event.code === "KeyR") resetGame(state.practice);
     });
-    window.addEventListener("keyup", (event) => keys.delete(event.code));
+    window.addEventListener("keyup", (event) => {
+      keys.delete(event.code);
+      if (event.code === "Space") state.boostEmptyLatched = false;
+    });
 
     startBtn.addEventListener("click", () => {
       resetGame(false);
@@ -1507,8 +1579,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     stick.addEventListener("pointerup", clearStick);
     stick.addEventListener("pointercancel", clearStick);
     touchBoost.addEventListener("pointerdown", () => keys.add("Space"));
-    touchBoost.addEventListener("pointerup", () => keys.delete("Space"));
-    touchBoost.addEventListener("pointercancel", () => keys.delete("Space"));
+    touchBoost.addEventListener("pointerup", () => {
+      keys.delete("Space");
+      state.boostEmptyLatched = false;
+    });
+    touchBoost.addEventListener("pointercancel", () => {
+      keys.delete("Space");
+      state.boostEmptyLatched = false;
+    });
 
     if (new URLSearchParams(window.location.search).has("play")) {
       resetGame(false);

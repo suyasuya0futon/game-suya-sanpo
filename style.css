@@ -1,6 +1,6 @@
     :root {
       color-scheme: dark;
-      font-family: "Noto Sans", "Noto Serif JP", "Noto Serif CJK JP", sans-serif;
+      font-family: "Noto Sans", "Noto Serif JP", serif;
       --panel: rgba(10, 15, 22, 0.72);
       --panel-strong: rgba(11, 16, 24, 0.88);
       --line: rgba(255, 255, 255, 0.16);
@@ -154,6 +154,7 @@
     }
 
     .lead {
+      font-family: "Noto Serif JP", serif;
       max-width: 560px;
       margin: 0 auto 24px;
       color: rgba(246, 251, 255, 0.82);
