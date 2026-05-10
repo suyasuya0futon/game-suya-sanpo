@@ -172,7 +172,7 @@
     .howtoplay {
       position: fixed;
       left: 50%;
-      bottom: 96px;
+      bottom: 160px;
       transform: translateX(-50%);
       width: min(480px, calc(100vw - 32px));
       font-family: "Noto Serif JP", serif;
