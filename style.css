@@ -1,6 +1,6 @@
     :root {
       color-scheme: dark;
-      font-family: "Noto Serif JP", "Noto Serif CJK JP", serif;
+      font-family: "Noto Sans", "Noto Serif JP", "Noto Serif CJK JP", sans-serif;
       --panel: rgba(10, 15, 22, 0.72);
       --panel-strong: rgba(11, 16, 24, 0.88);
       --line: rgba(255, 255, 255, 0.16);
@@ -133,6 +133,11 @@
       font-family: "Rochester", cursive;
     }
 
+    .center.is-result h1 {
+      font-family: "Noto Sans", Arial, sans-serif;
+      font-weight: 500;
+    }
+
     .lead {
       max-width: 560px;
       margin: 0 auto 24px;
@@ -150,6 +155,7 @@
 
     .primary,
     .ghost {
+      font-family: "Noto Sans", Arial, sans-serif;
       min-height: 42px;
       padding: 0 22px;
       border-radius: 999px;

@@ -346,7 +346,7 @@
     sun.shadow.camera.bottom = -24;
     scene.add(sun);
 
-    const cyanLight = new THREE.PointLight(0x43e5ff, 16, 34);
+    const cyanLight = new THREE.PointLight(0xffd285, 16, 34);
     cyanLight.position.set(0, 5, 8);
     scene.add(cyanLight);
 
@@ -438,7 +438,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       tree.scale.setScalar(treeScale);
       tree.rotation.y = Math.random() * Math.PI * 2;
       tree.userData.obstacle = true;
-      tree.userData.halfSize = { x: 1.0 * treeScale, y: 2.0 * treeScale, z: 1.0 * treeScale };
+      tree.userData.halfSize = { x: 0.55 * treeScale, y: 2.0 * treeScale, z: 0.55 * treeScale };
       ground.add(tree);
       obstacles.push(tree);
     }
@@ -714,6 +714,34 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     ship.position.set(0, 26, 4);
     scene.add(ship);
 
+    const shadowTexture = (() => {
+      const size = 128;
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = size;
+      const ctx = cv.getContext("2d");
+      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      grad.addColorStop(0.0, "rgba(0,0,0,0.62)");
+      grad.addColorStop(0.4, "rgba(0,0,0,0.28)");
+      grad.addColorStop(1.0, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      return new THREE.CanvasTexture(cv);
+    })();
+    const shipShadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({
+        map: shadowTexture,
+        color: 0x000000,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        fog: false
+      })
+    );
+    shipShadow.rotation.x = -Math.PI / 2;
+    shipShadow.scale.set(3, 3, 1);
+    scene.add(shipShadow);
+
     const pickupGeo = new THREE.TorusGeometry(3.05, 0.06, 12, 128);
     const pickupMat = new THREE.MeshBasicMaterial({
       color: 0xffd84d,
@@ -721,6 +749,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       depthTest: false
     });
     const SPARKLE_COUNT = 40;
+    const RAINBOW_SPARKLE_COUNT = 120;
     const sparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
       color: 0xffe9a8,
@@ -733,14 +762,26 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true
     });
-    function createSparkleRing() {
-      const positions = new Float32Array(SPARKLE_COUNT * 3);
-      const phase = new Float32Array(SPARKLE_COUNT);
-      const baseAngle = new Float32Array(SPARKLE_COUNT);
-      const baseRadius = new Float32Array(SPARKLE_COUNT);
-      const angularSpeed = new Float32Array(SPARKLE_COUNT);
-      for (let i = 0; i < SPARKLE_COUNT; i += 1) {
-        const a = (i / SPARKLE_COUNT) * Math.PI * 2 + Math.random() * 0.18;
+    const rainbowSparkleMaterial = new THREE.PointsMaterial({
+      map: sparkleTexture,
+      color: 0xffffff,
+      size: 2.4,
+      transparent: true,
+      opacity: 0.78,
+      depthWrite: false,
+      depthTest: false,
+      fog: false,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true
+    });
+    function createSparkleRing(count = SPARKLE_COUNT, material = sparkleMaterial) {
+      const positions = new Float32Array(count * 3);
+      const phase = new Float32Array(count);
+      const baseAngle = new Float32Array(count);
+      const baseRadius = new Float32Array(count);
+      const angularSpeed = new Float32Array(count);
+      for (let i = 0; i < count; i += 1) {
+        const a = (i / count) * Math.PI * 2 + Math.random() * 0.18;
         const r = 3.0 + (Math.random() - 0.5) * 0.55;
         baseAngle[i] = a;
         baseRadius[i] = r;
@@ -752,11 +793,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      const points = new THREE.Points(geo, sparkleMaterial);
+      const points = new THREE.Points(geo, material);
       points.userData.phase = phase;
       points.userData.baseAngle = baseAngle;
       points.userData.baseRadius = baseRadius;
       points.userData.angularSpeed = angularSpeed;
+      points.userData.count = count;
       return points;
     }
     const hazardGeo = new THREE.IcosahedronGeometry(0.95, 0);
@@ -768,22 +810,22 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       metalness: 0.2
     });
     const trailGeo = new THREE.SphereGeometry(0.035, 8, 6);
-    const trailColors = [0xc9ecff, 0x6fb8ff, 0x3d8eff];
+    const trailColors = [0xfffbe6, 0xffe49a, 0xffc870];
     const boostTrailColors = [0xfff8c0, 0xffd66b, 0xff9a2a];
 
     const TRAIL_PER_RING = 10;
     const TRAIL_MAX = 200;
     const colorNormal = {
-      body: new THREE.Color(0x6fb0ff),
-      bodyEmissive: new THREE.Color(0x2a6fe0),
-      glow: new THREE.Color(0x7fc2ff),
-      core: new THREE.Color(0x9fd4ff),
-      halo: new THREE.Color(0x6fb8ff),
-      engineHalo: new THREE.Color(0x4f9bff),
-      light: new THREE.Color(0x4f9bff),
-      sleeve0: new THREE.Color(0xb6e2ff),
-      sleeve1: new THREE.Color(0x6fb8ff),
-      sleeve2: new THREE.Color(0x3d8eff)
+      body: new THREE.Color(0xfff3d0),
+      bodyEmissive: new THREE.Color(0xffd07a),
+      glow: new THREE.Color(0xfff0c8),
+      core: new THREE.Color(0xfffbe6),
+      halo: new THREE.Color(0xffe49a),
+      engineHalo: new THREE.Color(0xffc870),
+      light: new THREE.Color(0xffd285),
+      sleeve0: new THREE.Color(0xfff5d8),
+      sleeve1: new THREE.Color(0xffd58a),
+      sleeve2: new THREE.Color(0xc99550)
     };
     const colorBoost = {
       body: new THREE.Color(0xffe07a),
@@ -816,12 +858,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (isRainbow) {
         ringMat = pickupMat.clone();
         ringMat.color.setHSL(hue, 1.0, 0.6);
-        haloMat = sparkleMaterial.clone();
+        haloMat = rainbowSparkleMaterial.clone();
         haloMat.color.setHSL(hue, 1.0, 0.7);
       }
+      const halo = isRainbow
+        ? createSparkleRing(RAINBOW_SPARKLE_COUNT, haloMat)
+        : createSparkleRing();
       const ring = new THREE.Mesh(pickupGeo, ringMat);
-      const halo = createSparkleRing();
-      if (isRainbow) halo.material = haloMat;
       const lightColor = isRainbow ? new THREE.Color().setHSL(hue, 1.0, 0.6).getHex() : 0xffd35a;
       const ringLight = new THREE.PointLight(lightColor, 2.6, 15);
       ring.renderOrder = 6;
@@ -881,7 +924,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const trailColor = new THREE.Color(trailColors[colorIdx]).lerp(new THREE.Color(boostTrailColors[colorIdx]), state.boost);
       if (rbTrail > 0) {
         const hue = (clock.elapsedTime * 0.35 + Math.random() * 0.3) % 1;
-        trailColor.lerp(new THREE.Color().setHSL(hue, 1.0, 0.6), rbTrail);
+        trailColor.lerp(new THREE.Color().setHSL(hue, 1.0, 0.5), rbTrail);
       }
       const mat = new THREE.SpriteMaterial({
         map: sparkleTexture,
@@ -952,7 +995,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.ended = true;
       menu.hidden = false;
       menu.classList.add("is-result");
-      menu.querySelector("h1").textContent = title;
+      const h1 = menu.querySelector("h1");
+      h1.textContent = title;
+      h1.hidden = !title;
       menu.querySelector(".lead").textContent = detail;
       startBtn.textContent = "RETRY";
       if (practiceBtn) practiceBtn.textContent = "";
@@ -1032,7 +1077,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       tone(80, 0.35, "sawtooth", 0.06);
       flash.classList.add("on");
       window.setTimeout(() => flash.classList.remove("on"), 240);
-      endGame("Crash", `障害物に衝突しました。`);
+      endGame("", `障害物に衝突しました。`);
     }
 
     function stepObjects(dt) {
@@ -1082,13 +1127,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           const pos = halo.geometry.attributes.position;
           const arr = pos.array;
           const ud = halo.userData;
-          for (let s = 0; s < SPARKLE_COUNT; s += 1) {
+          const count = ud.count || SPARKLE_COUNT;
+          for (let s = 0; s < count; s += 1) {
             const angle = ud.baseAngle[s] + ud.angularSpeed[s] * t;
             const radius = ud.baseRadius[s] + Math.sin(t * 2.0 + ud.phase[s]) * 0.22;
             arr[s * 3] = Math.cos(angle) * radius;
             arr[s * 3 + 1] = Math.sin(angle) * radius;
           }
           pos.needsUpdate = true;
+          if (item.userData.rainbow) {
+            halo.material.color.setHSL((t * 0.6 + item.position.x * 0.05) % 1, 1, 0.5);
+          }
         }
         if (isShipThroughRing(item)) collect(item, i);
         else if (item.position.z > 14) {
@@ -1127,15 +1176,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
 
       if (state.invulnerable <= 0) {
+        const sx = 0.9 + state.boost * 0.5;
+        const sy = 0.22;
+        const sz = 0.45;
         for (const o of obstacles) {
           const wx = ground.position.x + o.position.x;
           const wy = ground.position.y + o.position.y;
           const wz = ground.position.z + o.position.z;
           const hs = o.userData.halfSize;
-          if (Math.abs(wz - ship.position.z) > hs.z + 1.0) continue;
-          if (Math.abs(wx - ship.position.x) > hs.x + 0.9) continue;
-          if (ship.position.y > wy + hs.y + 0.9) continue;
-          if (ship.position.y < wy - hs.y - 0.9) continue;
+          if (Math.abs(wz - ship.position.z) > hs.z + sz) continue;
+          if (Math.abs(wx - ship.position.x) > hs.x + sx) continue;
+          if (ship.position.y > wy + hs.y + sy) continue;
+          if (ship.position.y < wy - hs.y - sy) continue;
           crash();
           break;
         }
@@ -1177,7 +1229,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const hueBase = (clock.elapsedTime * 0.35) % 1;
         function applyRainbow(target, hueOffset) {
           if (rb <= 0) return;
-          tmpRainbow.setHSL((hueBase + hueOffset) % 1, 1.0, 0.55 + b * 0.18);
+          tmpRainbow.setHSL((hueBase + hueOffset) % 1, 1.0, 0.5);
           target.lerp(tmpRainbow, rb);
         }
         bodyMat.color.lerpColors(colorNormal.body, colorBoost.body, b);
@@ -1235,12 +1287,20 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         cyanLight.position.x = ship.position.x;
         cyanLight.position.y = ship.position.y + 3;
         cyanLight.intensity = 14 + state.boost * 12;
-        const trailTarget = Math.min(TRAIL_MAX, Math.floor(state.boostFuel * TRAIL_PER_RING));
+
+        const shadowAlt = ship.position.y - ground.position.y;
+        const shadowVisibility = 1 - THREE.MathUtils.smoothstep(shadowAlt, 4, 45);
+        shipShadow.material.opacity = 0.65 * shadowVisibility;
+        shipShadow.position.set(ship.position.x, ground.position.y + 0.06, ship.position.z);
+        const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
+        shipShadow.scale.set(shadowSize * (1 + state.boost * 0.4), shadowSize, 1);
+        const rainbowMul = state.rainbowTimer > 0 ? 3 : 1;
+        const trailTarget = Math.min(TRAIL_MAX * rainbowMul, Math.floor(state.boostFuel * TRAIL_PER_RING * rainbowMul));
         let aliveTrail = 0;
         for (const p of particles) if (p.userData.trail) aliveTrail += 1;
         const deficit = trailTarget - aliveTrail;
         if (deficit > 0) {
-          const toSpawn = Math.min(deficit, 6);
+          const toSpawn = Math.min(deficit, rainbowMul > 1 ? 12 : 6);
           for (let s = 0; s < toSpawn; s += 1) spawnOneTrail();
         } else if (deficit < 0) {
           let toShorten = -deficit;
@@ -1262,6 +1322,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         stepObjects(dt);
         updateHud();
       } else {
+        shipShadow.material.opacity = 0;
         ship.rotation.y += dt * 0.5;
         ship.position.y = 26 + Math.sin(clock.elapsedTime * 1.1) * 0.42;
         halo.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
