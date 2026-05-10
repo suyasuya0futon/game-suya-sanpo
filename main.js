@@ -1230,12 +1230,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         p.position.set(
           item.position.x + radial.x * radius,
           item.position.y + radial.y * radius,
-          item.position.z + (Math.random() - 0.5) * tuning.RING_BURST_Z_RANDOM
+          ship.position.z + (Math.random() - 0.5) * tuning.RING_BURST_Z_RANDOM
         );
         const speed = tuning.RING_BURST_RADIAL_SPEED + Math.random() * tuning.RING_BURST_RADIAL_SPEED_RANDOM;
+        const dir = tuning.RING_BURST_INWARD ? -1 : 1;
         p.userData.velocity = new THREE.Vector3(
-          radial.x * speed,
-          radial.y * speed + tuning.RING_BURST_UPWARD_SPEED,
+          radial.x * speed * dir,
+          radial.y * speed * dir + tuning.RING_BURST_UPWARD_SPEED,
           (Math.random() - 0.5) * tuning.RING_BURST_Z_SPEED_RANDOM
         );
         p.userData.life = tuning.RING_BURST_LIFE_BASE + Math.random() * tuning.RING_BURST_LIFE_RANDOM;
