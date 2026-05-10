@@ -1,4 +1,5 @@
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
+    import * as tuning from "./tuning.js";
 
     const canvas = document.querySelector("#game");
     const scoreEl = document.querySelector("#score");
@@ -828,38 +829,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     shipShadow.scale.set(3, 3, 1);
     scene.add(shipShadow);
 
-    const PICKUP_RING_RADIUS = 6.0; // 通常リングの中心半径。
-    const PICKUP_RING_TUBE_RADIUS = 0.06; // 通常リングの線の太さ。
-    const PICKUP_RING_RADIAL_SEGMENTS = 12; // 通常リング断面の分割数。
-    const PICKUP_RING_TUBULAR_SEGMENTS = 128; // 通常リング円周の分割数。
-    const PICKUP_RING_PASS_MARGIN = 0.27; // 見た目の内側より少し小さくする通過判定の余白。
-    const RAINBOW_RING_RADIUS = PICKUP_RING_RADIUS; // レインボーリング本体の中心半径。
-    const RAINBOW_RING_TUBE_RADIUS = 0.095; // レインボーリング本体の線の太さ。
-    const RAINBOW_RING_RADIAL_SEGMENTS = 14; // レインボーリング本体断面の分割数。
-    const RAINBOW_RING_TUBULAR_SEGMENTS = 24; // レインボーリング1色ぶんの円周分割数。
-    const RAINBOW_RING_GLOW_RADIUS = 3.08; // レインボーリング外側グローの中心半径。
-    const RAINBOW_RING_GLOW_TUBE_RADIUS = 0.24; // レインボーリング外側グローの太さ。
-    const RAINBOW_RING_GLOW_RADIAL_SEGMENTS = 12; // レインボーリング外側グロー断面の分割数。
-    const RAINBOW_RING_SEGMENTS = 7; // レインボーリングを何色の弧に分けるか。
-    const RAINBOW_RING_ARC_COVERAGE = 0.94; // 各色の弧を円周1区間の何割まで描くか。
-    const SPARKLE_RING_RADIUS = 6.2; // リング周囲の光の粒が並ぶ基本半径。
-    const SPARKLE_RING_RADIUS_RANDOM = 0.55; // リング周囲の光の粒の半径方向のばらつき。
-    const SPARKLE_RING_ANGLE_RANDOM = 0.18; // リング周囲の光の粒の角度ばらつき。
-    const SPARKLE_RING_Z_RANDOM = 0.12; // リング周囲の光の粒の奥行きばらつき。
-    const SPARKLE_RING_ANGULAR_SPEED = 0.4; // リング周囲の光の粒が回る速度のばらつき。
     const pickupGeo = new THREE.TorusGeometry(
-      PICKUP_RING_RADIUS,
-      PICKUP_RING_TUBE_RADIUS,
-      PICKUP_RING_RADIAL_SEGMENTS,
-      PICKUP_RING_TUBULAR_SEGMENTS
+      tuning.PICKUP_RING_RADIUS,
+      tuning.PICKUP_RING_TUBE_RADIUS,
+      tuning.PICKUP_RING_RADIAL_SEGMENTS,
+      tuning.PICKUP_RING_TUBULAR_SEGMENTS
     );
     const pickupMat = new THREE.MeshBasicMaterial({
       color: 0xffd84d,
       fog: false,
       depthTest: false
     });
-    const SPARKLE_COUNT = 40; // 通常リング周囲の光の粒数。
-    const RAINBOW_SPARKLE_COUNT = 96; // レインボーリング周囲の光の粒数。
     const sparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
       color: 0xffe9a8,
@@ -884,22 +864,22 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true
     });
-    function createSparkleRing(count = SPARKLE_COUNT, material = sparkleMaterial) {
+    function createSparkleRing(count = tuning.SPARKLE_COUNT, material = sparkleMaterial) {
       const positions = new Float32Array(count * 3);
       const phase = new Float32Array(count);
       const baseAngle = new Float32Array(count);
       const baseRadius = new Float32Array(count);
       const angularSpeed = new Float32Array(count);
       for (let i = 0; i < count; i += 1) {
-        const a = (i / count) * Math.PI * 2 + Math.random() * SPARKLE_RING_ANGLE_RANDOM;
-        const r = SPARKLE_RING_RADIUS + (Math.random() - 0.5) * SPARKLE_RING_RADIUS_RANDOM;
+        const a = (i / count) * Math.PI * 2 + Math.random() * tuning.SPARKLE_RING_ANGLE_RANDOM;
+        const r = tuning.SPARKLE_RING_RADIUS + (Math.random() - 0.5) * tuning.SPARKLE_RING_RADIUS_RANDOM;
         baseAngle[i] = a;
         baseRadius[i] = r;
         phase[i] = Math.random() * Math.PI * 2;
-        angularSpeed[i] = (Math.random() - 0.5) * SPARKLE_RING_ANGULAR_SPEED;
+        angularSpeed[i] = (Math.random() - 0.5) * tuning.SPARKLE_RING_ANGULAR_SPEED;
         positions[i * 3] = Math.cos(a) * r;
         positions[i * 3 + 1] = Math.sin(a) * r;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * SPARKLE_RING_Z_RANDOM;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * tuning.SPARKLE_RING_Z_RANDOM;
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -914,7 +894,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function createRainbowPickupRing(hueBase = 0) {
       const group = new THREE.Group();
-      const segments = RAINBOW_RING_SEGMENTS;
+      const segments = tuning.RAINBOW_RING_SEGMENTS;
       const arc = (Math.PI * 2) / segments;
       for (let i = 0; i < segments; i += 1) {
         const color = new THREE.Color().setHSL((hueBase + i / segments) % 1, 1.0, 0.58);
@@ -934,18 +914,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           blending: THREE.AdditiveBlending
         });
         const segment = new THREE.Mesh(new THREE.TorusGeometry(
-          RAINBOW_RING_RADIUS,
-          RAINBOW_RING_TUBE_RADIUS,
-          RAINBOW_RING_RADIAL_SEGMENTS,
-          RAINBOW_RING_TUBULAR_SEGMENTS,
-          arc * RAINBOW_RING_ARC_COVERAGE
+          tuning.RAINBOW_RING_RADIUS,
+          tuning.RAINBOW_RING_TUBE_RADIUS,
+          tuning.RAINBOW_RING_RADIAL_SEGMENTS,
+          tuning.RAINBOW_RING_TUBULAR_SEGMENTS,
+          arc * tuning.RAINBOW_RING_ARC_COVERAGE
         ), material);
         const glow = new THREE.Mesh(new THREE.TorusGeometry(
-          RAINBOW_RING_GLOW_RADIUS,
-          RAINBOW_RING_GLOW_TUBE_RADIUS,
-          RAINBOW_RING_GLOW_RADIAL_SEGMENTS,
-          RAINBOW_RING_TUBULAR_SEGMENTS,
-          arc * RAINBOW_RING_ARC_COVERAGE
+          tuning.RAINBOW_RING_GLOW_RADIUS,
+          tuning.RAINBOW_RING_GLOW_TUBE_RADIUS,
+          tuning.RAINBOW_RING_GLOW_RADIAL_SEGMENTS,
+          tuning.RAINBOW_RING_TUBULAR_SEGMENTS,
+          arc * tuning.RAINBOW_RING_ARC_COVERAGE
         ), glowMaterial);
         segment.rotation.z = i * arc;
         glow.rotation.z = i * arc;
@@ -955,9 +935,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function getPickupPassRadius(isRainbow) {
-      const ringRadius = isRainbow ? RAINBOW_RING_RADIUS : PICKUP_RING_RADIUS;
-      const tubeRadius = isRainbow ? RAINBOW_RING_TUBE_RADIUS : PICKUP_RING_TUBE_RADIUS;
-      return Math.max(0.1, ringRadius - tubeRadius - PICKUP_RING_PASS_MARGIN);
+      const ringRadius = isRainbow ? tuning.RAINBOW_RING_RADIUS : tuning.PICKUP_RING_RADIUS;
+      const tubeRadius = isRainbow ? tuning.RAINBOW_RING_TUBE_RADIUS : tuning.PICKUP_RING_TUBE_RADIUS;
+      return Math.max(0.1, ringRadius - tubeRadius - tuning.PICKUP_RING_PASS_MARGIN);
     }
 
     function disposeRenderable(object) {
@@ -981,48 +961,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const trailColors = [0xfffbe6, 0xffe49a, 0xffc870];
     const boostTrailColors = [0xfff8c0, 0xffd66b, 0xff9a2a];
 
-    const BOOST_FUEL_PER_RING = 0.5; // 通常リング1個で増えるブースト燃料の秒数。
-    const RAINBOW_RING_MULTIPLIER = 5; // レインボーリング報酬の通常リング比。
-    const TRAIL_PER_BOOST_SECOND = 10; // 燃料1秒ぶんを通常時の光の粒何個として見せるか。
-    const BOOST_TRAIL_MULTIPLIER = 100; // ブースト中の噴射粒の発生倍率。
-    const TRAIL_SPAWN_RATE = 30; // 光の粒を1秒あたり何個ペースで生成するか。
-    const BOOST_SPEED_MULTIPLIER = 3; // ブースト中の上下左右移動速度倍率。
-    const TRAIL_MAX = 500; // 同時に残せる光の粒の最大数。
-
-    const TRAIL_RAINBOW_TINT_MAX = 1.0; // レインボー中に噴射粒へ混ぜる虹色の最大量。
-    const TRAIL_RAINBOW_HUE_RANDOM = 0.3; // 噴射粒の虹色をランダムにずらす幅。
-    const TRAIL_RAINBOW_SATURATION = 1.0; // 噴射粒に混ぜる虹色の彩度。
-    const TRAIL_RAINBOW_LIGHTNESS = 0.64; // 噴射粒に混ぜる虹色の明るさ。
-    const TRAIL_BOOST_SPREAD = 1.8; // ブースト中に噴射粒の発生位置を広げる倍率。
-    const TRAIL_OPACITY_NORMAL = 0.85; // 通常時の噴射粒の不透明度。
-    const TRAIL_OPACITY_BOOST = 0.68; // ブースト中の噴射粒の不透明度。
-    const TRAIL_OFFSET_X = 0.32; // 噴射粒の左右方向の発生幅。
-    const TRAIL_OFFSET_Y = 0.5; // 噴射粒の上下方向の発生幅。
-    const TRAIL_OFFSET_Y_BASE = -0.45; // 噴射粒の発生位置を機体中心から下へずらす量。
-    const TRAIL_OFFSET_Z_BASE = 0.45; // 噴射粒の発生位置を機体後方へずらす量。
-    const TRAIL_OFFSET_Z_RANDOM = 0.6; // 噴射粒の後方発生位置のランダム幅。
-    const TRAIL_OFFSET_Z_BOOST = 0.9; // ブースト中に後方発生位置をさらに広げる量。
-    const TRAIL_ANGLE_SPREAD = 0.95; // 噴射粒が左右へ散る角度幅。
-    const TRAIL_ANGLE_BOOST_SPREAD = 1.35; // ブースト中に左右の散り方を広げる倍率。
-    const TRAIL_ANGLE_Y_SPREAD = 0.55; // 噴射粒が上下へ散る角度幅。
-    const TRAIL_ANGLE_Y_BOOST_SPREAD = 1.65; // ブースト中に上下の散り方を広げる倍率。
-    const TRAIL_SPEED_BASE = 2.7; // 噴射粒の基本速度。
-    const TRAIL_SPEED_RANDOM = 2.4; // 噴射粒の速度に足すランダム幅。
-    const TRAIL_SPEED_BOOST = 0.9; // ブースト中に噴射粒速度へ足す量。
-    const TRAIL_BACKWARD_SPEED_MULTIPLIER = 3; // 噴射粒が後ろへ流れる速度倍率。
-    const TRAIL_INPUT_DRIFT = 0.18; // 機体操作と逆方向へ噴射粒を少し流す量。
-    const TRAIL_VERTICAL_SPEED_SCALE = 0.5; // 上下方向の噴射速度を抑える倍率。
-    const TRAIL_VERTICAL_DRIFT = -0.16; // 噴射粒を少し下向きへ流す量。
-    const TRAIL_VERTICAL_BOOST_LIFT = 0.1; // ブースト中に噴射粒を少し上向きへ戻す量。
-    const TRAIL_LIFE_BASE = 1.6; // 噴射粒の基本寿命。
-    const TRAIL_LIFE_RANDOM = 1.2; // 噴射粒の寿命に足すランダム幅。
-    const TRAIL_LIFE_BOOST = 0.55; // ブースト中に噴射粒の寿命へ足す量。
-    const TRAIL_START_SCALE_BASE = 0.28; // 噴射粒の出始めの基本サイズ。
-    const TRAIL_START_SCALE_RANDOM = 0.18; // 噴射粒の出始めサイズに足すランダム幅。
-    const TRAIL_START_SCALE_BOOST = 0.05; // ブースト中に出始めサイズへ足す量。
-    const TRAIL_END_SCALE_GROWTH = 1.4; // 噴射粒が消えるまでに広がる基本量。
-    const TRAIL_END_SCALE_RANDOM = 1.2; // 噴射粒の広がりに足すランダム幅。
-    const TRAIL_END_SCALE_BOOST = 1.2; // ブースト中に噴射粒の広がりへ足す量。
     const colorNormal = {
       body: new THREE.Color(0x6fb0ff),
       bodyEmissive: new THREE.Color(0x2a6fe0),
@@ -1094,7 +1032,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         haloMat.color.set(0xffffff).lerp(tint, 0.92);
       }
       const halo = isRainbow
-        ? createSparkleRing(RAINBOW_SPARKLE_COUNT, haloMat)
+        ? createSparkleRing(tuning.RAINBOW_SPARKLE_COUNT, haloMat)
         : createSparkleRing();
       const ring = isRainbow ? createRainbowPickupRing(hue) : new THREE.Mesh(pickupGeo, ringMat);
       const lightColor = isRainbow ? 0xffffff : 0xffd35a;
@@ -1150,20 +1088,50 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     }
 
+    function burstRing(item, color, count = 24) {
+      const isRainbow = item.userData.rainbow;
+      const ringRadius = isRainbow ? tuning.RAINBOW_RING_RADIUS : tuning.PICKUP_RING_RADIUS;
+      const mat = new THREE.MeshBasicMaterial({ color });
+      for (let i = 0; i < count; i += 1) {
+        const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * tuning.RING_BURST_ANGLE_RANDOM;
+        const radial = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
+        const radius = ringRadius + (Math.random() - 0.5) * tuning.RING_BURST_RADIUS_RANDOM;
+        const p = new THREE.Mesh(new THREE.BoxGeometry(
+          tuning.RING_BURST_PARTICLE_SIZE,
+          tuning.RING_BURST_PARTICLE_SIZE,
+          tuning.RING_BURST_PARTICLE_SIZE
+        ), mat);
+        p.position.set(
+          item.position.x + radial.x * radius,
+          item.position.y + radial.y * radius,
+          item.position.z + (Math.random() - 0.5) * tuning.RING_BURST_Z_RANDOM
+        );
+        const speed = tuning.RING_BURST_RADIAL_SPEED + Math.random() * tuning.RING_BURST_RADIAL_SPEED_RANDOM;
+        p.userData.velocity = new THREE.Vector3(
+          radial.x * speed,
+          radial.y * speed + tuning.RING_BURST_UPWARD_SPEED,
+          (Math.random() - 0.5) * tuning.RING_BURST_Z_SPEED_RANDOM
+        );
+        p.userData.life = tuning.RING_BURST_LIFE_BASE + Math.random() * tuning.RING_BURST_LIFE_RANDOM;
+        scene.add(p);
+        particles.push(p);
+      }
+    }
+
     function spawnOneTrail(boostAmount = state.boost) {
-      const rbTrail = Math.min(TRAIL_RAINBOW_TINT_MAX, state.rainbowTimer / 8 * TRAIL_RAINBOW_TINT_MAX);
+      const rbTrail = Math.min(tuning.TRAIL_RAINBOW_TINT_MAX, state.rainbowTimer / 8 * tuning.TRAIL_RAINBOW_TINT_MAX);
       const colorIdx = Math.floor(Math.random() * trailColors.length);
       const trailColor = new THREE.Color(trailColors[colorIdx]).lerp(new THREE.Color(boostTrailColors[colorIdx]), boostAmount);
       if (rbTrail > 0) {
-        const hue = (clock.elapsedTime * 0.35 + Math.random() * TRAIL_RAINBOW_HUE_RANDOM) % 1;
-        trailColor.lerp(new THREE.Color().setHSL(hue, TRAIL_RAINBOW_SATURATION, TRAIL_RAINBOW_LIGHTNESS), rbTrail);
+        const hue = (clock.elapsedTime * 0.35 + Math.random() * tuning.TRAIL_RAINBOW_HUE_RANDOM) % 1;
+        trailColor.lerp(new THREE.Color().setHSL(hue, tuning.TRAIL_RAINBOW_SATURATION, tuning.TRAIL_RAINBOW_LIGHTNESS), rbTrail);
       }
-      const spread = 1 + boostAmount * TRAIL_BOOST_SPREAD;
+      const spread = 1 + boostAmount * tuning.TRAIL_BOOST_SPREAD;
       const mat = new THREE.SpriteMaterial({
         map: sparkleTexture,
         color: trailColor,
         transparent: true,
-        opacity: THREE.MathUtils.lerp(TRAIL_OPACITY_NORMAL, TRAIL_OPACITY_BOOST, boostAmount),
+        opacity: THREE.MathUtils.lerp(tuning.TRAIL_OPACITY_NORMAL, tuning.TRAIL_OPACITY_BOOST, boostAmount),
         depthTest: false,
         depthWrite: false,
         fog: false,
@@ -1171,23 +1139,23 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       });
       const p = new THREE.Sprite(mat);
       p.position.set(
-        ship.position.x + (Math.random() - 0.5) * TRAIL_OFFSET_X * spread,
-        ship.position.y + TRAIL_OFFSET_Y_BASE + (Math.random() - 0.5) * TRAIL_OFFSET_Y * spread,
-        ship.position.z + TRAIL_OFFSET_Z_BASE + Math.random() * (TRAIL_OFFSET_Z_RANDOM + boostAmount * TRAIL_OFFSET_Z_BOOST)
+        ship.position.x + (Math.random() - 0.5) * tuning.TRAIL_OFFSET_X * spread,
+        ship.position.y + tuning.TRAIL_OFFSET_Y_BASE + (Math.random() - 0.5) * tuning.TRAIL_OFFSET_Y * spread,
+        ship.position.z + tuning.TRAIL_OFFSET_Z_BASE + Math.random() * (tuning.TRAIL_OFFSET_Z_RANDOM + boostAmount * tuning.TRAIL_OFFSET_Z_BOOST)
       );
-      const angle = (Math.random() - 0.5) * TRAIL_ANGLE_SPREAD * (1 + boostAmount * TRAIL_ANGLE_BOOST_SPREAD);
-      const angleY = (Math.random() - 0.5) * TRAIL_ANGLE_Y_SPREAD * (1 + boostAmount * TRAIL_ANGLE_Y_BOOST_SPREAD);
-      const speed = TRAIL_SPEED_BASE + Math.random() * TRAIL_SPEED_RANDOM + boostAmount * TRAIL_SPEED_BOOST;
+      const angle = (Math.random() - 0.5) * tuning.TRAIL_ANGLE_SPREAD * (1 + boostAmount * tuning.TRAIL_ANGLE_BOOST_SPREAD);
+      const angleY = (Math.random() - 0.5) * tuning.TRAIL_ANGLE_Y_SPREAD * (1 + boostAmount * tuning.TRAIL_ANGLE_Y_BOOST_SPREAD);
+      const speed = tuning.TRAIL_SPEED_BASE + Math.random() * tuning.TRAIL_SPEED_RANDOM + boostAmount * tuning.TRAIL_SPEED_BOOST;
       p.userData.velocity = new THREE.Vector3(
-        Math.sin(angle) * speed - input.x * TRAIL_INPUT_DRIFT,
-        Math.sin(angleY) * speed * TRAIL_VERTICAL_SPEED_SCALE + TRAIL_VERTICAL_DRIFT + boostAmount * TRAIL_VERTICAL_BOOST_LIFT,
-        Math.cos(angle) * speed * TRAIL_BACKWARD_SPEED_MULTIPLIER
+        Math.sin(angle) * speed - input.x * tuning.TRAIL_INPUT_DRIFT,
+        Math.sin(angleY) * speed * tuning.TRAIL_VERTICAL_SPEED_SCALE + tuning.TRAIL_VERTICAL_DRIFT + boostAmount * tuning.TRAIL_VERTICAL_BOOST_LIFT,
+        Math.cos(angle) * speed * tuning.TRAIL_BACKWARD_SPEED_MULTIPLIER
       );
-      p.userData.life = TRAIL_LIFE_BASE + Math.random() * TRAIL_LIFE_RANDOM + boostAmount * TRAIL_LIFE_BOOST;
+      p.userData.life = tuning.TRAIL_LIFE_BASE + Math.random() * tuning.TRAIL_LIFE_RANDOM + boostAmount * tuning.TRAIL_LIFE_BOOST;
       p.userData.maxLife = p.userData.life;
       p.userData.trail = true;
-      p.userData.startScale = TRAIL_START_SCALE_BASE + Math.random() * TRAIL_START_SCALE_RANDOM + boostAmount * TRAIL_START_SCALE_BOOST;
-      p.userData.endScale = p.userData.startScale + TRAIL_END_SCALE_GROWTH + Math.random() * TRAIL_END_SCALE_RANDOM + boostAmount * TRAIL_END_SCALE_BOOST;
+      p.userData.startScale = tuning.TRAIL_START_SCALE_BASE + Math.random() * tuning.TRAIL_START_SCALE_RANDOM + boostAmount * tuning.TRAIL_START_SCALE_BOOST;
+      p.userData.endScale = p.userData.startScale + tuning.TRAIL_END_SCALE_GROWTH + Math.random() * tuning.TRAIL_END_SCALE_RANDOM + boostAmount * tuning.TRAIL_END_SCALE_BOOST;
       p.renderOrder = 4;
       p.scale.setScalar(p.userData.startScale);
       scene.add(p);
@@ -1273,10 +1241,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function collect(item, index) {
       state.rings += 1;
       const isRainbow = item.userData.rainbow;
-      const rewardMultiplier = isRainbow ? RAINBOW_RING_MULTIPLIER : 1;
-      state.boostFuel += BOOST_FUEL_PER_RING * rewardMultiplier;
+      const rewardMultiplier = isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1;
+      state.boostFuel += tuning.BOOST_FUEL_PER_RING * rewardMultiplier;
       state.boostEmptyLatched = false;
-      burst(item.position, isRainbow ? 0xffffff : 0xffd66b, isRainbow ? 36 : 24);
+      burstRing(
+        item,
+        isRainbow ? 0xffffff : 0xffd66b,
+        isRainbow ? tuning.RAINBOW_RING_BURST_COUNT : tuning.RING_BURST_COUNT
+      );
       if (isRainbow) {
         rainbowTone();
         state.rainbowTimer = 8;
@@ -1366,7 +1338,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           const pos = halo.geometry.attributes.position;
           const arr = pos.array;
           const ud = halo.userData;
-          const count = ud.count || SPARKLE_COUNT;
+          const count = ud.count || tuning.SPARKLE_COUNT;
           for (let s = 0; s < count; s += 1) {
             const angle = ud.baseAngle[s] + ud.angularSpeed[s] * t;
             const radius = ud.baseRadius[s] + Math.sin(t * 2.0 + ud.phase[s]) * 0.22;
@@ -1503,7 +1475,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         sleeveR.children[2].material.color.lerpColors(colorNormal.sleeve2, colorBoost.sleeve2, b);
         applyRainbow(sleeveR.children[2].material.color, 0.8);
         state.speed += ((17 + state.score / 14000) - state.speed) * dt * 0.06;
-        const boostSpeedFactor = 1 + state.boost * (BOOST_SPEED_MULTIPLIER - 1);
+        const boostSpeedFactor = 1 + state.boost * (tuning.BOOST_SPEED_MULTIPLIER - 1);
 
         const floatBob = Math.sin(clock.elapsedTime * 1.6 + ship.position.x * 0.08) * dt * 0.55;
         ship.position.x = THREE.MathUtils.clamp(ship.position.x + input.x * dt * 10.5 * boostSpeedFactor, -10.5, 10.5);
@@ -1538,13 +1510,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         shipShadow.position.set(ship.position.x, ground.position.y + 0.06, ship.position.z);
         const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
         shipShadow.scale.set(shadowSize * (1 + state.boost * 0.4), shadowSize, 1);
-        const baseTrailTarget = Math.floor(state.boostFuel * TRAIL_PER_BOOST_SECOND);
-        const trailTarget = Math.min(TRAIL_MAX, baseTrailTarget);
+        const baseTrailTarget = Math.floor(state.boostFuel * tuning.TRAIL_PER_BOOST_SECOND);
+        const trailTarget = Math.min(tuning.TRAIL_MAX, baseTrailTarget);
         let aliveTrail = 0;
         for (const p of particles) if (p.userData.trail) aliveTrail += 1;
         if (boosting) {
-          state.trailSpawnCarry += dt * TRAIL_SPAWN_RATE * BOOST_TRAIL_MULTIPLIER;
-          const room = Math.max(0, TRAIL_MAX - aliveTrail);
+          state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE * tuning.BOOST_TRAIL_MULTIPLIER;
+          const room = Math.max(0, tuning.TRAIL_MAX - aliveTrail);
           const toSpawn = Math.min(room, Math.floor(state.trailSpawnCarry));
           state.trailSpawnCarry -= toSpawn;
           state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
@@ -1552,7 +1524,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         } else {
           const deficit = trailTarget - aliveTrail;
           if (deficit > 0) {
-            state.trailSpawnCarry += dt * TRAIL_SPAWN_RATE;
+            state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE;
             const toSpawn = Math.min(deficit, Math.floor(state.trailSpawnCarry));
             state.trailSpawnCarry -= toSpawn;
             state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
