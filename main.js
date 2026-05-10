@@ -297,6 +297,27 @@
       }
     }
 
+    function stopBgm() {
+      if (audioCtx.state !== "running") return;
+      const now = audioCtx.currentTime;
+      const fade = 0.18;
+      for (const g of [bgmGain.gain, stringGain.gain]) {
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(g.value, now);
+        g.linearRampToValueAtTime(0, now + fade);
+      }
+      for (const voice of stringVoices) {
+        voice.gain.gain.cancelScheduledValues(now);
+        voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+        voice.gain.gain.linearRampToValueAtTime(0, now + fade);
+      }
+      nextStringChordTime = Infinity;
+    }
+
+    function startBgm() {
+      nextStringChordTime = 0;
+    }
+
     function sparkleTone() {
       tone(1175, 0.09, "sine", 0.028);
       window.setTimeout(() => tone(1568, 0.08, "triangle", 0.022), 38);
@@ -900,6 +921,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function resetGame(practice = false) {
       resetObjects();
       state.running = true;
+      startBgm();
       state.practice = practice;
       state.score = 0;
       state.combo = 1;
@@ -926,12 +948,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function endGame(title, detail) {
       state.running = false;
+      stopBgm();
       state.ended = true;
       menu.hidden = false;
       menu.classList.add("is-result");
       menu.querySelector("h1").textContent = title;
       menu.querySelector(".lead").textContent = detail;
-      startBtn.textContent = "start sanpo";
+      startBtn.textContent = "RETRY";
       if (practiceBtn) practiceBtn.textContent = "";
     }
 
@@ -1009,7 +1032,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       tone(80, 0.35, "sawtooth", 0.06);
       flash.classList.add("on");
       window.setTimeout(() => flash.classList.remove("on"), 240);
-      endGame("Crash", `Score ${state.score.toLocaleString("ja-JP")}。建物に衝突しました。`);
+      endGame("Crash", `障害物に衝突しました。`);
     }
 
     function stepObjects(dt) {
@@ -1263,6 +1286,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     window.addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopBgm();
+      } else if (state.running) {
+        startBgm();
+      }
+    });
     window.addEventListener("keydown", (event) => {
       keys.add(event.code);
       if (event.code === "Space") event.preventDefault();
@@ -1283,6 +1313,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     soundBtn.addEventListener("click", () => {
       setSoundEnabled(state.muted);
       audioCtx.resume();
+      soundBtn.blur();
     });
 
     let touchId = null;
