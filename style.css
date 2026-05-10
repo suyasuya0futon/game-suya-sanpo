@@ -138,6 +138,21 @@
       font-weight: 500;
     }
 
+    .center.is-result {
+      position: fixed;
+      inset: 0;
+      width: min(660px, calc(100vw - 32px));
+      margin: auto;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 18px;
+    }
+
+    .center.is-result .lead {
+      margin-bottom: 0;
+    }
+
     .lead {
       max-width: 560px;
       margin: 0 auto 24px;

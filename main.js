@@ -107,7 +107,8 @@
       rainbowQueue: 0,
       muted: false,
       rings: 0,
-      ended: false
+      ended: false,
+      crashed: false
     };
 
     const input = new THREE.Vector2();
@@ -672,6 +673,41 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     halo.position.z = 0.08;
     ship.add(halo);
 
+    const angelHalo = new THREE.Group();
+    const angelRing = new THREE.Mesh(
+      new THREE.TorusGeometry(1.48, 0.055, 14, 128),
+      new THREE.MeshBasicMaterial({
+        color: 0xfff0c8,
+        transparent: true,
+        opacity: 0.92,
+        depthWrite: false,
+        depthTest: false,
+        fog: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    angelRing.rotation.x = Math.PI / 2;
+    angelRing.renderOrder = 8;
+    const angelGlow = new THREE.Mesh(
+      new THREE.RingGeometry(1.2, 1.86, 128),
+      new THREE.MeshBasicMaterial({
+        color: 0xffe6b0,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        depthTest: false,
+        fog: false,
+        blending: THREE.AdditiveBlending
+      })
+    );
+    angelGlow.rotation.x = Math.PI / 2;
+    angelGlow.renderOrder = 7;
+    angelHalo.add(angelGlow, angelRing);
+    angelHalo.position.set(0, 1.55, 0.02);
+    angelHalo.visible = false;
+    ship.add(angelHalo);
+
     const sleeveL = createSleeve(-1);
     const sleeveR = createSleeve(1);
     sleeveL.rotation.z = 0.18;
@@ -749,7 +785,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       depthTest: false
     });
     const SPARKLE_COUNT = 40;
-    const RAINBOW_SPARKLE_COUNT = 120;
+    const RAINBOW_SPARKLE_COUNT = 96;
     const sparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
       color: 0xffe9a8,
@@ -765,9 +801,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const rainbowSparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
       color: 0xffffff,
-      size: 2.4,
+      size: 2.15,
       transparent: true,
-      opacity: 0.78,
+      opacity: 0.72,
       depthWrite: false,
       depthTest: false,
       fog: false,
@@ -801,6 +837,46 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       points.userData.count = count;
       return points;
     }
+
+    function createRainbowPickupRing(hueBase = 0) {
+      const group = new THREE.Group();
+      const segments = 7;
+      const arc = (Math.PI * 2) / segments;
+      for (let i = 0; i < segments; i += 1) {
+        const color = new THREE.Color().setHSL((hueBase + i / segments) % 1, 1.0, 0.58);
+        const material = new THREE.MeshBasicMaterial({
+          color,
+          fog: false,
+          depthTest: false,
+          transparent: true,
+          opacity: 1
+        });
+        const glowMaterial = new THREE.MeshBasicMaterial({
+          color,
+          fog: false,
+          depthTest: false,
+          transparent: true,
+          opacity: 0.34,
+          blending: THREE.AdditiveBlending
+        });
+        const segment = new THREE.Mesh(new THREE.TorusGeometry(3.05, 0.095, 14, 24, arc * 0.94), material);
+        const glow = new THREE.Mesh(new THREE.TorusGeometry(3.08, 0.24, 12, 24, arc * 0.94), glowMaterial);
+        segment.rotation.z = i * arc;
+        glow.rotation.z = i * arc;
+        group.add(glow, segment);
+      }
+      return group;
+    }
+
+    function disposeRenderable(object) {
+      object.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) child.material.forEach((material) => material.dispose());
+          else child.material.dispose();
+        }
+      });
+    }
     const hazardGeo = new THREE.IcosahedronGeometry(0.95, 0);
     const hazardMat = new THREE.MeshStandardMaterial({
       color: 0xff5f7e,
@@ -816,16 +892,16 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const TRAIL_PER_RING = 10;
     const TRAIL_MAX = 200;
     const colorNormal = {
-      body: new THREE.Color(0xfff3d0),
-      bodyEmissive: new THREE.Color(0xffd07a),
-      glow: new THREE.Color(0xfff0c8),
-      core: new THREE.Color(0xfffbe6),
-      halo: new THREE.Color(0xffe49a),
-      engineHalo: new THREE.Color(0xffc870),
-      light: new THREE.Color(0xffd285),
-      sleeve0: new THREE.Color(0xfff5d8),
-      sleeve1: new THREE.Color(0xffd58a),
-      sleeve2: new THREE.Color(0xc99550)
+      body: new THREE.Color(0x6fb0ff),
+      bodyEmissive: new THREE.Color(0x2a6fe0),
+      glow: new THREE.Color(0x7fc2ff),
+      core: new THREE.Color(0x9fd4ff),
+      halo: new THREE.Color(0x6fb8ff),
+      engineHalo: new THREE.Color(0x4f9bff),
+      light: new THREE.Color(0x4f9bff),
+      sleeve0: new THREE.Color(0xb6e2ff),
+      sleeve1: new THREE.Color(0x6fb8ff),
+      sleeve2: new THREE.Color(0x3d8eff)
     };
     const colorBoost = {
       body: new THREE.Color(0xffe07a),
@@ -839,6 +915,31 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       sleeve1: new THREE.Color(0xffd24a),
       sleeve2: new THREE.Color(0xff9a28)
     };
+    const colorCrashed = {
+      body: new THREE.Color(0xc9d2dc),
+      bodyEmissive: new THREE.Color(0x3c5268),
+      sleeve: new THREE.Color(0xdce7f1)
+    };
+
+    function setShipCrashed(crashed) {
+      state.crashed = crashed;
+      angelHalo.visible = crashed;
+      bodyMat.color.copy(crashed ? colorCrashed.body : colorNormal.body);
+      bodyMat.emissive.copy(crashed ? colorCrashed.bodyEmissive : colorNormal.bodyEmissive);
+      bodyMat.emissiveIntensity = crashed ? 0.36 : 2.1;
+      glow.material.opacity = crashed ? 0.16 : 1.0;
+      coreLight.material.opacity = crashed ? 0.28 : 0.95;
+      halo.material.opacity = crashed ? 0.08 : 0.2;
+      engine.material.opacity = crashed ? 0 : 1.0;
+      engineHalo.material.opacity = crashed ? 0 : 0.7;
+      shipLight.intensity = crashed ? 0.15 : 2.6;
+      for (const sleeve of [sleeveL, sleeveR]) {
+        sleeve.children.forEach((cloth, index) => {
+          cloth.material.color.copy(crashed ? colorCrashed.sleeve : colorNormal[`sleeve${index}`]);
+          cloth.material.opacity = crashed ? 0.14 : 0.26 - index * 0.045;
+        });
+      }
+    }
 
     function resetObjects() {
       for (const item of [...pickups, ...hazards, ...particles]) {
@@ -856,17 +957,16 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       let ringMat = pickupMat;
       let haloMat = sparkleMaterial;
       if (isRainbow) {
-        ringMat = pickupMat.clone();
-        ringMat.color.setHSL(hue, 1.0, 0.6);
+        const tint = new THREE.Color().setHSL(hue, 1.0, 0.58);
         haloMat = rainbowSparkleMaterial.clone();
-        haloMat.color.setHSL(hue, 1.0, 0.7);
+        haloMat.color.set(0xffffff).lerp(tint, 0.92);
       }
       const halo = isRainbow
         ? createSparkleRing(RAINBOW_SPARKLE_COUNT, haloMat)
         : createSparkleRing();
-      const ring = new THREE.Mesh(pickupGeo, ringMat);
-      const lightColor = isRainbow ? new THREE.Color().setHSL(hue, 1.0, 0.6).getHex() : 0xffd35a;
-      const ringLight = new THREE.PointLight(lightColor, 2.6, 15);
+      const ring = isRainbow ? createRainbowPickupRing(hue) : new THREE.Mesh(pickupGeo, ringMat);
+      const lightColor = isRainbow ? 0xffffff : 0xffd35a;
+      const ringLight = new THREE.PointLight(lightColor, isRainbow ? 3.5 : 2.6, 18);
       ring.renderOrder = 6;
       halo.renderOrder = 5;
       pickup.add(ring, halo, ringLight);
@@ -919,12 +1019,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function spawnOneTrail() {
-      const rbTrail = Math.min(1, state.rainbowTimer / 0.6);
+      const rbTrail = Math.min(0.18, state.rainbowTimer / 8 * 0.18);
       const colorIdx = Math.floor(Math.random() * trailColors.length);
       const trailColor = new THREE.Color(trailColors[colorIdx]).lerp(new THREE.Color(boostTrailColors[colorIdx]), state.boost);
       if (rbTrail > 0) {
         const hue = (clock.elapsedTime * 0.35 + Math.random() * 0.3) % 1;
-        trailColor.lerp(new THREE.Color().setHSL(hue, 1.0, 0.5), rbTrail);
+        trailColor.lerp(new THREE.Color().setHSL(hue, 0.46, 0.64), rbTrail);
       }
       const mat = new THREE.SpriteMaterial({
         map: sparkleTexture,
@@ -982,6 +1082,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.lastRing = { x: 0, y: 26 };
       state.rings = 0;
       state.ended = false;
+      setShipCrashed(false);
       menu.classList.remove("is-result");
       ship.position.set(0, 26, 4);
       ship.rotation.set(0, 0, 0);
@@ -993,6 +1094,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.running = false;
       stopBgm();
       state.ended = true;
+      setShipCrashed(true);
       menu.hidden = false;
       menu.classList.add("is-result");
       const h1 = menu.querySelector("h1");
@@ -1048,7 +1150,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const halo = item.children[1];
       if (halo && halo.geometry) halo.geometry.dispose();
       if (isRainbow) {
-        if (ring && ring.material) ring.material.dispose();
+        if (ring) disposeRenderable(ring);
         if (halo && halo.material) halo.material.dispose();
       }
       scene.remove(item);
@@ -1099,7 +1201,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         if (state.rainbowQueue > 0) {
           const total = 7;
           const idx = total - state.rainbowQueue;
-          spawnPickup({ rainbow: true, hue: idx / total, idx });
+          spawnPickup({ rainbow: true, hue: 0.1 + (idx / total) * 0.75, idx });
           state.rainbowQueue -= 1;
           state.spawnTimer = state.rainbowQueue > 0 ? 0.45 : 2.4 + Math.random() * 2.0;
         } else {
@@ -1135,16 +1237,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
             arr[s * 3 + 1] = Math.sin(angle) * radius;
           }
           pos.needsUpdate = true;
-          if (item.userData.rainbow) {
-            halo.material.color.setHSL((t * 0.6 + item.position.x * 0.05) % 1, 1, 0.5);
-          }
         }
         if (isShipThroughRing(item)) collect(item, i);
         else if (item.position.z > 14) {
           if (halo && halo.geometry) halo.geometry.dispose();
           if (item.userData.rainbow) {
             const r = item.children[0];
-            if (r && r.material) r.material.dispose();
+            if (r) disposeRenderable(r);
             if (halo && halo.material) halo.material.dispose();
           }
           scene.remove(item);
@@ -1223,13 +1322,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         state.boost += ((boosting ? 1 : 0) - state.boost) * Math.min(1, dt * 7);
 
         state.rainbowTimer = Math.max(0, state.rainbowTimer - dt);
-        const rb = Math.min(1, state.rainbowTimer / 0.6);
+        const rb = Math.min(1, state.rainbowTimer / 8);
         const b = state.boost;
         const tmpRainbow = new THREE.Color();
         const hueBase = (clock.elapsedTime * 0.35) % 1;
         function applyRainbow(target, hueOffset) {
           if (rb <= 0) return;
-          tmpRainbow.setHSL((hueBase + hueOffset) % 1, 1.0, 0.5);
+          tmpRainbow.setHSL((hueBase + hueOffset) % 1, 1.0, 0.56);
           target.lerp(tmpRainbow, rb);
         }
         bodyMat.color.lerpColors(colorNormal.body, colorBoost.body, b);
@@ -1294,13 +1393,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         shipShadow.position.set(ship.position.x, ground.position.y + 0.06, ship.position.z);
         const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
         shipShadow.scale.set(shadowSize * (1 + state.boost * 0.4), shadowSize, 1);
-        const rainbowMul = state.rainbowTimer > 0 ? 3 : 1;
-        const trailTarget = Math.min(TRAIL_MAX * rainbowMul, Math.floor(state.boostFuel * TRAIL_PER_RING * rainbowMul));
+        const trailTarget = Math.min(TRAIL_MAX, Math.floor(state.boostFuel * TRAIL_PER_RING));
         let aliveTrail = 0;
         for (const p of particles) if (p.userData.trail) aliveTrail += 1;
         const deficit = trailTarget - aliveTrail;
         if (deficit > 0) {
-          const toSpawn = Math.min(deficit, rainbowMul > 1 ? 12 : 6);
+          const toSpawn = Math.min(deficit, 6);
           for (let s = 0; s < toSpawn; s += 1) spawnOneTrail();
         } else if (deficit < 0) {
           let toShorten = -deficit;
@@ -1411,4 +1509,3 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     updateHud();
     animate();
-
