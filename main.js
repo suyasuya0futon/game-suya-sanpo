@@ -889,16 +889,33 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     scene.add(ship);
 
     const shadowTexture = (() => {
-      const size = 128;
+      const size = 256;
       const cv = document.createElement("canvas");
       cv.width = cv.height = size;
       const ctx = cv.getContext("2d");
-      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-      grad.addColorStop(0.0, "rgba(0,0,0,0.62)");
-      grad.addColorStop(0.4, "rgba(0,0,0,0.28)");
-      grad.addColorStop(1.0, "rgba(0,0,0,0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, size, size);
+      ctx.clearRect(0, 0, size, size);
+      ctx.filter = "blur(32px)";
+      const cx = size / 2;
+      const cy = size / 2;
+      ctx.fillStyle = "rgba(100, 100, 100, 0.6)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + size * 0.04, size * 0.075, size * 0.30, 0, 0, Math.PI * 2);
+      ctx.fill();
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(cx + side * size * 0.04, cy - size * 0.10);
+        ctx.quadraticCurveTo(
+          cx + side * size * 0.30, cy - size * 0.02,
+          cx + side * size * 0.46, cy + size * 0.32
+        );
+        ctx.lineTo(cx + side * size * 0.34, cy + size * 0.38);
+        ctx.quadraticCurveTo(
+          cx + side * size * 0.18, cy + size * 0.16,
+          cx + side * size * 0.05, cy + size * 0.06
+        );
+        ctx.closePath();
+        ctx.fill();
+      }
       return new THREE.CanvasTexture(cv);
     })();
     const shipShadow = new THREE.Mesh(
@@ -1649,7 +1666,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         shipShadow.material.opacity = 0.65 * shadowVisibility;
         shipShadow.position.set(ship.position.x, ground.position.y + 0.06, ship.position.z);
         const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
-        shipShadow.scale.set(shadowSize * (1 + state.boost * 0.4), shadowSize, 1);
+        shipShadow.scale.set(shadowSize * 1.6 * (1 + state.boost * 0.4), shadowSize, 1);
         const baseTrailTarget = Math.floor(state.boostFuel * tuning.TRAIL_PER_BOOST_SECOND);
         const trailTarget = Math.min(tuning.TRAIL_MAX, baseTrailTarget);
         let aliveTrail = 0;
