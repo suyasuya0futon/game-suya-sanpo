@@ -273,7 +273,7 @@
       position: fixed;
       inset: auto 16px 18px 16px;
       display: none;
-      justify-content: space-between;
+      justify-content: flex-start;
       pointer-events: none;
     }
 
@@ -305,14 +305,21 @@
     }
 
     .boost {
-      align-self: end;
-      width: 82px;
-      height: 82px;
-      border-radius: 50%;
-      color: rgba(255, 255, 255, 0.88);
+      position: fixed;
+      right: 78px;
+      bottom: 12px;
+      width: min(154px, 38vw);
+      height: 58px;
+      border-radius: 999px;
+      color: rgba(255, 255, 255, 0.86);
       background: rgba(255, 255, 255, 0.08);
-      font-weight: 900;
+      font: 700 14px/1 "Noto Sans", Arial, sans-serif;
+      letter-spacing: 0.08em;
+      text-align: center;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .flash {
