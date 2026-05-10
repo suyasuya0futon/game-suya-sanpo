@@ -676,7 +676,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const cy = size / 2;
       ctx.clearRect(0, 0, size, size);
       ctx.globalCompositeOperation = "lighter";
-      ctx.filter = "blur(3px)";
+      ctx.filter = "blur(2px)";
 
       const hGrad = ctx.createLinearGradient(0, cy, size, cy);
       hGrad.addColorStop(0, "rgba(255,255,255,0)");
@@ -978,7 +978,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const sparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
       color: 0xffd84d,
-      size: 1.8,
+      size: tuning.SPARKLE_SIZE,
       transparent: true,
       opacity: 0.55,
       depthWrite: false,
@@ -990,7 +990,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const rainbowSparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
       color: 0xffffff,
-      size: 2.15,
+      size: tuning.RAINBOW_SPARKLE_SIZE,
       transparent: true,
       opacity: 0.72,
       depthWrite: false,
