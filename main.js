@@ -451,8 +451,8 @@
         osc.start(when);
         osc.stop(when + dur + 0.02);
       }
-      beep(start, 110, 0.12);
-      beep(start + 0.16, 110, 0.16);
+      beep(start, 70, 0.12);
+      beep(start + 0.16, 70, 0.16);
     }
 
     function playEmptyBoostOnce() {
@@ -1157,9 +1157,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       sleeve2: new THREE.Color(0xff9a28)
     };
     const colorCrashed = {
-      body: new THREE.Color(0xc9d2dc),
-      bodyEmissive: new THREE.Color(0x3c5268),
-      sleeve: new THREE.Color(0xdce7f1)
+      body: new THREE.Color(0xffffff),
+      bodyEmissive: new THREE.Color(0x6a6a6a),
+      sleeve: new THREE.Color(0x6a6a6a),
+      halo: new THREE.Color(0x6a6a6a)
     };
 
     function setShipCrashed(crashed) {
@@ -1171,6 +1172,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       glow.material.opacity = crashed ? 0.16 : 1.0;
       coreLight.material.opacity = crashed ? 0.28 : 0.95;
       halo.material.opacity = crashed ? 0.08 : 0.2;
+      if (crashed) halo.material.color.copy(colorCrashed.halo);
       engine.material.opacity = crashed ? 0 : 1.0;
       engineHalo.material.opacity = crashed ? 0 : 0.7;
       shipLight.intensity = crashed ? 0.15 : 2.6;
@@ -1428,7 +1430,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       item.userData.collected = true;
       state.rings += 1;
       const isRainbow = item.userData.rainbow;
-      const boostMul = state.boost > 0.5 ? 2 : 1;
+      const boostMul = state.boost > 0.5 ? 3 : 1;
       state.score += Math.floor(tuning.BOOST_FUEL_PER_RING * tuning.TRAIL_PER_BOOST_SECOND * (isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1) * boostMul);
       const rewardMultiplier = isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1;
       state.boostFuel += tuning.BOOST_FUEL_PER_RING * rewardMultiplier;
