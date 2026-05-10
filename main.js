@@ -437,10 +437,31 @@
       tick.stop(start + 0.008);
     }
 
+    function emptyBoostBuzz() {
+      if (state.muted || audioCtx.state !== "running") return;
+      const start = audioCtx.currentTime;
+      function beep(when, freq, dur) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "square";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, when);
+        gain.gain.linearRampToValueAtTime(0.022, when + 0.012);
+        gain.gain.linearRampToValueAtTime(0.02, when + dur - 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(when);
+        osc.stop(when + dur + 0.02);
+      }
+      beep(start, 110, 0.12);
+      beep(start + 0.16, 110, 0.16);
+    }
+
     function playEmptyBoostOnce() {
       if (state.boostEmptyLatched) return;
       state.boostEmptyLatched = true;
-      emptyBoostClick();
+      emptyBoostBuzz();
     }
 
     const ambient = new THREE.HemisphereLight(0xd7c6c5, 0x171f46, 1.45);
