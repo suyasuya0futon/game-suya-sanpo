@@ -1222,18 +1222,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (!state.lastRing) state.lastRing = { x: 0, y: state.running ? ship.position.y : 28 };
       let nextX, nextY;
       if (isRainbow) {
-        const idx = opts.idx ?? 0;
-        nextX = THREE.MathUtils.clamp(state.lastRing.x + Math.cos(idx * 0.9) * 1.5, -10, 10);
-        nextY = THREE.MathUtils.clamp(state.lastRing.y + Math.sin(idx * 0.9) * 1.4, -32, 86);
+        nextX = state.lastRing.x;
+        nextY = state.lastRing.y;
       } else {
-        nextX = THREE.MathUtils.clamp(state.lastRing.x + (Math.random() - 0.5) * 8, -10, 10);
+        nextX = THREE.MathUtils.clamp(state.lastRing.x + (Math.random() - 0.5) * tuning.PICKUP_X_RANDOM * 2, -10, 10);
         const r = Math.random();
         if (r < 0.18) {
           nextY = -32 + Math.random() * 14;
         } else if (r < 0.32) {
           nextY = 55 + Math.random() * 30;
         } else {
-          nextY = THREE.MathUtils.clamp(state.lastRing.y + (Math.random() - 0.5) * 16, -32, 88);
+          nextY = THREE.MathUtils.clamp(state.lastRing.y + (Math.random() - 0.5) * tuning.PICKUP_Y_RANDOM * 2, -32, 88);
         }
       }
       state.lastRing.x = nextX;
