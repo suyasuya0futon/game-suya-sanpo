@@ -533,6 +533,7 @@
     const ground = new THREE.Group();
     ground.position.set(0, -36, -115);
     scene.add(ground);
+    const islandFootprints = [];
 
     const land = new THREE.Mesh(
       new THREE.CircleGeometry(80, 96),
@@ -542,6 +543,7 @@
     land.scale.set(1.6, 0.95, 1);
     land.position.set(-20, 0.05, -4);
     ground.add(land);
+    islandFootprints.push({ x: -20, z: -4, rx: 80 * 1.6, rz: 80 * 0.95 });
 
 const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const forestMats = forestPalette.map((c) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.78, depthWrite: false }));
@@ -576,6 +578,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     forestCarpet.scale.set(1.6, 0.9, 1);
     forestCarpet.position.set(-58, 0.12, -8);
     ground.add(forestCarpet);
+    islandFootprints.push({ x: -58, z: -8, rx: 54 * 1.6, rz: 54 * 0.9 });
     for (let i = 0; i < 160; i += 1) {
       placeTree(-104 + Math.random() * 92, -56 + Math.random() * 102);
     }
@@ -592,6 +595,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     cityPlaza.scale.set(1.4, 1.0, 1);
     cityPlaza.position.set(28, 0.12, -12);
     ground.add(cityPlaza);
+    islandFootprints.push({ x: 28, z: -12, rx: 34 * 1.4, rz: 34 * 1.0 });
     for (let i = 0; i < 56; i += 1) {
       const isSpire = Math.random() < 0.18;
       const w = isSpire ? 1.6 + Math.random() * 1.4 : 2.5 + Math.random() * 4;
@@ -1663,7 +1667,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
         const shadowAlt = ship.position.y - ground.position.y;
         const shadowVisibility = 1 - THREE.MathUtils.smoothstep(shadowAlt, 4, 45);
-        shipShadow.material.opacity = 0.65 * shadowVisibility;
+        const lx = ship.position.x - ground.position.x;
+        const lz = ship.position.z - ground.position.z;
+        let coverage = 0;
+        for (const f of islandFootprints) {
+          const dx = (lx - f.x) / f.rx;
+          const dz = (lz - f.z) / f.rz;
+          const r = Math.sqrt(dx * dx + dz * dz);
+          const c = 1 - THREE.MathUtils.smoothstep(r, 0.88, 1.0);
+          if (c > coverage) coverage = c;
+        }
+        shipShadow.material.opacity = 0.65 * shadowVisibility * coverage;
         shipShadow.position.set(ship.position.x, ground.position.y + 0.06, ship.position.z);
         const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
         shipShadow.scale.set(shadowSize * 1.6 * (1 + state.boost * 0.4), shadowSize, 1);
