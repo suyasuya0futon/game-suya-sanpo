@@ -1430,7 +1430,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       for (const item of groundObjects) {
         item.position.z += forward * 0.4;
-        if (item.position.z > 80) item.position.z -= tuning.GROUND_WRAP_DISTANCE;
+        if (item.position.z > 120) item.position.z -= tuning.GROUND_WRAP_DISTANCE;
         const fadeMaterials = item.userData.fadeMaterials;
         if (fadeMaterials) {
           const z = item.position.z;
@@ -1506,7 +1506,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           pos.needsUpdate = true;
         }
         if (isShipThroughRing(item)) collect(item, i);
-        else if (item.position.z > 14) {
+        else if (item.position.z > 36) {
           if (halo && halo.geometry) halo.geometry.dispose();
           const r = item.children[0];
           if (item.userData.rainbow) {
