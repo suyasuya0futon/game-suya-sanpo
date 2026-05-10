@@ -667,6 +667,23 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       clouds.push(cloud);
     }
 
+    const softGlowTexture = (() => {
+      const size = 128;
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = size;
+      const ctx = cv.getContext("2d");
+      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      grad.addColorStop(0.0, "rgba(255,255,255,0.55)");
+      grad.addColorStop(0.18, "rgba(255,255,255,0.32)");
+      grad.addColorStop(0.45, "rgba(255,255,255,0.12)");
+      grad.addColorStop(1.0, "rgba(255,255,255,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    })();
+
     const sparkleTexture = (() => {
       const size = 128;
       const cv = document.createElement("canvas");
@@ -803,7 +820,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     body.add(prism);
 
     const coreLight = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: sparkleTexture,
+      map: softGlowTexture,
       color: 0x9fd4ff,
       transparent: true,
       opacity: 0.95,
@@ -816,7 +833,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     ship.add(body);
 
     const glow = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: sparkleTexture,
+      map: softGlowTexture,
       color: 0x7fc2ff,
       transparent: true,
       opacity: 1.0,
@@ -884,7 +901,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     ship.add(sleeveL, sleeveR);
 
     const engine = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: sparkleTexture,
+      map: softGlowTexture,
       color: 0xffffff,
       transparent: true,
       opacity: 1.0,
@@ -899,7 +916,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     ship.add(engine);
 
     const engineHalo = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: sparkleTexture,
+      map: softGlowTexture,
       color: 0x4f9bff,
       transparent: true,
       opacity: 0.7,
@@ -1666,7 +1683,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         ship.rotation.x += ((input.y * 0.22) - ship.rotation.x) * dt * 6;
         ship.rotation.y = Math.sin(clock.elapsedTime * 4.8) * 0.035;
         const pulse = 1 + Math.sin(clock.elapsedTime * 9) * 0.08;
-        glow.scale.set(5.6 * pulse, 4.0 * pulse, 1);
+        const boostExpand = 1 + b * (1.6 + rb * 0.8);
+        glow.scale.set(5.6 * pulse * boostExpand, 4.0 * pulse * boostExpand, 1);
         glow.material.opacity = Math.min(1, 1.0 + b * 0.2);
         halo.scale.setScalar(1 + Math.sin(clock.elapsedTime * 2.2) * 0.08);
         halo.rotation.z += dt * (0.22 + b * 0.32);
