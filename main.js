@@ -1462,29 +1462,38 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
         shipShadow.scale.set(shadowSize * (1 + state.boost * 0.4), shadowSize, 1);
         const baseTrailTarget = Math.floor(state.boostFuel * TRAIL_PER_BOOST_SECOND);
-        const trailTarget = Math.min(TRAIL_MAX, baseTrailTarget * (boosting ? BOOST_TRAIL_MULTIPLIER : 1));
+        const trailTarget = Math.min(TRAIL_MAX, baseTrailTarget);
         let aliveTrail = 0;
         for (const p of particles) if (p.userData.trail) aliveTrail += 1;
-        const deficit = trailTarget - aliveTrail;
-        if (deficit > 0) {
-          const spawnRate = TRAIL_SPAWN_RATE * (boosting ? BOOST_TRAIL_MULTIPLIER : 1);
-          state.trailSpawnCarry += dt * spawnRate;
-          const toSpawn = Math.min(deficit, Math.floor(state.trailSpawnCarry));
+        if (boosting) {
+          state.trailSpawnCarry += dt * TRAIL_SPAWN_RATE * BOOST_TRAIL_MULTIPLIER;
+          const room = Math.max(0, TRAIL_MAX - aliveTrail);
+          const toSpawn = Math.min(room, Math.floor(state.trailSpawnCarry));
           state.trailSpawnCarry -= toSpawn;
-          for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(boosting ? Math.max(0.75, state.boost) : state.boost);
-        } else if (deficit < 0) {
-          state.trailSpawnCarry = 0;
-          let toShorten = -deficit;
-          for (let i = 0; i < particles.length && toShorten > 0; i += 1) {
-            const p = particles[i];
-            if (p.userData.trail && p.userData.life > 0.35) {
-              p.userData.life = 0.35;
-              p.userData.maxLife = 0.35;
-              toShorten -= 1;
-            }
-          }
-        } else {
           state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
+          for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(Math.max(0.75, state.boost));
+        } else {
+          const deficit = trailTarget - aliveTrail;
+          if (deficit > 0) {
+            state.trailSpawnCarry += dt * TRAIL_SPAWN_RATE;
+            const toSpawn = Math.min(deficit, Math.floor(state.trailSpawnCarry));
+            state.trailSpawnCarry -= toSpawn;
+            state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
+            for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(state.boost);
+          } else if (deficit < 0) {
+            state.trailSpawnCarry = 0;
+            let toShorten = -deficit;
+            for (let i = 0; i < particles.length && toShorten > 0; i += 1) {
+              const p = particles[i];
+              if (p.userData.trail && p.userData.life > 0.35) {
+                p.userData.life = 0.35;
+                p.userData.maxLife = 0.35;
+                toShorten -= 1;
+              }
+            }
+          } else {
+            state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
+          }
         }
 
         camera.position.x += (ship.position.x * 0.42 - camera.position.x) * dt * 2.4;
