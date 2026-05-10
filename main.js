@@ -1098,16 +1098,20 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const pickup = new THREE.Group();
       const isRainbow = !!opts.rainbow;
       const hue = opts.hue ?? 0;
-      let ringMat = pickupMat;
-      let haloMat = sparkleMaterial;
+      let ringMat;
+      let haloMat;
       if (isRainbow) {
         const tint = new THREE.Color().setHSL(hue, 1.0, 0.58);
         haloMat = rainbowSparkleMaterial.clone();
         haloMat.color.set(0xffffff).lerp(tint, 0.92);
+      } else {
+        ringMat = pickupMat.clone();
+        ringMat.transparent = true;
+        haloMat = sparkleMaterial.clone();
       }
       const halo = isRainbow
         ? createSparkleRing(tuning.RAINBOW_SPARKLE_COUNT, haloMat)
-        : createSparkleRing();
+        : createSparkleRing(tuning.SPARKLE_COUNT, haloMat);
       const ring = isRainbow ? createRainbowPickupRing(hue) : new THREE.Mesh(pickupGeo, ringMat);
       const lightColor = isRainbow ? 0xffffff : 0xffd35a;
       const ringLight = new THREE.PointLight(lightColor, isRainbow ? 3.5 : 2.6, 18);
@@ -1142,6 +1146,16 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       pickup.userData.value = 100;
       pickup.userData.innerRadius = getPickupPassRadius(isRainbow);
       pickup.userData.rainbow = isRainbow;
+      const fadeMaterials = [];
+      pickup.traverse((child) => {
+        if (child.material) {
+          const m = child.material;
+          m.transparent = true;
+          m.userData.baseOpacity = m.opacity;
+          fadeMaterials.push(m);
+        }
+      });
+      pickup.userData.fadeMaterials = fadeMaterials;
       scene.add(pickup);
       pickups.push(pickup);
     }
@@ -1338,8 +1352,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (halo && halo.geometry) halo.geometry.dispose();
       if (isRainbow) {
         if (ring) disposeRenderable(ring);
-        if (halo && halo.material) halo.material.dispose();
+      } else if (ring && ring.material) {
+        ring.material.dispose();
       }
+      if (halo && halo.material) halo.material.dispose();
       scene.remove(item);
       pickups.splice(index, 1);
     }
@@ -1410,6 +1426,21 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         item.position.z += forward;
         item.rotation.z += dt * 0.8;
         item.position.y += Math.sin(clock.elapsedTime * 2.2 + item.position.x) * dt * 0.42;
+        const fadeMaterials = item.userData.fadeMaterials;
+        if (fadeMaterials) {
+          const z = item.position.z;
+          let factor;
+          if (z >= tuning.PICKUP_FADE_NEAR_Z) factor = 1;
+          else if (z <= tuning.PICKUP_FADE_FAR_Z) factor = tuning.PICKUP_FADE_MIN_OPACITY;
+          else {
+            const t = (z - tuning.PICKUP_FADE_FAR_Z) / (tuning.PICKUP_FADE_NEAR_Z - tuning.PICKUP_FADE_FAR_Z);
+            factor = THREE.MathUtils.lerp(tuning.PICKUP_FADE_MIN_OPACITY, 1, t);
+          }
+          for (let m = 0; m < fadeMaterials.length; m += 1) {
+            const mat = fadeMaterials[m];
+            mat.opacity = mat.userData.baseOpacity * factor;
+          }
+        }
         const halo = item.children[1];
         if (halo && halo.isPoints) {
           const t = clock.elapsedTime;
@@ -1428,11 +1459,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         if (isShipThroughRing(item)) collect(item, i);
         else if (item.position.z > 14) {
           if (halo && halo.geometry) halo.geometry.dispose();
+          const r = item.children[0];
           if (item.userData.rainbow) {
-            const r = item.children[0];
             if (r) disposeRenderable(r);
-            if (halo && halo.material) halo.material.dispose();
+          } else if (r && r.material) {
+            r.material.dispose();
           }
+          if (halo && halo.material) halo.material.dispose();
           scene.remove(item);
           pickups.splice(i, 1);
           state.combo = Math.max(1, state.combo - 1);
