@@ -1558,7 +1558,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         ship.position.y = tuning.ATMOSPHERE_SPARK_START_Y - 8;
         return;
       }
-      endGame("？", "何かに衝突しました。");
+      endGame("", "天井に衝突しました。");
     }
 
     function updateAtmosphereDanger(dt) {
