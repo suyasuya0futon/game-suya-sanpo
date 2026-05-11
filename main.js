@@ -165,7 +165,6 @@
       muted: false,
       rings: 0,
       ended: false,
-      crashed: false,
       crashCameraTime: 0,
       crashCameraDuration: 2.2,
       crashCameraActive: false,
@@ -885,41 +884,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     halo.position.z = 0.08;
     ship.add(halo);
 
-    const angelHalo = new THREE.Group();
-    const angelRing = new THREE.Mesh(
-      new THREE.TorusGeometry(1.48, 0.055, 14, 128),
-      new THREE.MeshBasicMaterial({
-        color: 0xfff0c8,
-        transparent: true,
-        opacity: 0.92,
-        depthWrite: false,
-        depthTest: false,
-        fog: false,
-        blending: THREE.AdditiveBlending
-      })
-    );
-    angelRing.rotation.x = Math.PI / 2;
-    angelRing.renderOrder = 8;
-    const angelGlow = new THREE.Mesh(
-      new THREE.RingGeometry(1.2, 1.86, 128),
-      new THREE.MeshBasicMaterial({
-        color: 0xffe6b0,
-        transparent: true,
-        opacity: 0.2,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-        depthTest: false,
-        fog: false,
-        blending: THREE.AdditiveBlending
-      })
-    );
-    angelGlow.rotation.x = Math.PI / 2;
-    angelGlow.renderOrder = 7;
-    angelHalo.add(angelGlow, angelRing);
-    angelHalo.position.set(0, 1.55, 0.02);
-    angelHalo.visible = false;
-    ship.add(angelHalo);
-
     const sleeveL = createSleeve(-1);
     const sleeveR = createSleeve(1);
     sleeveL.rotation.z = 0.18;
@@ -1201,34 +1165,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       sleeve1: new THREE.Color(0xffd24a),
       sleeve2: new THREE.Color(0xff9a28)
     };
-    const colorCrashed = {
-      body: new THREE.Color(0xffffff),
-      bodyEmissive: new THREE.Color(0x6a6a6a),
-      sleeve: new THREE.Color(0x6a6a6a),
-      halo: new THREE.Color(0x6a6a6a)
-    };
-
-    function setShipCrashed(crashed) {
-      state.crashed = crashed;
-      angelHalo.visible = crashed;
-      bodyMat.color.copy(crashed ? colorCrashed.body : colorNormal.body);
-      bodyMat.emissive.copy(crashed ? colorCrashed.bodyEmissive : colorNormal.bodyEmissive);
-      bodyMat.emissiveIntensity = crashed ? 0.36 : 2.1;
-      glow.material.opacity = crashed ? 0.16 : 1.0;
-      coreLight.material.opacity = crashed ? 0.28 : 0.95;
-      halo.material.opacity = crashed ? 0.08 : 0.2;
-      if (crashed) halo.material.color.copy(colorCrashed.halo);
-      engine.material.opacity = crashed ? 0 : 1.0;
-      engineHalo.material.opacity = crashed ? 0 : 0.7;
-      shipLight.intensity = crashed ? 0.15 : 2.6;
-      for (const sleeve of [sleeveL, sleeveR]) {
-        sleeve.children.forEach((cloth, index) => {
-          cloth.material.color.copy(crashed ? colorCrashed.sleeve : colorNormal[`sleeve${index}`]);
-          cloth.material.opacity = crashed ? 0.14 : 0.26 - index * 0.045;
-        });
-      }
-    }
-
     function resetObjects() {
       for (const item of [...pickups, ...hazards, ...particles]) {
         scene.remove(item);
@@ -1424,7 +1360,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.crashCameraTime = 0;
       state.crashCameraActive = false;
       camera.up.set(0, 1, 0);
-      setShipCrashed(false);
       menu.classList.remove("is-result");
       ship.position.set(0, 26, 7);
       ship.rotation.set(0, 0, 0);
@@ -1436,7 +1371,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.running = false;
       stopBgm();
       state.ended = true;
-      setShipCrashed(true);
       menu.hidden = false;
       menu.classList.add("is-result");
       const h1 = menu.querySelector("h1");
