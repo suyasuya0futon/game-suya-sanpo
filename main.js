@@ -719,18 +719,21 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     for (let i = 0; i < 36; i += 1) {
+      const baseOpacity = 0.36 + Math.random() * 0.34;
       const cloud = new THREE.Mesh(
         new THREE.PlaneGeometry(18 + Math.random() * 30, 6 + Math.random() * 12),
         new THREE.MeshBasicMaterial({
           map: createCloudTexture(),
           transparent: true,
-          opacity: 0.36 + Math.random() * 0.34,
-          depthWrite: false
+          opacity: baseOpacity,
+          depthWrite: false,
+          fog: false
         })
       );
       cloud.position.set((Math.random() - 0.5) * 74, 8 + Math.random() * 16, -12 - i * 9 - Math.random() * 18);
       cloud.rotation.z = (Math.random() - 0.5) * 0.12;
       cloud.userData.speed = 0.04 + Math.random() * 0.08;
+      cloud.userData.baseOpacity = baseOpacity;
       scene.add(cloud);
       rails.push(cloud);
       clouds.push(cloud);
@@ -1615,7 +1618,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
       for (const item of rails) {
         item.position.z += forward;
-        if (item.position.z > 18) item.position.z -= 256;
+        if (item.position.z > 18) item.position.z -= tuning.CLOUD_WRAP_DISTANCE;
       }
       for (const item of groundObjects) {
         item.position.z += forward * 0.4;
@@ -2027,6 +2030,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
       updateEngineAudio();
       updateBgmAudio();
+      for (const cloud of clouds) {
+        if (cloud.userData.baseOpacity === undefined) continue;
+        const z = cloud.position.z;
+        let factor;
+        if (z >= tuning.CLOUD_FADE_NEAR_Z) factor = 1;
+        else if (z <= tuning.CLOUD_FADE_FAR_Z) factor = tuning.CLOUD_FADE_MIN_OPACITY;
+        else {
+          const t = (z - tuning.CLOUD_FADE_FAR_Z) / (tuning.CLOUD_FADE_NEAR_Z - tuning.CLOUD_FADE_FAR_Z);
+          factor = THREE.MathUtils.lerp(tuning.CLOUD_FADE_MIN_OPACITY, 1, t);
+        }
+        cloud.material.opacity = cloud.userData.baseOpacity * factor;
+      }
       renderer.render(scene, camera);
     }
 
