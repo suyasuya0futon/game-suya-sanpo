@@ -1805,7 +1805,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           item.position.z -= tuning.GROUND_WRAP_DISTANCE;
           state.loopCount += 1;
           updateLoopDisplay();
-          const snowChance = state.debugMode ? 0.5 : 0.05;
+          const snowChance = state.debugMode ? 0.5 : 0.1;
           applySnowMode(Math.random() < snowChance);
         }
         const fadeMaterials = item.userData.fadeMaterials;
