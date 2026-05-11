@@ -516,11 +516,11 @@
 
     const starGeo = new THREE.BufferGeometry();
     const starPositions = [];
-    for (let i = 0; i < 620; i += 1) {
+    for (let i = 0; i < 900; i += 1) {
       starPositions.push(
-        (Math.random() - 0.5) * 240,
-        24 + Math.random() * 130,
-        -35 - Math.random() * 220
+        (Math.random() - 0.5) * 260,
+        24 + Math.random() * 500,
+        -35 - Math.random() * 240
       );
     }
     starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starPositions, 3));
