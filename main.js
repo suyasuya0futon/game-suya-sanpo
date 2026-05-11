@@ -1578,7 +1578,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       );
       state.atmosphereSparkCarry += sparkRate * dt;
       while (state.atmosphereSparkCarry >= 1) {
-        spawnAtmosphereSpark(0.65 + danger * 0.75);
+        spawnAtmosphereSpark(1);
         state.atmosphereSparkCarry -= 1;
       }
       if (ship.position.y >= tuning.ATMOSPHERE_EXPLODE_Y) {
