@@ -209,6 +209,7 @@
       rainbowQueue: 0,
       muted: false,
       debugMode: tuning.DEBUG_MODE,
+      snow: false,
       rings: 0,
       ended: false,
       crashCameraTime: 0,
@@ -390,13 +391,20 @@
     let loopBuildingMaterial = null;
     const LOOP_BUILDING_NORMAL_COLOR = 0x26304e;
     const LOOP_BUILDING_DEBUG_COLOR = 0xff3333;
+    const LOOP_BUILDING_SNOW_COLOR = 0xd8dde8;
+
+    function refreshLoopBuildingColor() {
+      if (!loopBuildingMaterial) return;
+      const hex = state.snow ? LOOP_BUILDING_SNOW_COLOR
+        : state.debugMode ? LOOP_BUILDING_DEBUG_COLOR
+        : LOOP_BUILDING_NORMAL_COLOR;
+      loopBuildingMaterial.color.setHex(hex);
+    }
 
     function setDebugMode(enabled) {
       state.debugMode = enabled;
       updateHud();
-      if (loopBuildingMaterial) {
-        loopBuildingMaterial.color.setHex(enabled ? LOOP_BUILDING_DEBUG_COLOR : LOOP_BUILDING_NORMAL_COLOR);
-      }
+      refreshLoopBuildingColor();
     }
     setDebugMode(state.debugMode);
 
@@ -662,6 +670,7 @@
     islandFootprints.push({ x: -20, z: -4, rx: 80 * 1.6, rz: 80 * 0.95 });
 
 const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
+    const forestSnowPalette = [0xdfe6e2, 0xe6ece8, 0xd4dcd7, 0xeef2f0, 0xc9d2cc];
     const forestMats = forestPalette.map((c) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.78, depthWrite: false }));
     const coneGeoA = new THREE.ConeGeometry(1.0, 3.6, 7);
     const coneGeoB = new THREE.ConeGeometry(0.7, 4.6, 6);
@@ -701,6 +710,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     const cityPalette = [0x26304e, 0x2f3a5c, 0x1d2540, 0x363f63, 0x222b48];
+    const citySnowPalette = [0xd8dde8, 0xe2e6ef, 0xccd2de, 0xeaeef5, 0xc6cdda];
     const cityMats = cityPalette.map((c) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.78, depthWrite: false }));
     const windowMat = new THREE.MeshBasicMaterial({ color: 0xffd98c, transparent: true, opacity: 0.92, depthWrite: false, blending: THREE.AdditiveBlending });
     const windowGeo = new THREE.PlaneGeometry(0.28, 0.34);
@@ -750,6 +760,26 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         beacon.position.set(building.position.x, h + 0.2, building.position.z);
         ground.add(beacon);
       }
+    }
+
+    const SNOW_LAND_COLOR = 0xeaf0ed;
+    const SNOW_FOREST_CARPET_COLOR = 0xdde4e0;
+    const SNOW_CITY_PLAZA_COLOR = 0xc8cfdc;
+    const normalLandHex = land.material.color.getHex();
+    const normalForestCarpetHex = forestCarpet.material.color.getHex();
+    const normalCityPlazaHex = cityPlaza.material.color.getHex();
+    function applySnowMode(enabled) {
+      state.snow = enabled;
+      for (let i = 0; i < forestMats.length; i += 1) {
+        forestMats[i].color.setHex(enabled ? forestSnowPalette[i] : forestPalette[i]);
+      }
+      for (let i = 0; i < cityMats.length; i += 1) {
+        cityMats[i].color.setHex(enabled ? citySnowPalette[i] : cityPalette[i]);
+      }
+      land.material.color.setHex(enabled ? SNOW_LAND_COLOR : normalLandHex);
+      forestCarpet.material.color.setHex(enabled ? SNOW_FOREST_CARPET_COLOR : normalForestCarpetHex);
+      cityPlaza.material.color.setHex(enabled ? SNOW_CITY_PLAZA_COLOR : normalCityPlazaHex);
+      refreshLoopBuildingColor();
     }
 
     const LOOP_DISPLAY_FONT = {
@@ -1560,6 +1590,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.combo = 1;
       state.loopCount = 1;
       updateLoopDisplay();
+      applySnowMode(false);
       state.shield = 100;
       state.time = 9999;
       state.speed = practice ? 14 : 17;
@@ -1759,6 +1790,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           item.position.z -= tuning.GROUND_WRAP_DISTANCE;
           state.loopCount += 1;
           updateLoopDisplay();
+          const snowChance = state.debugMode ? 0.8 : 0.05;
+          applySnowMode(Math.random() < snowChance);
         }
         const fadeMaterials = item.userData.fadeMaterials;
         if (fadeMaterials) {
