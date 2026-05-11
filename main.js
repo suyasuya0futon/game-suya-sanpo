@@ -781,16 +781,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       return tex;
     })();
 
-    const atmosphereSparkGeo = new THREE.BoxGeometry(
-      tuning.ATMOSPHERE_SPARK_SIZE,
-      tuning.ATMOSPHERE_SPARK_SIZE,
-      tuning.ATMOSPHERE_SPARK_SIZE
-    );
-    const atmosphereSparkMaterials = tuning.ATMOSPHERE_SPARK_COLORS.map((color) => new THREE.MeshBasicMaterial({
+    const atmosphereSparkMaterials = tuning.ATMOSPHERE_SPARK_COLORS.map((color) => new THREE.SpriteMaterial({
+      map: softGlowTexture,
       color,
       transparent: true,
       opacity: 0.95,
+      depthTest: false,
       depthWrite: false,
+      fog: false,
       blending: THREE.AdditiveBlending
     }));
 
@@ -1301,18 +1299,24 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function spawnAtmosphereSpark(intensity = 1) {
       const mat = atmosphereSparkMaterials[Math.floor(Math.random() * atmosphereSparkMaterials.length)];
-      const p = new THREE.Mesh(atmosphereSparkGeo, mat);
+      const p = new THREE.Sprite(mat);
       p.position.set(
         ship.position.x + (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPREAD_X,
-        ship.position.y + (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPREAD_Y,
-        ship.position.z + (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPREAD_Z
+        ship.position.y + tuning.ATMOSPHERE_SPARK_OFFSET_Y + (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPREAD_Y,
+        ship.position.z + tuning.ATMOSPHERE_SPARK_OFFSET_Z + (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPREAD_Z
       );
       p.userData.velocity = new THREE.Vector3(
         (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPEED_X * intensity,
         (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPEED_Y * intensity,
-        (2.2 + Math.random() * tuning.ATMOSPHERE_SPARK_SPEED_Z) * intensity
+        (tuning.ATMOSPHERE_SPARK_SPEED_Z + Math.random() * 1.6) * intensity
       );
       p.userData.life = tuning.ATMOSPHERE_SPARK_LIFE_BASE + Math.random() * tuning.ATMOSPHERE_SPARK_LIFE_RANDOM;
+      p.userData.maxLife = p.userData.life;
+      p.userData.atmosphereSpark = true;
+      p.userData.startScale = tuning.ATMOSPHERE_SPARK_SIZE * tuning.ATMOSPHERE_SPARK_SPRITE_START_SCALE;
+      p.userData.endScale = tuning.ATMOSPHERE_SPARK_SIZE * tuning.ATMOSPHERE_SPARK_SPRITE_END_SCALE;
+      p.renderOrder = 5;
+      p.scale.setScalar(p.userData.startScale);
       scene.add(p);
       particles.push(p);
     }
@@ -1742,7 +1746,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       for (let i = particles.length - 1; i >= 0; i -= 1) {
         const p = particles[i];
         p.userData.life -= dt;
-        if (!p.userData.trail) {
+        if (!p.userData.trail && !p.userData.atmosphereSpark) {
           p.userData.velocity.y -= dt * 5.6;
         }
         p.position.addScaledVector(p.userData.velocity, dt);
@@ -1751,6 +1755,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           const age = 1 - t;
           p.material.opacity = t * t * 0.85;
           p.scale.setScalar(p.userData.startScale + age * (p.userData.endScale - p.userData.startScale));
+        } else if (p.userData.atmosphereSpark) {
+          const t = Math.max(0, p.userData.life / p.userData.maxLife);
+          p.scale.setScalar(THREE.MathUtils.lerp(p.userData.endScale, p.userData.startScale, t));
         } else {
           p.scale.setScalar(Math.max(0.05, p.userData.life));
         }
