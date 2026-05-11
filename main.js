@@ -586,9 +586,25 @@
     scene.add(ground);
     const islandFootprints = [];
 
+    const islandEdgeAlphaTex = (() => {
+      const size = 256;
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = size;
+      const ctx = cv.getContext("2d");
+      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      grad.addColorStop(0, "#ffffff");
+      grad.addColorStop(tuning.ISLAND_EDGE_FADE_START, "#ffffff");
+      grad.addColorStop(tuning.ISLAND_EDGE_FADE_END, "#000000");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.NoColorSpace;
+      return tex;
+    })();
+
     const land = new THREE.Mesh(
       new THREE.CircleGeometry(80, 96),
-      new THREE.MeshBasicMaterial({ color: 0x1c3b33, transparent: true, opacity: 0.7, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: 0x1c3b33, transparent: true, opacity: 0.7, depthWrite: false, alphaMap: islandEdgeAlphaTex })
     );
     land.rotation.x = -Math.PI / 2;
     land.scale.set(1.6, 0.95, 1);
@@ -624,7 +640,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
     const forestCarpet = new THREE.Mesh(
       new THREE.CircleGeometry(54, 48),
-      new THREE.MeshBasicMaterial({ color: 0x10261b, transparent: true, opacity: 0.55, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: 0x10261b, transparent: true, opacity: 0.55, depthWrite: false, alphaMap: islandEdgeAlphaTex })
     );
     forestCarpet.rotation.x = -Math.PI / 2;
     forestCarpet.scale.set(1.6, 0.9, 1);
