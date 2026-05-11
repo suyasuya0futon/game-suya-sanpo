@@ -376,17 +376,6 @@
       opacity: 1;
     }
 
-    .space-shade {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0;
-      background:
-        radial-gradient(circle at 50% 28%, rgba(80, 120, 210, 0.05), transparent 30%),
-        linear-gradient(180deg, rgba(0, 2, 12, 0.18) 0%, rgba(0, 2, 12, 0.74) 42%, rgba(0, 0, 0, 1) 100%);
-      transition: opacity 240ms ease;
-    }
-
     @media (max-width: 720px) {
       .hud {
         padding: 12px;

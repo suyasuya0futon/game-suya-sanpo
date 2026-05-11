@@ -11,7 +11,6 @@
     const stick = document.querySelector("#stick");
     const knob = document.querySelector("#knob");
     const touchBoost = document.querySelector("#touchBoost");
-    const spaceShade = document.querySelector("#spaceShade");
 
     function createSkyTexture() {
       const sky = document.createElement("canvas");
@@ -1723,8 +1722,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         skyTexture.userData.drawSky(high);
         lastSkyHigh = high;
       }
-      if (spaceShade) spaceShade.style.opacity = (high * tuning.SKY_SPACE_SHADE_OPACITY).toFixed(3);
-
       if (state.running) {
         state.invulnerable = Math.max(0, state.invulnerable - dt);
         const wantsBoost = keys.has("Space");
