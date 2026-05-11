@@ -782,7 +782,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       new THREE.BoxGeometry(loopBuildingW, loopBuildingH, loopBuildingD),
       loopBuildingMaterial
     );
-    loopBuilding.position.set(28, loopBuildingH / 2, 10);
+    loopBuilding.position.set(28, loopBuildingH / 2, 14);
     loopBuilding.userData.obstacle = true;
     loopBuilding.userData.crashMessage = "建物に衝突しました。";
     loopBuilding.userData.halfSize = { x: loopBuildingW / 2, y: loopBuildingH / 2, z: loopBuildingD / 2 };
@@ -794,15 +794,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const loopStepY = loopBuildingH / (LOOP_DISPLAY_ROWS_TOTAL + 1);
     for (let cx = 0; cx < LOOP_DISPLAY_COLS; cx += 1) {
       loopDisplayWindows.push([]);
-      for (let ry = 0; ry < LOOP_DISPLAY_ROWS_TOTAL; ry += 1) {
+      for (let r = 0; r < 5; r += 1) {
+        const ry = LOOP_DISPLAY_PAD_BOTTOM + r;
         const win = new THREE.Mesh(windowGeo, windowMat);
         win.position.set(
           loopBuilding.position.x - loopBuildingW / 2 + loopStepX * (cx + 1),
           loopStepY * (ry + 1),
           loopBuilding.position.z + loopBuildingD / 2 + 0.02
         );
-        const isDisplayRow = ry >= LOOP_DISPLAY_PAD_BOTTOM && ry < LOOP_DISPLAY_PAD_BOTTOM + 5;
-        if (!isDisplayRow) win.visible = true;
+        win.visible = false;
         ground.add(win);
         loopDisplayWindows[cx].push(win);
       }
@@ -813,7 +813,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const str = loop > 99 ? "!?" : String(loop).padStart(2, "0");
       for (let cx = 0; cx < LOOP_DISPLAY_COLS; cx += 1) {
         for (let r = 0; r < 5; r += 1) {
-          loopDisplayWindows[cx][LOOP_DISPLAY_PAD_BOTTOM + r].visible = false;
+          loopDisplayWindows[cx][r].visible = false;
         }
       }
       for (let i = 0; i < 2; i += 1) {
@@ -823,10 +823,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         for (let r = 0; r < 5; r += 1) {
           for (let c = 0; c < 3; c += 1) {
             if (pattern[r][c] !== "X") continue;
-            const buildingRow = LOOP_DISPLAY_PAD_BOTTOM + (4 - r);
+            const localRow = 4 - r;
             const buildingCol = colOffset + c;
-            if (loopDisplayWindows[buildingCol] && loopDisplayWindows[buildingCol][buildingRow]) {
-              loopDisplayWindows[buildingCol][buildingRow].visible = true;
+            if (loopDisplayWindows[buildingCol]) {
+              loopDisplayWindows[buildingCol][localRow].visible = true;
             }
           }
         }
