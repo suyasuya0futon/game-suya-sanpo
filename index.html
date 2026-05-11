@@ -18,6 +18,7 @@
       <div class="meter">
         <strong id="score">SCORE：00000000</strong>
       </div>
+      <button class="help" id="help" aria-label="遊び方">？</button>
     </section>
 
     <section class="center" id="menu">
@@ -27,8 +28,6 @@
       <div class="actions">
         <button class="primary" id="start">START</button>
       </div>
-
-      <p class="howtoplay">リングをくぐるとブーストの光がたまり、<br>SPACEを押しているあいだ加速します。</p>
     </section>
 
     <section class="bottom">
@@ -43,10 +42,18 @@
 
   <div class="touch" aria-hidden="true">
     <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
-    <button class="boost" id="touchBoost" aria-label="Space boost">SPACE</button>
+    <button class="boost" id="touchBoost" aria-label="Space boost">BOOST</button>
   </div>
 
   <div class="flash" id="flash"></div>
+
+  <div class="help-overlay" id="helpOverlay" hidden>
+    <button class="help help-close" id="helpClose" aria-label="閉じる">×</button>
+    <div class="help-content">
+      <h2>遊び方</h2>
+      <p id="helpContent"></p>
+    </div>
+  </div>
 
   <script type="module" src="./main.js"></script>
 </body>

@@ -11,6 +11,22 @@
     const stick = document.querySelector("#stick");
     const knob = document.querySelector("#knob");
     const touchBoost = document.querySelector("#touchBoost");
+    const helpBtn = document.querySelector("#help");
+    const helpOverlay = document.querySelector("#helpOverlay");
+    const helpClose = document.querySelector("#helpClose");
+
+    document.querySelector("#helpContent").innerHTML = `リングをくぐるとブーストの光がたまり、ブーストを押しているあいだ加速します。リングをくぐると${tuning.NORMAL_RING_SCORE}点、レインボーリングは${tuning.RAINBOW_RING_SCORE}点。ブーストしながらくぐると${tuning.BOOST_SCORE_MULTIPLIER}倍です。`;
+
+    function setHelpOpen(open) {
+      state.paused = open;
+      helpOverlay.hidden = !open;
+    }
+
+    helpBtn.addEventListener("click", () => setHelpOpen(true));
+    helpClose.addEventListener("click", () => setHelpOpen(false));
+    helpOverlay.addEventListener("click", (event) => {
+      if (event.target === helpOverlay) setHelpOpen(false);
+    });
 
     function createSkyTexture() {
       const sky = document.createElement("canvas");
@@ -153,6 +169,7 @@
     const lanes = [-7.5, -4.5, -1.5, 1.5, 4.5, 7.5];
     const state = {
       running: false,
+      paused: false,
       practice: false,
       score: 0,
       combo: 1,
@@ -1818,6 +1835,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function animate() {
       requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.04);
+      if (state.paused) {
+        renderer.render(scene, camera);
+        return;
+      }
       updateInput();
       state.boostEmptyFeedback = Math.max(0, state.boostEmptyFeedback - dt);
       const empty = state.boostEmptyFeedback / 0.4;

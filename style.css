@@ -58,17 +58,24 @@
       position: fixed;
       top: 16px;
       right: 16px;
-      text-align: right;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       pointer-events: none;
-      display: none;
-    }
-
-    body:has(#menu[hidden]) .topbar {
-      display: block;
     }
 
     .meter {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
       text-shadow: 0 2px 12px rgba(2, 8, 24, 0.55);
+      text-align: center;
+      display: none;
+    }
+
+    body:has(#menu[hidden]) .meter {
+      display: block;
     }
 
     .meter span {
@@ -190,30 +197,6 @@
       gap: 10px;
     }
 
-    .howtoplay {
-      position: fixed;
-      left: 50%;
-      bottom: 160px;
-      transform: translateX(-50%);
-      width: min(480px, calc(100vw - 32px));
-      font-family: "Noto Serif JP", serif;
-      max-width: 480px;
-      margin: 0;
-      color: rgba(246, 251, 255, 0.82);
-      font-size: 12px;
-      line-height: 1.85;
-      text-align: center;
-      text-shadow: 0 2px 16px rgba(2, 8, 24, 0.55);
-    }
-
-    .howtoplay small {
-      font-size: inherit;
-    }
-
-    .center.is-result .howtoplay {
-      display: none;
-    }
-
     .primary,
     .ghost {
       font-family: "Noto Sans", Arial, sans-serif;
@@ -312,6 +295,74 @@
     .sound.is-muted:focus-visible {
       border-color: rgba(255, 255, 255, 0.22);
       box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.07);
+    }
+
+    .help {
+      pointer-events: auto;
+      width: 46px;
+      min-width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.38);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      cursor: pointer;
+      outline: none;
+      backdrop-filter: blur(8px);
+      color: rgba(255, 255, 255, 0.82);
+      font: 700 18px/1 "Noto Sans", Arial, sans-serif;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
+      transition: color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .help:focus-visible {
+      border-color: rgba(255, 255, 255, 0.38);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
+    }
+
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(2, 8, 18, 0.72);
+      backdrop-filter: blur(6px);
+      pointer-events: auto;
+      z-index: 100;
+    }
+
+    .help-overlay[hidden] {
+      display: none;
+    }
+
+    .help-close {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+    }
+
+    .help-content {
+      width: min(440px, calc(100vw - 48px));
+      text-shadow: 0 2px 16px rgba(2, 8, 24, 0.65);
+    }
+
+    .help-content h2 {
+      margin: 0 0 12px;
+      font-family: "Noto Serif JP", serif;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+
+    .help-content p {
+      margin: 0;
+      font-family: "Noto Serif JP", serif;
+      font-size: 13px;
+      line-height: 1.85;
+      color: rgba(246, 251, 255, 0.92);
     }
 
     .touch {
