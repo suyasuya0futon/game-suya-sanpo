@@ -1708,6 +1708,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         ship.localToWorld(tip);
         const isRainbow = nearest.userData.rainbow;
         const hueShift = clock.elapsedTime * 0.3;
+        const boostStrength = state.boost;
+        const baseScale = 1 + boostStrength * tuning.GUIDE_BOOST_SCALE_GAIN;
         for (let gi = 0; gi < GUIDE_PARTICLE_COUNT; gi += 1) {
           const t = (gi + 0.5) / GUIDE_PARTICLE_COUNT;
           const child = guideTrail.children[gi];
@@ -1737,6 +1739,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           } else {
             child.material.color.setHex(tuning.GUIDE_COLOR);
           }
+          child.scale.setScalar(baseScale);
         }
         guideDisk.visible = true;
       } else {
