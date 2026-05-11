@@ -178,7 +178,11 @@
     const tempBox = new THREE.Box3();
 
     function altitudeFactor() {
-      return THREE.MathUtils.smoothstep(ship.position.y, 24, 82);
+      return THREE.MathUtils.smoothstep(
+        ship.position.y,
+        tuning.SKY_ALTITUDE_FADE_START_Y,
+        tuning.SKY_ALTITUDE_FADE_END_Y
+      );
     }
 
     const listener = new THREE.AudioListener();
@@ -1698,7 +1702,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       moonDisk.material.opacity = THREE.MathUtils.lerp(0.34, 0.92, high);
       moonGlow.material.opacity = THREE.MathUtils.lerp(0.55, 1, high);
       starMat.opacity = THREE.MathUtils.lerp(0.68, 1, high);
-      if (spaceShade) spaceShade.style.opacity = (high * 0.78).toFixed(3);
+      if (spaceShade) spaceShade.style.opacity = (high * tuning.SKY_SPACE_SHADE_OPACITY).toFixed(3);
 
       if (state.running) {
         state.invulnerable = Math.max(0, state.invulnerable - dt);
@@ -1755,7 +1759,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
         const floatBob = Math.sin(clock.elapsedTime * 1.6 + ship.position.x * 0.08) * dt * 0.55;
         ship.position.x = THREE.MathUtils.clamp(ship.position.x + input.x * dt * 10.5 * boostSpeedFactor, -10.5, 10.5);
-        ship.position.y = THREE.MathUtils.clamp(ship.position.y + input.y * dt * 11.2 * boostSpeedFactor + floatBob, -34, 88);
+        ship.position.y = THREE.MathUtils.clamp(
+          ship.position.y + input.y * dt * 11.2 * boostSpeedFactor + floatBob,
+          tuning.SHIP_MOVE_MIN_Y,
+          tuning.SHIP_MOVE_MAX_Y
+        );
         ship.rotation.z += ((-input.x * 0.48) - ship.rotation.z) * dt * 8;
         ship.rotation.x += ((input.y * 0.22) - ship.rotation.x) * dt * 6;
         ship.rotation.y = Math.sin(clock.elapsedTime * 4.8) * 0.035;
