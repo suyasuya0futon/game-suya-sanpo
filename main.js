@@ -18,17 +18,24 @@
       sky.width = 32;
       sky.height = 512;
       const ctx = sky.getContext("2d");
-      const gradient = ctx.createLinearGradient(0, 0, 0, sky.height);
-      gradient.addColorStop(0, "#01040f");
-      gradient.addColorStop(0.18, "#071033");
-      gradient.addColorStop(0.38, "#1a2a60");
-      gradient.addColorStop(0.62, "#574875");
-      gradient.addColorStop(0.82, "#9d6159");
-      gradient.addColorStop(1, "#d49b72");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, sky.width, sky.height);
       const texture = new THREE.CanvasTexture(sky);
       texture.colorSpace = THREE.SRGBColorSpace;
+
+      function draw(high = 0) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, sky.height);
+        for (let i = 0; i < tuning.SKY_SUNSET_GRADIENT_STOPS.length; i += 1) {
+          const [stop, sunsetColor] = tuning.SKY_SUNSET_GRADIENT_STOPS[i];
+          const spaceColor = tuning.SKY_SPACE_GRADIENT_STOPS[i][1];
+          const color = new THREE.Color(sunsetColor).lerp(new THREE.Color(spaceColor), high);
+          gradient.addColorStop(stop, color.getStyle());
+        }
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, sky.width, sky.height);
+        texture.needsUpdate = true;
+      }
+
+      texture.userData.drawSky = draw;
+      draw(0);
       return texture;
     }
 
@@ -117,7 +124,8 @@
     }
 
     const scene = new THREE.Scene();
-    scene.background = createSkyTexture();
+    const skyTexture = createSkyTexture();
+    scene.background = skyTexture;
     scene.fog = new THREE.FogExp2(0x253056, 0.007);
 
     const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 520);
@@ -134,6 +142,7 @@
     const clock = new THREE.Clock();
     const lowFogColor = new THREE.Color(0x253056);
     const highFogColor = new THREE.Color(0x05091d);
+    let lastSkyHigh = -1;
     const keys = new Set();
     const pickups = [];
     const hazards = [];
@@ -1710,6 +1719,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       moonDisk.material.opacity = THREE.MathUtils.lerp(0.34, 0.92, high);
       moonGlow.material.opacity = THREE.MathUtils.lerp(0.55, 1, high);
       starMat.opacity = THREE.MathUtils.lerp(0.68, 1, high);
+      if (Math.abs(high - lastSkyHigh) > 0.01) {
+        skyTexture.userData.drawSky(high);
+        lastSkyHigh = high;
+      }
       if (spaceShade) spaceShade.style.opacity = (high * tuning.SKY_SPACE_SHADE_OPACITY).toFixed(3);
 
       if (state.running) {
