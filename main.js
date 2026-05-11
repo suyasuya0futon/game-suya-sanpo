@@ -168,6 +168,7 @@
       boostEmptyLatched: false,
       boostEmptyFeedback: 0,
       trailSpawnCarry: 0,
+      atmosphereSparkCarry: 0,
       rainbowTimer: 0,
       rainbowQueue: 0,
       muted: false,
@@ -191,6 +192,14 @@
         ship.position.y,
         tuning.SKY_ALTITUDE_FADE_START_Y,
         tuning.SKY_ALTITUDE_FADE_END_Y
+      );
+    }
+
+    function atmosphereDangerFactor() {
+      return THREE.MathUtils.smoothstep(
+        ship.position.y,
+        tuning.ATMOSPHERE_SPARK_START_Y,
+        tuning.ATMOSPHERE_EXPLODE_Y
       );
     }
 
@@ -772,6 +781,19 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       return tex;
     })();
 
+    const atmosphereSparkGeo = new THREE.BoxGeometry(
+      tuning.ATMOSPHERE_SPARK_SIZE,
+      tuning.ATMOSPHERE_SPARK_SIZE,
+      tuning.ATMOSPHERE_SPARK_SIZE
+    );
+    const atmosphereSparkMaterials = tuning.ATMOSPHERE_SPARK_COLORS.map((color) => new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.95,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    }));
+
     const ship = new THREE.Group();
     const bodyMat = new THREE.MeshStandardMaterial({
       color: 0x6fb0ff,
@@ -1277,6 +1299,24 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     }
 
+    function spawnAtmosphereSpark(intensity = 1) {
+      const mat = atmosphereSparkMaterials[Math.floor(Math.random() * atmosphereSparkMaterials.length)];
+      const p = new THREE.Mesh(atmosphereSparkGeo, mat);
+      p.position.set(
+        ship.position.x + (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPREAD_X,
+        ship.position.y + (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPREAD_Y,
+        ship.position.z + (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPREAD_Z
+      );
+      p.userData.velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPEED_X * intensity,
+        (Math.random() - 0.5) * tuning.ATMOSPHERE_SPARK_SPEED_Y * intensity,
+        (2.2 + Math.random() * tuning.ATMOSPHERE_SPARK_SPEED_Z) * intensity
+      );
+      p.userData.life = tuning.ATMOSPHERE_SPARK_LIFE_BASE + Math.random() * tuning.ATMOSPHERE_SPARK_LIFE_RANDOM;
+      scene.add(p);
+      particles.push(p);
+    }
+
     function burstRing(item, color, count = 24) {
       const isRainbow = item.userData.rainbow;
       const ringRadius = isRainbow ? tuning.RAINBOW_RING_RADIUS : tuning.PICKUP_RING_RADIUS;
@@ -1371,6 +1411,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.boostEmptyLatched = false;
       state.boostEmptyFeedback = 0;
       state.trailSpawnCarry = 0;
+      state.atmosphereSparkCarry = 0;
       state.rainbowTimer = 0;
       state.rainbowQueue = 0;
       state.lastRing = { x: 0, y: 26 };
@@ -1397,14 +1438,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       h1.hidden = !title;
       menu.querySelector(".lead").textContent = detail;
       const resultScoreEl = document.querySelector("#resultScore");
-      if (resultScoreEl) resultScoreEl.textContent = `SCORE：${String(state.score).padStart(8, "0")}`;
+      if (resultScoreEl) resultScoreEl.textContent = `SCORE：${String(state.score).padStart(7, "0")}`;
       startBtn.textContent = "RETRY";
       if (practiceBtn) practiceBtn.textContent = "";
     }
 
     function updateHud() {
-      const label = state.debugMode ? "DEBUG MODE" : "SCORE";
-      scoreEl.textContent = `${label}：${String(state.score).padStart(8, "0")}`;
+      const score = String(state.score).padStart(7, "0");
+      if (state.debugMode) {
+        scoreEl.textContent = `<DEBUG MODE> Y=${Math.round(ship.position.y)}, SCORE：${score}`;
+      } else {
+        scoreEl.textContent = `SCORE：${score}`;
+      }
     }
 
     function updateInput() {
@@ -1491,6 +1536,50 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         return;
       }
       endGame("", message);
+    }
+
+    function atmosphereExplosion() {
+      if (state.invulnerable > 0 || !state.running) return;
+      state.crashCameraTime = 0;
+      state.crashCameraActive = true;
+      state.crashCameraStartPosition.copy(camera.position);
+      state.crashCameraStartTarget.set(ship.position.x * 0.25, ship.position.y + 1.4, -24);
+      burst(ship.position, 0xffa04a, tuning.ATMOSPHERE_EXPLOSION_PARTICLES);
+      burst(ship.position, 0x8cefff, Math.floor(tuning.ATMOSPHERE_EXPLOSION_PARTICLES * 0.4));
+      tone(64, 0.42, "sawtooth", 0.08);
+      flash.classList.add("on");
+      window.setTimeout(() => flash.classList.remove("on"), 280);
+      if (state.debugMode) {
+        state.invulnerable = 0.9;
+        ship.position.y = tuning.ATMOSPHERE_SPARK_START_Y - 8;
+        return;
+      }
+      endGame("", "大気圏で爆発しました。");
+    }
+
+    function updateAtmosphereDanger(dt) {
+      if (!state.running) {
+        state.atmosphereSparkCarry = 0;
+        return;
+      }
+      const danger = atmosphereDangerFactor();
+      if (danger <= 0) {
+        state.atmosphereSparkCarry = 0;
+        return;
+      }
+      const sparkRate = THREE.MathUtils.lerp(
+        tuning.ATMOSPHERE_SPARK_RATE_MIN,
+        tuning.ATMOSPHERE_SPARK_RATE_MAX,
+        danger
+      );
+      state.atmosphereSparkCarry += sparkRate * dt;
+      while (state.atmosphereSparkCarry >= 1) {
+        spawnAtmosphereSpark(0.65 + danger * 0.75);
+        state.atmosphereSparkCarry -= 1;
+      }
+      if (ship.position.y >= tuning.ATMOSPHERE_EXPLODE_Y) {
+        atmosphereExplosion();
+      }
     }
 
     function stepObjects(dt) {
@@ -1783,6 +1872,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           tuning.SHIP_MOVE_MIN_Y,
           tuning.SHIP_MOVE_MAX_Y
         );
+        updateAtmosphereDanger(dt);
+        updateHud();
         ship.rotation.z += ((-input.x * 0.48) - ship.rotation.z) * dt * 8;
         ship.rotation.x += ((input.y * 0.22) - ship.rotation.x) * dt * 6;
         ship.rotation.y = Math.sin(clock.elapsedTime * 4.8) * 0.035;
