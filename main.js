@@ -651,7 +651,7 @@
     grid.position.z = -62;
 
     const ground = new THREE.Group();
-    ground.position.set(0, -36, -115);
+    ground.position.set(0, -36, -400);
     scene.add(ground);
     const islandFootprints = [];
 
@@ -1605,6 +1605,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.loopCount = 1;
       updateLoopDisplay();
       applySnowMode(false);
+      ground.position.z = -400;
       state.shield = 100;
       state.time = 9999;
       state.speed = practice ? 14 : 17;
