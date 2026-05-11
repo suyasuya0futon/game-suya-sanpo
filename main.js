@@ -189,6 +189,7 @@
       paused: false,
       manualPaused: false,
       practice: false,
+      loopCount: 1,
       score: 0,
       combo: 1,
       shield: 100,
@@ -386,9 +387,16 @@
       setSoundEnabled(event.target.checked);
     });
 
+    let loopBuildingMaterial = null;
+    const LOOP_BUILDING_NORMAL_COLOR = 0x26304e;
+    const LOOP_BUILDING_DEBUG_COLOR = 0xff3333;
+
     function setDebugMode(enabled) {
       state.debugMode = enabled;
       updateHud();
+      if (loopBuildingMaterial) {
+        loopBuildingMaterial.color.setHex(enabled ? LOOP_BUILDING_DEBUG_COLOR : LOOP_BUILDING_NORMAL_COLOR);
+      }
     }
     setDebugMode(state.debugMode);
 
@@ -743,6 +751,88 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         ground.add(beacon);
       }
     }
+
+    const LOOP_DISPLAY_FONT = {
+      "0": ["XXX", "X.X", "X.X", "X.X", "XXX"],
+      "1": [".X.", "XX.", ".X.", ".X.", "XXX"],
+      "2": ["XXX", "..X", "XXX", "X..", "XXX"],
+      "3": ["XXX", "..X", ".XX", "..X", "XXX"],
+      "4": ["X.X", "X.X", "XXX", "..X", "..X"],
+      "5": ["XXX", "X..", "XXX", "..X", "XXX"],
+      "6": ["XXX", "X..", "XXX", "X.X", "XXX"],
+      "7": ["XXX", "..X", "..X", "..X", "..X"],
+      "8": ["XXX", "X.X", "XXX", "X.X", "XXX"],
+      "9": ["XXX", "X.X", "XXX", "..X", "XXX"],
+      "!": [".X.", ".X.", ".X.", "...", ".X."],
+      "?": ["XX.", "..X", ".X.", "...", ".X."]
+    };
+    const LOOP_DISPLAY_COLS = 7;
+    const LOOP_DISPLAY_ROWS_TOTAL = 11;
+    const LOOP_DISPLAY_PAD_BOTTOM = 3;
+    const loopBuildingW = 6.6;
+    const loopBuildingH = 12.6;
+    const loopBuildingD = 3.2;
+    loopBuildingMaterial = new THREE.MeshBasicMaterial({
+      color: state.debugMode ? LOOP_BUILDING_DEBUG_COLOR : LOOP_BUILDING_NORMAL_COLOR,
+      transparent: true,
+      opacity: 0.78,
+      depthWrite: false
+    });
+    const loopBuilding = new THREE.Mesh(
+      new THREE.BoxGeometry(loopBuildingW, loopBuildingH, loopBuildingD),
+      loopBuildingMaterial
+    );
+    loopBuilding.position.set(28, loopBuildingH / 2, 10);
+    loopBuilding.userData.obstacle = true;
+    loopBuilding.userData.crashMessage = "建物に衝突しました。";
+    loopBuilding.userData.halfSize = { x: loopBuildingW / 2, y: loopBuildingH / 2, z: loopBuildingD / 2 };
+    ground.add(loopBuilding);
+    obstacles.push(loopBuilding);
+
+    const loopDisplayWindows = [];
+    const loopStepX = loopBuildingW / (LOOP_DISPLAY_COLS + 1);
+    const loopStepY = loopBuildingH / (LOOP_DISPLAY_ROWS_TOTAL + 1);
+    for (let cx = 0; cx < LOOP_DISPLAY_COLS; cx += 1) {
+      loopDisplayWindows.push([]);
+      for (let ry = 0; ry < LOOP_DISPLAY_ROWS_TOTAL; ry += 1) {
+        const win = new THREE.Mesh(windowGeo, windowMat);
+        win.position.set(
+          loopBuilding.position.x - loopBuildingW / 2 + loopStepX * (cx + 1),
+          loopStepY * (ry + 1),
+          loopBuilding.position.z + loopBuildingD / 2 + 0.02
+        );
+        const isDisplayRow = ry >= LOOP_DISPLAY_PAD_BOTTOM && ry < LOOP_DISPLAY_PAD_BOTTOM + 5;
+        if (!isDisplayRow) win.visible = true;
+        ground.add(win);
+        loopDisplayWindows[cx].push(win);
+      }
+    }
+
+    function updateLoopDisplay() {
+      const loop = state.loopCount;
+      const str = loop > 99 ? "!?" : String(loop).padStart(2, "0");
+      for (let cx = 0; cx < LOOP_DISPLAY_COLS; cx += 1) {
+        for (let r = 0; r < 5; r += 1) {
+          loopDisplayWindows[cx][LOOP_DISPLAY_PAD_BOTTOM + r].visible = false;
+        }
+      }
+      for (let i = 0; i < 2; i += 1) {
+        const pattern = LOOP_DISPLAY_FONT[str[i]];
+        if (!pattern) continue;
+        const colOffset = i * 4;
+        for (let r = 0; r < 5; r += 1) {
+          for (let c = 0; c < 3; c += 1) {
+            if (pattern[r][c] !== "X") continue;
+            const buildingRow = LOOP_DISPLAY_PAD_BOTTOM + (4 - r);
+            const buildingCol = colOffset + c;
+            if (loopDisplayWindows[buildingCol] && loopDisplayWindows[buildingCol][buildingRow]) {
+              loopDisplayWindows[buildingCol][buildingRow].visible = true;
+            }
+          }
+        }
+      }
+    }
+    updateLoopDisplay();
 
     groundObjects.push(ground);
     {
@@ -1468,6 +1558,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.practice = practice;
       state.score = 0;
       state.combo = 1;
+      state.loopCount = 1;
+      updateLoopDisplay();
       state.shield = 100;
       state.time = 9999;
       state.speed = practice ? 14 : 17;
@@ -1663,7 +1755,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       for (const item of groundObjects) {
         item.position.z += forward * 0.4;
-        if (item.position.z > 120) item.position.z -= tuning.GROUND_WRAP_DISTANCE;
+        if (item.position.z > 120) {
+          item.position.z -= tuning.GROUND_WRAP_DISTANCE;
+          state.loopCount += 1;
+          updateLoopDisplay();
+        }
         const fadeMaterials = item.userData.fadeMaterials;
         if (fadeMaterials) {
           const z = item.position.z;
