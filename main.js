@@ -45,6 +45,16 @@
       if (event.target === helpOverlay) setHelpOpen(false);
     });
 
+    const SKY_SNOW_GRADIENT_STOPS = [
+      [0, "#0a1322"],
+      [0.18, "#152244"],
+      [0.38, "#324270"],
+      [0.62, "#6d7a98"],
+      [0.82, "#a9a4b4"],
+      [1, "#c5bcc0"]
+    ];
+    let snowSky = false;
+
     function createSkyTexture() {
       const sky = document.createElement("canvas");
       sky.width = 32;
@@ -54,11 +64,12 @@
       texture.colorSpace = THREE.SRGBColorSpace;
 
       function draw(high = 0) {
+        const lowStops = snowSky ? SKY_SNOW_GRADIENT_STOPS : tuning.SKY_SUNSET_GRADIENT_STOPS;
         const gradient = ctx.createLinearGradient(0, 0, 0, sky.height);
-        for (let i = 0; i < tuning.SKY_SUNSET_GRADIENT_STOPS.length; i += 1) {
-          const [stop, sunsetColor] = tuning.SKY_SUNSET_GRADIENT_STOPS[i];
+        for (let i = 0; i < lowStops.length; i += 1) {
+          const [stop, lowColor] = lowStops[i];
           const spaceColor = tuning.SKY_SPACE_GRADIENT_STOPS[i][1];
-          const color = new THREE.Color(sunsetColor).lerp(new THREE.Color(spaceColor), high);
+          const color = new THREE.Color(lowColor).lerp(new THREE.Color(spaceColor), high);
           gradient.addColorStop(stop, color.getStyle());
         }
         ctx.fillStyle = gradient;
@@ -173,6 +184,7 @@
 
     const clock = new THREE.Clock();
     const lowFogColor = new THREE.Color(0x253056);
+    const lowFogColorSnow = new THREE.Color(0x6a7383);
     const highFogColor = new THREE.Color(0x05091d);
     let lastSkyHigh = -1;
     const keys = new Set();
@@ -770,6 +782,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const normalCityPlazaHex = cityPlaza.material.color.getHex();
     function applySnowMode(enabled) {
       state.snow = enabled;
+      snowSky = enabled;
+      lastSkyHigh = -1;
       for (let i = 0; i < forestMats.length; i += 1) {
         forestMats[i].color.setHex(enabled ? forestSnowPalette[i] : forestPalette[i]);
       }
@@ -1638,7 +1652,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function updateHud() {
       const score = String(state.score).padStart(7, "0");
       if (state.debugMode) {
-        scoreEl.textContent = `<DEBUG MODE> Y=${Math.round(ship.position.y)}, SPEED=${state.speed.toFixed(1)}, SCORE：${score}`;
+        const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
+        scoreEl.textContent = `<DEBUG MODE> Y=${Math.round(ship.position.y)}, SPEED=${state.speed.toFixed(1)}, LOOP=${state.loopCount} (${loopProgress}%), SNOW=${state.snow ? "ON" : "OFF"}, SCORE：${score}`;
       } else {
         scoreEl.textContent = `SCORE：${score}`;
       }
@@ -1790,7 +1805,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           item.position.z -= tuning.GROUND_WRAP_DISTANCE;
           state.loopCount += 1;
           updateLoopDisplay();
-          const snowChance = state.debugMode ? 0.8 : 0.05;
+          const snowChance = state.debugMode ? 0.5 : 0.05;
           applySnowMode(Math.random() < snowChance);
         }
         const fadeMaterials = item.userData.fadeMaterials;
@@ -2008,7 +2023,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
 
       const high = altitudeFactor();
-      scene.fog.color.copy(lowFogColor).lerp(highFogColor, high);
+      scene.fog.color.copy(snowSky ? lowFogColorSnow : lowFogColor).lerp(highFogColor, high);
       scene.fog.density = THREE.MathUtils.lerp(0.007, 0.0032, high);
       renderer.toneMappingExposure = THREE.MathUtils.lerp(0.95, 0.74, high);
       ambient.intensity = THREE.MathUtils.lerp(1.45, 0.74, high);
