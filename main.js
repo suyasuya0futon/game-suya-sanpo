@@ -378,7 +378,13 @@
       soundBtn.classList.toggle("is-muted", state.muted);
       masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
       masterGain.gain.setTargetAtTime(state.muted ? 0 : 0.86, audioCtx.currentTime, 0.04);
+      const bgmToggle = document.querySelector("#bgmToggle");
+      if (bgmToggle) bgmToggle.checked = enabled;
     }
+
+    document.querySelector("#bgmToggle").addEventListener("change", (event) => {
+      setSoundEnabled(event.target.checked);
+    });
 
     function setDebugMode(enabled) {
       state.debugMode = enabled;

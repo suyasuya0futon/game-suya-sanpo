@@ -197,6 +197,49 @@
       gap: 10px;
     }
 
+    .bgm-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+      font-family: "Noto Sans", Arial, sans-serif;
+      font-size: 13px;
+      color: rgba(246, 251, 255, 0.78);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .bgm-toggle input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 0;
+      background: transparent;
+      cursor: pointer;
+      display: inline-grid;
+      place-content: center;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .bgm-toggle input:checked::before {
+      content: "✓";
+    }
+
+    .bgm-toggle small {
+      color: rgba(246, 251, 255, 0.55);
+      font-size: 11px;
+    }
+
+    .center.is-result .bgm-toggle {
+      display: none;
+    }
+
     .primary,
     .ghost {
       font-family: "Noto Sans", Arial, sans-serif;
