@@ -1401,7 +1401,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const dx = ship.position.x - ring.position.x;
       const dy = ship.position.y - ring.position.y;
       const dz = Math.abs(ship.position.z - ring.position.z);
-      const depth = 1.45 + state.boost * 1.0;
+      const depth = tuning.RING_HIT_DEPTH + state.boost * tuning.RING_HIT_DEPTH_BOOST;
       if (dz >= depth) return "miss";
       const d = Math.hypot(dx, dy);
       const ex = THREE.MathUtils.lerp(tuning.SHIP_HIT_RADIUS_X, tuning.SHIP_HIT_RADIUS_X_BOOST, state.boost);
@@ -1409,7 +1409,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const radial = (d < 1e-6)
         ? Math.max(ex, ey)
         : 1 / Math.sqrt((dx / d / ex) * (dx / d / ex) + (dy / d / ey) * (dy / d / ey));
-      const ringR = ring.userData.rainbow ? tuning.RAINBOW_RING_RADIUS : tuning.PICKUP_RING_RADIUS;
+      const ringR = ring.userData.rainbow ? tuning.RAINBOW_RING_GLOW_RADIUS : tuning.PICKUP_RING_RADIUS;
       if (d + radial < ringR) return "pass";
       if (d - radial > ringR) return "miss";
       return "crash";

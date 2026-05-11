@@ -5,6 +5,8 @@ export const DEBUG_MODE = false; // true ならクラッシュしてもゲーム
 export const SHIP_HIT_RADIUS_X = 2.0; // 機体の横（翼方向）当たり判定半径。通常時。
 export const SHIP_HIT_RADIUS_X_BOOST = 4.0; // 機体の横当たり判定半径。ブースト最大時（翼が広がるぶん）。
 export const SHIP_HIT_RADIUS_Y = 0.5; // 機体の縦（上下）当たり判定半径。ブーストでは変わらない。
+export const RING_HIT_DEPTH = 1.45; // リング通過/衝突を判定する奥行き方向の基本厚み。
+export const RING_HIT_DEPTH_BOOST = 1.0; // ブースト中に追加するリング判定の奥行き厚み。
 
 // 機体の見た目
 export const SHIP_GLOW_WIDTH = 5.6; // 機体を覆う柔らかい光の球の基本サイズ（横）。
@@ -20,18 +22,18 @@ export const PICKUP_RING_RADIAL_SEGMENTS = 12; // 通常リング断面の分割
 export const PICKUP_RING_TUBULAR_SEGMENTS = 128; // 通常リング円周の分割数。
 
 // レインボーリング本体
-export const RAINBOW_RING_RADIUS = PICKUP_RING_RADIUS - 1.0; // レインボーリング本体の中心半径。
-export const RAINBOW_RING_TUBE_RADIUS = 0.15; // レインボーリング本体の線の太さ。
+export const RAINBOW_RING_RADIUS = PICKUP_RING_RADIUS; // レインボーリング本体の中心半径。
+export const RAINBOW_RING_TUBE_RADIUS = 0.08; // レインボーリング本体の線の太さ。
 export const RAINBOW_RING_RADIAL_SEGMENTS = 14; // レインボーリング本体断面の分割数。
 export const RAINBOW_RING_TUBULAR_SEGMENTS = 24; // レインボーリング1色ぶんの円周分割数。
 export const RAINBOW_RING_SEGMENTS = 7; // レインボーリングを何色の弧に分けるか。
 export const RAINBOW_RING_ARC_COVERAGE = 0.94; // 各色の弧を円周1区間の何割まで描くか。
 export const RAINBOW_RING_SPAWN_INTERVAL = 0.8; // レインボーリング群の中で1個ずつ出る間隔（秒）。大きいほど間が空く。
 
-// レインボーリングの外側グロー
-export const RAINBOW_RING_GLOW_RADIUS = RAINBOW_RING_RADIUS + 1.0; // レインボーリング外側グローの中心半径。
-export const RAINBOW_RING_GLOW_TUBE_RADIUS = 0.24; // レインボーリング外側グローの太さ。
-export const RAINBOW_RING_GLOW_RADIAL_SEGMENTS = 12; // レインボーリング外側グロー断面の分割数。
+// レインボーリングのグロー
+export const RAINBOW_RING_GLOW_RADIUS = RAINBOW_RING_RADIUS - 1.7; // レインボーリンググローの中心半径。
+export const RAINBOW_RING_GLOW_TUBE_RADIUS = 0.24; // レインボーリンググローの太さ。
+export const RAINBOW_RING_GLOW_RADIAL_SEGMENTS = 12; // レインボーリンググロー断面の分割数。
 
 // リングの出現位置と遠景フェード
 export const PICKUP_SPAWN_Z_BASE = -300; // リングが出現する奥行きの基準位置。
