@@ -163,6 +163,7 @@
       rainbowTimer: 0,
       rainbowQueue: 0,
       muted: false,
+      debugMode: tuning.DEBUG_MODE,
       rings: 0,
       ended: false,
       crashCameraTime: 0,
@@ -326,6 +327,12 @@
       masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
       masterGain.gain.setTargetAtTime(state.muted ? 0 : 0.86, audioCtx.currentTime, 0.04);
     }
+
+    function setDebugMode(enabled) {
+      state.debugMode = enabled;
+      updateHud();
+    }
+    setDebugMode(state.debugMode);
 
     function updateEngineAudio() {
       if (audioCtx.state !== "running") return;
@@ -1388,7 +1395,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function updateHud() {
-      scoreEl.textContent = `SCORE：${String(state.score).padStart(8, "0")}`;
+      const label = state.debugMode ? "DEBUG MODE" : "SCORE";
+      scoreEl.textContent = `${label}：${String(state.score).padStart(8, "0")}`;
     }
 
     function updateInput() {
@@ -1470,7 +1478,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       tone(80, 0.35, "sawtooth", 0.06);
       flash.classList.add("on");
       window.setTimeout(() => flash.classList.remove("on"), 240);
-      if (tuning.DEBUG_MODE) {
+      if (state.debugMode) {
         state.invulnerable = 0.6;
         return;
       }
@@ -1707,11 +1715,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (state.running) {
         state.invulnerable = Math.max(0, state.invulnerable - dt);
         const wantsBoost = keys.has("Space");
-        const boosting = wantsBoost && state.boostFuel > 0;
-        if (boosting) {
+        const debugBoosting = state.debugMode && wantsBoost;
+        const boosting = wantsBoost && (state.boostFuel > 0 || debugBoosting);
+        if (boosting && !debugBoosting) {
           state.boostFuel = Math.max(0, state.boostFuel - dt);
           if (state.boostFuel <= 0) playEmptyBoostOnce();
-        } else if (wantsBoost) {
+        } else if (wantsBoost && !debugBoosting) {
           playEmptyBoostOnce();
         } else {
           state.boostEmptyLatched = false;
@@ -1923,7 +1932,33 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         if (!state.muted) audioCtx.resume();
       });
     }
-    soundBtn.addEventListener("click", () => {
+    let soundHoldTimer = null;
+    let soundHoldConsumed = false;
+    function clearSoundHold() {
+      if (soundHoldTimer !== null) {
+        window.clearTimeout(soundHoldTimer);
+        soundHoldTimer = null;
+      }
+    }
+    soundBtn.addEventListener("pointerdown", (event) => {
+      soundHoldConsumed = false;
+      soundBtn.setPointerCapture(event.pointerId);
+      clearSoundHold();
+      soundHoldTimer = window.setTimeout(() => {
+        soundHoldConsumed = true;
+        setDebugMode(!state.debugMode);
+        soundBtn.blur();
+      }, 1200);
+    });
+    soundBtn.addEventListener("pointerup", clearSoundHold);
+    soundBtn.addEventListener("pointercancel", clearSoundHold);
+    soundBtn.addEventListener("pointerleave", clearSoundHold);
+    soundBtn.addEventListener("click", (event) => {
+      if (soundHoldConsumed) {
+        event.preventDefault();
+        soundHoldConsumed = false;
+        return;
+      }
       setSoundEnabled(state.muted);
       audioCtx.resume();
       soundBtn.blur();

@@ -382,10 +382,9 @@
       pointer-events: none;
       opacity: 0;
       background:
-        radial-gradient(circle at 50% 34%, rgba(120, 170, 255, 0.1), transparent 34%),
-        linear-gradient(180deg, rgba(1, 4, 18, 0.72), rgba(6, 12, 34, 0.3) 48%, rgba(0, 0, 0, 0.08));
+        radial-gradient(circle at 50% 28%, rgba(80, 120, 210, 0.05), transparent 30%),
+        linear-gradient(180deg, rgba(0, 2, 12, 0.18) 0%, rgba(0, 2, 12, 0.74) 42%, rgba(0, 0, 0, 1) 100%);
       transition: opacity 240ms ease;
-      mix-blend-mode: multiply;
     }
 
     @media (max-width: 720px) {
