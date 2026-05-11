@@ -955,6 +955,49 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     ship.position.set(0, 26, 7);
     scene.add(ship);
 
+    const guideTrail = new THREE.Group();
+    const guideDisk = new THREE.Group();
+    const GUIDE_PARTICLE_COUNT = 20;
+    const GUIDE_DISK_POSITIONS = [];
+    const guideGeo = new THREE.BoxGeometry(
+      tuning.GUIDE_PARTICLE_SIZE,
+      tuning.GUIDE_PARTICLE_SIZE,
+      tuning.GUIDE_PARTICLE_SIZE
+    );
+    const createGuideParticle = () => {
+      const material = new THREE.MeshBasicMaterial({
+        color: tuning.GUIDE_COLOR,
+        depthTest: false,
+        fog: false
+      });
+      const particle = new THREE.Mesh(guideGeo, material);
+      particle.frustumCulled = false;
+      return particle;
+    };
+
+    for (let i = 0; i < GUIDE_PARTICLE_COUNT; i += 1) {
+      guideTrail.add(createGuideParticle());
+    }
+    guideTrail.visible = false;
+    scene.add(guideTrail);
+
+    const diskRadius = tuning.PICKUP_RING_RADIUS / 3;
+    GUIDE_DISK_POSITIONS.push([0, 0]);
+    for (let r = 1; r <= 5; r += 1) {
+      const ringR = (r / 5) * diskRadius;
+      const count = r * 12;
+      for (let i = 0; i < count; i += 1) {
+        const angle = (i / count) * Math.PI * 2;
+        GUIDE_DISK_POSITIONS.push([Math.cos(angle) * ringR, Math.sin(angle) * ringR]);
+      }
+    }
+
+    for (let i = 0; i < GUIDE_DISK_POSITIONS.length; i += 1) {
+      guideDisk.add(createGuideParticle());
+    }
+    guideDisk.visible = false;
+    scene.add(guideDisk);
+
     const shadowTexture = (() => {
       const size = 256;
       const cv = document.createElement("canvas");
@@ -1105,11 +1148,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       return group;
     }
 
-    function getPickupPassRadius(isRainbow) {
-      const ringRadius = isRainbow ? tuning.RAINBOW_RING_RADIUS : tuning.PICKUP_RING_RADIUS;
-      const tubeRadius = isRainbow ? tuning.RAINBOW_RING_TUBE_RADIUS : tuning.PICKUP_RING_TUBE_RADIUS;
-      return Math.max(0.1, ringRadius - tubeRadius - tuning.PICKUP_RING_PASS_MARGIN);
-    }
 
     function disposeRenderable(object) {
       object.traverse((child) => {
@@ -1242,7 +1280,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       );
       pickup.rotation.set(0, 0, Math.random() * Math.PI);
       pickup.userData.value = 100;
-      pickup.userData.innerRadius = getPickupPassRadius(isRainbow);
       pickup.userData.rainbow = isRainbow;
       const fadeMaterials = [];
       pickup.traverse((child) => {
@@ -1416,13 +1453,22 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (input.lengthSq() > 1) input.normalize();
     }
 
-    function isShipThroughRing(ring) {
+    function shipRingHit(ring) {
       const dx = ship.position.x - ring.position.x;
       const dy = ship.position.y - ring.position.y;
       const dz = Math.abs(ship.position.z - ring.position.z);
-      const radius = ring.userData.innerRadius + state.boost * 1.8;
       const depth = 1.45 + state.boost * 1.0;
-      return dz < depth && Math.hypot(dx, dy) < radius;
+      if (dz >= depth) return "miss";
+      const d = Math.hypot(dx, dy);
+      const ex = THREE.MathUtils.lerp(tuning.SHIP_HIT_RADIUS_X, tuning.SHIP_HIT_RADIUS_X_BOOST, state.boost);
+      const ey = tuning.SHIP_HIT_RADIUS_Y;
+      const radial = (d < 1e-6)
+        ? Math.max(ex, ey)
+        : 1 / Math.sqrt((dx / d / ex) * (dx / d / ex) + (dy / d / ey) * (dy / d / ey));
+      const ringR = ring.userData.rainbow ? tuning.RAINBOW_RING_RADIUS : tuning.PICKUP_RING_RADIUS;
+      if (d + radial < ringR) return "pass";
+      if (d - radial > ringR) return "miss";
+      return "crash";
     }
 
     function collect(item) {
@@ -1472,6 +1518,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       tone(80, 0.35, "sawtooth", 0.06);
       flash.classList.add("on");
       window.setTimeout(() => flash.classList.remove("on"), 240);
+      if (tuning.DEBUG_MODE) {
+        state.invulnerable = 0.6;
+        return;
+      }
       endGame("", `障害物に衝突しました。`);
     }
 
@@ -1561,8 +1611,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
           pos.needsUpdate = true;
         }
-        if (!item.userData.collected && isShipThroughRing(item)) collect(item);
-        else if (item.position.z > 36) {
+        if (!item.userData.collected) {
+          const hit = shipRingHit(item);
+          if (hit === "pass") collect(item);
+          else if (hit === "crash") crash();
+        }
+        if (item.position.z > 36) {
           if (halo && halo.geometry) halo.geometry.dispose();
           const r = item.children[0];
           if (item.userData.rainbow) {
@@ -1575,6 +1629,57 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           pickups.splice(i, 1);
           state.combo = Math.max(1, state.combo - 1);
         }
+      }
+
+      let nearest = null;
+      let nearestZ = -Infinity;
+      for (const item of pickups) {
+        if (item.userData.collected) continue;
+        if (item.position.z >= ship.position.z) continue;
+        if (item.position.z > nearestZ) {
+          nearestZ = item.position.z;
+          nearest = item;
+        }
+      }
+      if (nearest) {
+        const tip = new THREE.Vector3(0, 0.34, -0.95);
+        ship.localToWorld(tip);
+        const isRainbow = nearest.userData.rainbow;
+        const hueShift = clock.elapsedTime * 0.3;
+        for (let gi = 0; gi < GUIDE_PARTICLE_COUNT; gi += 1) {
+          const t = (gi + 0.5) / GUIDE_PARTICLE_COUNT;
+          const child = guideTrail.children[gi];
+          child.position.set(
+            tip.x + (nearest.position.x - tip.x) * t,
+            tip.y + (nearest.position.y - tip.y) * t,
+            tip.z + (nearest.position.z - tip.z) * t
+          );
+          if (isRainbow) {
+            child.material.color.setHSL((t + hueShift) % 1, 1.0, 0.6);
+          } else {
+            child.material.color.setHex(tuning.GUIDE_COLOR);
+          }
+        }
+        guideTrail.visible = true;
+        for (let gi = 0; gi < GUIDE_DISK_POSITIONS.length; gi += 1) {
+          const [ox, oy] = GUIDE_DISK_POSITIONS[gi];
+          const child = guideDisk.children[gi];
+          child.position.set(
+            nearest.position.x + ox,
+            nearest.position.y + oy,
+            nearest.position.z
+          );
+          if (isRainbow) {
+            const ang = Math.atan2(oy, ox) / (Math.PI * 2) + 0.5;
+            child.material.color.setHSL((ang + hueShift) % 1, 1.0, 0.6);
+          } else {
+            child.material.color.setHex(tuning.GUIDE_COLOR);
+          }
+        }
+        guideDisk.visible = true;
+      } else {
+        guideTrail.visible = false;
+        guideDisk.visible = false;
       }
 
       for (let i = particles.length - 1; i >= 0; i -= 1) {
@@ -1781,10 +1886,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
         }
 
-        camera.position.x += (ship.position.x * 0.42 - camera.position.x) * dt * 2.4;
-        camera.position.y += (ship.position.y + 12.5 - camera.position.y) * dt * 2.2;
+        camera.position.x += (ship.position.x * 0.5 - camera.position.x) * dt * 2.4;
+        camera.position.y += (ship.position.y + 4.2 - camera.position.y) * dt * 2.2;
         camera.position.z += (28 + state.boost * 3.5 - camera.position.z) * dt * 2.1;
-        camera.lookAt(ship.position.x * 0.22, ship.position.y + 1.2, -22);
+        camera.lookAt(ship.position.x * 0.25, ship.position.y + 1.4, -24);
 
         stepObjects(dt);
         updateHud();
