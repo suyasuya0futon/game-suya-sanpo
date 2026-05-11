@@ -977,11 +977,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const createGuideParticle = () => {
       const material = new THREE.MeshBasicMaterial({
         color: tuning.GUIDE_COLOR,
+        transparent: true,
         depthTest: false,
+        depthWrite: false,
         fog: false
       });
       const particle = new THREE.Mesh(guideGeo, material);
       particle.frustumCulled = false;
+      particle.renderOrder = 999;
       return particle;
     };
 
@@ -989,6 +992,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       guideTrail.add(createGuideParticle());
     }
     guideTrail.visible = false;
+    guideTrail.renderOrder = 999;
     scene.add(guideTrail);
 
     const diskRadius = tuning.PICKUP_RING_RADIUS / 3;
@@ -1006,6 +1010,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       guideDisk.add(createGuideParticle());
     }
     guideDisk.visible = false;
+    guideDisk.renderOrder = 999;
     scene.add(guideDisk);
 
     const shadowTexture = (() => {
