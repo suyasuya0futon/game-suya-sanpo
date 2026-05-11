@@ -585,6 +585,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       tree.scale.setScalar(treeScale);
       tree.rotation.y = Math.random() * Math.PI * 2;
       tree.userData.obstacle = true;
+      tree.userData.crashMessage = "木に衝突しました。";
       tree.userData.halfSize = { x: 0.55 * treeScale, y: 2.0 * treeScale, z: 0.55 * treeScale };
       ground.add(tree);
       obstacles.push(tree);
@@ -625,6 +626,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const building = new THREE.Mesh(geo, mat);
       building.position.set(2 + Math.random() * 54, h / 2, -44 + Math.random() * 56);
       building.userData.obstacle = true;
+      building.userData.crashMessage = "建物に衝突しました。";
       building.userData.halfSize = { x: w / 2, y: h / 2, z: d / 2 };
       ground.add(building);
       obstacles.push(building);
@@ -1512,7 +1514,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     }
 
-    function crash() {
+    function crash(message = "障害物に衝突しました。") {
       if (state.invulnerable > 0 || !state.running) return;
       burst(ship.position, 0xff8866, 40);
       tone(80, 0.35, "sawtooth", 0.06);
@@ -1522,7 +1524,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         state.invulnerable = 0.6;
         return;
       }
-      endGame("", `障害物に衝突しました。`);
+      endGame("", message);
     }
 
     function stepObjects(dt) {
@@ -1614,7 +1616,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         if (!item.userData.collected) {
           const hit = shipRingHit(item);
           if (hit === "pass") collect(item);
-          else if (hit === "crash") crash();
+          else if (hit === "crash") crash("リングの縁に衝突しました。");
         }
         if (item.position.z > 36) {
           if (halo && halo.geometry) halo.geometry.dispose();
@@ -1717,7 +1719,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           if (Math.abs(wx - ship.position.x) > hs.x + sx) continue;
           if (ship.position.y > wy + hs.y + sy) continue;
           if (ship.position.y < wy - hs.y - sy) continue;
-          crash();
+          crash(o.userData.crashMessage);
           break;
         }
       }
