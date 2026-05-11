@@ -165,7 +165,12 @@
       muted: false,
       rings: 0,
       ended: false,
-      crashed: false
+      crashed: false,
+      crashCameraTime: 0,
+      crashCameraDuration: 2.2,
+      crashCameraActive: false,
+      crashCameraStartPosition: new THREE.Vector3(),
+      crashCameraStartTarget: new THREE.Vector3()
     };
 
     const input = new THREE.Vector2();
@@ -1416,6 +1421,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.lastRing = { x: 0, y: 26 };
       state.rings = 0;
       state.ended = false;
+      state.crashCameraTime = 0;
+      state.crashCameraActive = false;
+      camera.up.set(0, 1, 0);
       setShipCrashed(false);
       menu.classList.remove("is-result");
       ship.position.set(0, 26, 7);
@@ -1516,6 +1524,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function crash(message = "障害物に衝突しました。") {
       if (state.invulnerable > 0 || !state.running) return;
+      state.crashCameraTime = 0;
+      state.crashCameraActive = true;
+      state.crashCameraStartPosition.copy(camera.position);
+      state.crashCameraStartTarget.set(ship.position.x * 0.25, ship.position.y + 1.4, -24);
       burst(ship.position, 0xff8866, 40);
       tone(80, 0.35, "sawtooth", 0.06);
       flash.classList.add("on");
@@ -1891,21 +1903,42 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         camera.position.x += (ship.position.x * 0.5 - camera.position.x) * dt * 2.4;
         camera.position.y += (ship.position.y + 4.2 - camera.position.y) * dt * 2.2;
         camera.position.z += (28 + state.boost * 3.5 - camera.position.z) * dt * 2.1;
+        camera.up.set(0, 1, 0);
         camera.lookAt(ship.position.x * 0.25, ship.position.y + 1.4, -24);
 
         stepObjects(dt);
         updateHud();
       } else {
         shipShadow.material.opacity = 0;
-        ship.rotation.y += dt * 0.5;
-        ship.position.y = 26 + Math.sin(clock.elapsedTime * 1.1) * 0.42;
-        halo.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
-        halo.rotation.z += dt * 0.16;
-        sleeveL.rotation.z = 0.18 + Math.sin(clock.elapsedTime * 1.8) * 0.08;
-        sleeveR.rotation.z = -0.18 - Math.sin(clock.elapsedTime * 1.8 + 0.4) * 0.08;
-        camera.position.y += (38 - camera.position.y) * dt * 2;
-        camera.position.z += (28 - camera.position.z) * dt * 2;
-        camera.lookAt(0, 26.5, -12);
+        if (state.crashCameraActive) {
+          state.crashCameraTime += dt;
+          const t = Math.min(1, state.crashCameraTime / state.crashCameraDuration);
+          const ease = 1 - Math.pow(1 - t, 3);
+          const roll = Math.sin(ease * Math.PI) * 0.35 + ease * Math.PI;
+          const target = new THREE.Vector3(
+            THREE.MathUtils.lerp(state.crashCameraStartTarget.x, ship.position.x * 0.18, ease),
+            THREE.MathUtils.lerp(state.crashCameraStartTarget.y, ship.position.y + 54, ease),
+            THREE.MathUtils.lerp(state.crashCameraStartTarget.z, -48, ease)
+          );
+          camera.position.set(
+            THREE.MathUtils.lerp(state.crashCameraStartPosition.x, ship.position.x * 0.2, ease),
+            THREE.MathUtils.lerp(state.crashCameraStartPosition.y, ship.position.y + 7.5, ease),
+            THREE.MathUtils.lerp(state.crashCameraStartPosition.z, 18, ease)
+          );
+          camera.up.set(Math.sin(roll), Math.cos(roll), 0);
+          camera.lookAt(target);
+        } else {
+          ship.rotation.y += dt * 0.5;
+          ship.position.y = 26 + Math.sin(clock.elapsedTime * 1.1) * 0.42;
+          halo.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
+          halo.rotation.z += dt * 0.16;
+          sleeveL.rotation.z = 0.18 + Math.sin(clock.elapsedTime * 1.8) * 0.08;
+          sleeveR.rotation.z = -0.18 - Math.sin(clock.elapsedTime * 1.8 + 0.4) * 0.08;
+          camera.up.set(0, 1, 0);
+          camera.position.y += (38 - camera.position.y) * dt * 2;
+          camera.position.z += (28 - camera.position.z) * dt * 2;
+          camera.lookAt(0, 26.5, -12);
+        }
       }
 
       updateEngineAudio();
