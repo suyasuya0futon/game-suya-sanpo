@@ -14,12 +14,29 @@
     const helpBtn = document.querySelector("#help");
     const helpOverlay = document.querySelector("#helpOverlay");
     const helpClose = document.querySelector("#helpClose");
+    const pauseOverlay = document.querySelector("#pauseOverlay");
 
     document.querySelector("#helpContent").innerHTML = `リングをくぐるとブースト燃料がたまり、ブースト押しっぱなしで加速。<br>燃料切れでブーストは止まります。<br><br>スコア説明<br>・金リング・・・${tuning.NORMAL_RING_SCORE}点<br>・レインボーリング・・・${tuning.RAINBOW_RING_SCORE}点<br>ブーストしながらくぐると得点${tuning.BOOST_SCORE_MULTIPLIER}倍です。`;
 
+    function refreshPauseState() {
+      const helpOpen = !helpOverlay.hidden;
+      const wasPaused = state.paused;
+      state.paused = state.manualPaused || helpOpen;
+      pauseOverlay.hidden = !(state.manualPaused && !helpOpen);
+      if (state.running && state.paused !== wasPaused) {
+        if (state.paused) stopBgm();
+        else startBgm();
+      }
+    }
+
+    function setManualPause(value) {
+      state.manualPaused = value;
+      refreshPauseState();
+    }
+
     function setHelpOpen(open) {
-      state.paused = open;
       helpOverlay.hidden = !open;
+      refreshPauseState();
     }
 
     helpBtn.addEventListener("click", () => setHelpOpen(true));
@@ -170,6 +187,7 @@
     const state = {
       running: false,
       paused: false,
+      manualPaused: false,
       practice: false,
       score: 0,
       combo: 1,
@@ -2082,9 +2100,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     });
     window.addEventListener("keydown", (event) => {
+      if (state.manualPaused && helpOverlay.hidden) {
+        setManualPause(false);
+        return;
+      }
       keys.add(event.code);
       if (event.code === "Space") event.preventDefault();
-      if (event.code === "KeyR") resetGame(state.practice);
+      if (event.code === "KeyR" && state.debugMode) resetGame(state.practice);
+      if (event.code === "Escape") {
+        if (!helpOverlay.hidden) setHelpOpen(false);
+        else if (state.running) setManualPause(true);
+      }
     });
     window.addEventListener("keyup", (event) => {
       keys.delete(event.code);
