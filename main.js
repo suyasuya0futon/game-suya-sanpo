@@ -3,6 +3,7 @@
 
     const canvas = document.querySelector("#game");
     const scoreEl = document.querySelector("#score");
+    const debugInfoEl = document.querySelector("#debugInfo");
     const menu = document.querySelector("#menu");
     const startBtn = document.querySelector("#start");
     const practiceBtn = document.querySelector("#practice");
@@ -1652,11 +1653,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function updateHud() {
       const score = String(state.score).padStart(7, "0");
+      scoreEl.textContent = `SCORE：${score}`;
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
-        scoreEl.textContent = `<DEBUG MODE> Y=${Math.round(ship.position.y)}, SPEED=${state.speed.toFixed(1)}, LOOP=${state.loopCount} (${loopProgress}%), SNOW=${state.snow ? "ON" : "OFF"}, SCORE：${score}`;
+        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}, SPEED=${state.speed.toFixed(1)}, LOOP=${state.loopCount} (${loopProgress}%), SNOW=${state.snow ? "ON" : "OFF"}`;
+        debugInfoEl.hidden = false;
       } else {
-        scoreEl.textContent = `SCORE：${score}`;
+        debugInfoEl.hidden = true;
       }
     }
 
