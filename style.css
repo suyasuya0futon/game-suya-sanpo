@@ -285,12 +285,9 @@
     }
 
     .bottom {
-      display: grid;
-      grid-row: 3;
-      grid-template-columns: auto;
-      gap: 14px;
-      align-items: end;
-      justify-self: end;
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
     }
 
     .tips {
@@ -383,12 +380,6 @@
     body.touch-swap .boost {
       right: auto;
       left: 12px;
-    }
-
-    body.touch-swap .bottom {
-      right: auto;
-      left: 16px;
-      justify-items: start;
     }
 
     .tips kbd {
@@ -656,16 +647,16 @@
         min-height: 56px;
       }
 
-      .bottom {
-        position: fixed;
-        right: 16px;
-        bottom: 106px;
-        grid-template-columns: auto;
-        justify-items: end;
-      }
-
       body:has(#menu[hidden]) .touch {
         display: flex;
+      }
+
+      body:has(#menu[hidden]) .bottom {
+        bottom: 106px;
+      }
+
+      body.touch-swap:has(#menu[hidden]) .bottom {
+        bottom: 140px;
       }
 
       .tips-keyboard {
