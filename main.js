@@ -420,6 +420,7 @@
 
     function setDebugMode(enabled) {
       state.debugMode = enabled;
+      document.body.classList.toggle("debug-on", enabled);
       updateHud();
       refreshLoopBuildingColor();
     }

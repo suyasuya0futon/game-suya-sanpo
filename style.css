@@ -76,7 +76,8 @@
       display: none;
     }
 
-    body:has(#menu[hidden]) .meter {
+    body:has(#menu[hidden]) .meter,
+    body.debug-on .meter {
       display: block;
     }
 
