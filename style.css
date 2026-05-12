@@ -609,7 +609,7 @@
         justify-items: end;
       }
 
-      .touch {
+      body:has(#menu[hidden]) .touch {
         display: flex;
       }
 
