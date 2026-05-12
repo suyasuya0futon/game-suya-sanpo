@@ -4,6 +4,7 @@
     const canvas = document.querySelector("#game");
     const scoreEl = document.querySelector("#score");
     const debugInfoEl = document.querySelector("#debugInfo");
+    const debugAutoEl = document.querySelector("#debugAuto");
     const menu = document.querySelector("#menu");
     const startBtn = document.querySelector("#start");
     const practiceBtn = document.querySelector("#practice");
@@ -255,6 +256,8 @@
       muted: false,
       debugMode: tuning.DEBUG_MODE,
       autopilot: false,
+      autoBoost: false,
+      trail: true,
       snow: false,
       rings: 0,
       ended: false,
@@ -1722,10 +1725,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       scoreEl.textContent = `SCORE：${score}`;
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
-        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  CHAIN=${state.combo}  AUTO=${state.autopilot ? "ON" : "OFF"}  SNOW=${state.snow ? "ON" : "OFF"}`;
+        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  CHAIN=${state.combo}  SNOW=${state.snow ? "ON" : "OFF"}`;
+        debugAutoEl.textContent = `AUTO(P)=${state.autopilot ? "ON" : "OFF"}  BOOST(B)=${state.autoBoost ? "ON" : "OFF"}  TRAIL(T)=${state.trail ? "ON" : "OFF"}`;
         debugInfoEl.hidden = false;
+        debugAutoEl.hidden = false;
       } else {
         debugInfoEl.hidden = true;
+        debugAutoEl.hidden = true;
       }
     }
 
@@ -1748,7 +1754,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           input.x = THREE.MathUtils.clamp(target.position.x - ship.position.x, -1, 1);
           input.y = THREE.MathUtils.clamp(target.position.y - ship.position.y, -1, 1);
         }
-        keys.add("Space");
+        if (state.autoBoost) keys.add("Space");
       }
       if (input.lengthSq() > 1) input.normalize();
     }
@@ -2240,10 +2246,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
         shipShadow.scale.set(shadowSize * 1.6 * (1 + state.boost * 0.4), shadowSize, 1);
         const baseTrailTarget = Math.floor(state.boostFuel * tuning.TRAIL_PER_BOOST_SECOND);
-        const trailTarget = Math.min(tuning.TRAIL_MAX, baseTrailTarget);
+        const trailTarget = state.trail ? Math.min(tuning.TRAIL_MAX, baseTrailTarget) : 0;
         let aliveTrail = 0;
         for (const p of particles) if (p.userData.trail) aliveTrail += 1;
-        if (boosting) {
+        if (boosting && state.trail) {
           state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE * tuning.BOOST_TRAIL_MULTIPLIER;
           const room = Math.max(0, tuning.TRAIL_MAX - aliveTrail);
           const toSpawn = Math.min(room, Math.floor(state.trailSpawnCarry));
@@ -2358,6 +2364,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (event.code === "KeyP" && state.debugMode) {
         state.autopilot = !state.autopilot;
         if (!state.autopilot) keys.delete("Space");
+      }
+      if (event.code === "KeyB" && state.debugMode) {
+        state.autoBoost = !state.autoBoost;
+        if (!state.autoBoost) keys.delete("Space");
+      }
+      if (event.code === "KeyT" && state.debugMode) {
+        state.trail = !state.trail;
+        if (!state.trail) {
+          for (const p of particles) {
+            if (p.userData.trail) p.userData.life = 0;
+          }
+        }
       }
       if (event.code === "Escape") {
         if (!helpOverlay.hidden) setHelpOpen(false);
