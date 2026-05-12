@@ -385,6 +385,12 @@
       left: 12px;
     }
 
+    body.touch-swap .bottom {
+      right: auto;
+      left: 16px;
+      justify-items: start;
+    }
+
     .tips kbd {
       min-width: 26px;
       display: inline-grid;
@@ -652,11 +658,10 @@
 
       .bottom {
         position: fixed;
-        left: 50%;
-        bottom: 12px;
-        transform: translateX(-50%);
+        right: 16px;
+        bottom: 106px;
         grid-template-columns: auto;
-        justify-items: center;
+        justify-items: end;
       }
 
       body:has(#menu[hidden]) .touch {
