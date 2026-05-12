@@ -1242,6 +1242,38 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     guideDisk.renderOrder = 999;
     scene.add(guideDisk);
 
+    const chainCanvas = document.createElement("canvas");
+    chainCanvas.width = chainCanvas.height = 256;
+    const chainCtx = chainCanvas.getContext("2d");
+    const chainTexture = new THREE.CanvasTexture(chainCanvas);
+    chainTexture.anisotropy = 4;
+    const chainSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: chainTexture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      fog: false
+    }));
+    chainSprite.scale.set(diskRadius * 1.6, diskRadius * 1.6, 1);
+    chainSprite.renderOrder = 1000;
+    chainSprite.visible = false;
+    scene.add(chainSprite);
+    let chainSpriteValue = -1;
+    const drawChainSprite = (value) => {
+      const size = chainCanvas.width;
+      chainCtx.clearRect(0, 0, size, size);
+      chainCtx.font = "bold 140px 'Press Start 2P', system-ui, monospace";
+      chainCtx.textAlign = "center";
+      chainCtx.textBaseline = "middle";
+      chainCtx.lineWidth = 12;
+      chainCtx.strokeStyle = "rgba(0, 0, 0, 0.7)";
+      chainCtx.fillStyle = "#ffffff";
+      const text = String(value);
+      chainCtx.strokeText(text, size / 2, size / 2);
+      chainCtx.fillText(text, size / 2, size / 2);
+      chainTexture.needsUpdate = true;
+    };
+
     const shadowTexture = (() => {
       const size = 256;
       const cv = document.createElement("canvas");
@@ -2005,9 +2037,20 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           child.scale.setScalar(baseScale);
         }
         guideDisk.visible = true;
+        if (state.combo >= 1) {
+          if (state.combo !== chainSpriteValue) {
+            drawChainSprite(state.combo);
+            chainSpriteValue = state.combo;
+          }
+          chainSprite.position.set(nearest.position.x, nearest.position.y, nearest.position.z);
+          chainSprite.visible = true;
+        } else {
+          chainSprite.visible = false;
+        }
       } else {
         guideTrail.visible = false;
         guideDisk.visible = false;
+        chainSprite.visible = false;
       }
 
       for (let i = particles.length - 1; i >= 0; i -= 1) {
