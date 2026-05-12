@@ -1,5 +1,5 @@
 // デバッグ設定
-export const DEBUG_MODE = false; // true なら起動時からデバッグモード。通常は音楽ボタン長押しで切り替える。
+export const DEBUG_MODE = false; // true なら起動時からデバッグモード。通常は？ボタン長押しで切り替える。
 
 // 機体の当たり判定
 export const SHIP_HIT_RADIUS_X = 2.0; // 機体の横（翼方向）当たり判定半径。通常時。

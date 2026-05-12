@@ -40,7 +40,35 @@
       refreshPauseState();
     }
 
-    helpBtn.addEventListener("click", () => setHelpOpen(true));
+    let helpHoldTimer = null;
+    let helpHoldConsumed = false;
+    function clearHelpHold() {
+      if (helpHoldTimer !== null) {
+        window.clearTimeout(helpHoldTimer);
+        helpHoldTimer = null;
+      }
+    }
+    helpBtn.addEventListener("pointerdown", (event) => {
+      helpHoldConsumed = false;
+      helpBtn.setPointerCapture(event.pointerId);
+      clearHelpHold();
+      helpHoldTimer = window.setTimeout(() => {
+        helpHoldConsumed = true;
+        setDebugMode(!state.debugMode);
+        helpBtn.blur();
+      }, 1200);
+    });
+    helpBtn.addEventListener("pointerup", clearHelpHold);
+    helpBtn.addEventListener("pointercancel", clearHelpHold);
+    helpBtn.addEventListener("pointerleave", clearHelpHold);
+    helpBtn.addEventListener("click", (event) => {
+      if (helpHoldConsumed) {
+        event.preventDefault();
+        helpHoldConsumed = false;
+        return;
+      }
+      setHelpOpen(true);
+    });
     helpClose.addEventListener("click", () => setHelpOpen(false));
     helpOverlay.addEventListener("click", (event) => {
       if (event.target === helpOverlay) setHelpOpen(false);
@@ -2289,33 +2317,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         if (!state.muted) audioCtx.resume();
       });
     }
-    let soundHoldTimer = null;
-    let soundHoldConsumed = false;
-    function clearSoundHold() {
-      if (soundHoldTimer !== null) {
-        window.clearTimeout(soundHoldTimer);
-        soundHoldTimer = null;
-      }
-    }
-    soundBtn.addEventListener("pointerdown", (event) => {
-      soundHoldConsumed = false;
-      soundBtn.setPointerCapture(event.pointerId);
-      clearSoundHold();
-      soundHoldTimer = window.setTimeout(() => {
-        soundHoldConsumed = true;
-        setDebugMode(!state.debugMode);
-        soundBtn.blur();
-      }, 1200);
-    });
-    soundBtn.addEventListener("pointerup", clearSoundHold);
-    soundBtn.addEventListener("pointercancel", clearSoundHold);
-    soundBtn.addEventListener("pointerleave", clearSoundHold);
-    soundBtn.addEventListener("click", (event) => {
-      if (soundHoldConsumed) {
-        event.preventDefault();
-        soundHoldConsumed = false;
-        return;
-      }
+    soundBtn.addEventListener("click", () => {
       setSoundEnabled(state.muted);
       audioCtx.resume();
       soundBtn.blur();
