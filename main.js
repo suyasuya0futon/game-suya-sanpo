@@ -208,7 +208,7 @@
       practice: false,
       loopCount: 1,
       score: 0,
-      combo: 1,
+      combo: 0,
       shield: 100,
       time: 90,
       speed: 17,
@@ -1606,7 +1606,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       startBgm();
       state.practice = practice;
       state.score = 0;
-      state.combo = 1;
+      state.combo = 0;
       state.loopCount = 1;
       updateLoopDisplay();
       applySnowMode(false);
@@ -1650,17 +1650,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       h1.hidden = !title;
       menu.querySelector(".lead").textContent = detail;
       const resultScoreEl = document.querySelector("#resultScore");
-      if (resultScoreEl) resultScoreEl.textContent = `SCORE：${String(state.score).padStart(7, "0")}`;
+      if (resultScoreEl) resultScoreEl.textContent = `SCORE：${String(state.score).padStart(tuning.SCORE_MAX_DIGITS, "0")}`;
       startBtn.textContent = "RETRY";
       if (practiceBtn) practiceBtn.textContent = "";
     }
 
     function updateHud() {
-      const score = String(state.score).padStart(7, "0");
+      const score = String(state.score).padStart(tuning.SCORE_MAX_DIGITS, "0");
       scoreEl.textContent = `SCORE：${score}`;
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
-        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  SNOW=${state.snow ? "ON" : "OFF"}`;
+        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  CHAIN=${state.combo}  SNOW=${state.snow ? "ON" : "OFF"}`;
         debugInfoEl.hidden = false;
       } else {
         debugInfoEl.hidden = true;
@@ -1699,10 +1699,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (item.userData.collected) return;
       item.userData.collected = true;
       state.rings += 1;
+      state.combo += 1;
       const isRainbow = item.userData.rainbow;
       const ringScore = isRainbow ? tuning.RAINBOW_RING_SCORE : tuning.NORMAL_RING_SCORE;
       const scoreBoostMul = state.boost > 0.5 ? tuning.BOOST_SCORE_MULTIPLIER : 1;
-      state.score += Math.floor(ringScore * scoreBoostMul);
+      state.score = Math.min(tuning.SCORE_MAX, state.score + Math.floor(ringScore * scoreBoostMul * state.combo));
       const rewardMultiplier = isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1;
       state.boostFuel += tuning.BOOST_FUEL_PER_RING * rewardMultiplier;
       state.boostEmptyLatched = false;
@@ -1906,7 +1907,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           if (halo && halo.material) halo.material.dispose();
           scene.remove(item);
           pickups.splice(i, 1);
-          state.combo = Math.max(1, state.combo - 1);
+          if (!item.userData.collected) state.combo = 0;
         }
       }
 

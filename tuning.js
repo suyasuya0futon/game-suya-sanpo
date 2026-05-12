@@ -144,6 +144,8 @@ export const BOOST_SPEED_MULTIPLIER = 3; // ブースト中の上下左右移動
 export const NORMAL_RING_SCORE = 10; // 通常リング1個で増えるスコア。
 export const RAINBOW_RING_SCORE = 70; // レインボーリング1個で増えるスコア。
 export const BOOST_SCORE_MULTIPLIER = 10; // ブースト中にリング取得スコアへ掛ける倍率。
+export const SCORE_MAX_DIGITS = 7; // スコアの最大桁数（HUDのゼロ詰めと上限クランプの両方の基準）。
+export const SCORE_MAX = 10 ** SCORE_MAX_DIGITS - 1; // スコアの上限値（9999999）。これ以上は加算してもクランプされる。
 
 // 噴射粒の生成数
 export const TRAIL_PER_BOOST_SECOND = 10; // 燃料1秒ぶんを通常時の光の粒何個として見せるか。
