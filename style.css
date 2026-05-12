@@ -293,6 +293,10 @@
       text-align: center;
     }
 
+    .tips-touch {
+      display: none;
+    }
+
     .tips kbd {
       min-width: 26px;
       display: inline-grid;
@@ -565,7 +569,11 @@
         display: flex;
       }
 
-      .tips {
+      .tips-keyboard {
         display: none;
+      }
+
+      .tips-touch {
+        display: block;
       }
     }
