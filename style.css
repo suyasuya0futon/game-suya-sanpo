@@ -407,6 +407,7 @@
       backdrop-filter: blur(6px);
       pointer-events: auto;
       z-index: 100;
+      touch-action: none;
     }
 
     .help-overlay[hidden] {
