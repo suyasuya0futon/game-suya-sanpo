@@ -1935,12 +1935,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
         }
         guideTrail.visible = true;
+        const radiusScale = 1 + boostStrength * tuning.GUIDE_BOOST_RADIUS_GAIN;
         for (let gi = 0; gi < GUIDE_DISK_POSITIONS.length; gi += 1) {
           const [ox, oy] = GUIDE_DISK_POSITIONS[gi];
           const child = guideDisk.children[gi];
           child.position.set(
-            nearest.position.x + ox,
-            nearest.position.y + oy,
+            nearest.position.x + ox * radiusScale,
+            nearest.position.y + oy * radiusScale,
             nearest.position.z
           );
           if (isRainbow) {
