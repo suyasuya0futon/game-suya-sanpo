@@ -1978,6 +1978,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           if (hit === "pass") collect(item);
           else if (hit === "crash") crash("リングの縁に衝突しました。");
         }
+        if (!item.userData.collected && !item.userData.missed && item.position.z >= ship.position.z) {
+          item.userData.missed = true;
+          state.combo = 0;
+        }
         if (item.position.z > 36) {
           if (halo && halo.geometry) halo.geometry.dispose();
           const r = item.children[0];
