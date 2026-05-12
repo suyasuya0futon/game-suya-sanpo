@@ -1616,7 +1616,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.time = 9999;
       state.speed = practice ? 14 : 17;
       state.distance = 0;
-      state.spawnTimer = 0.1;
+      state.spawnTimer = 0.1 * tuning.BASE_SPEED;
       state.hazardTimer = 9999;
       state.invulnerable = 1.0;
       state.boost = 0;
@@ -1835,23 +1835,23 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         }
       }
 
-      state.spawnTimer -= dt;
+      state.spawnTimer -= forward;
       if (state.spawnTimer <= 0) {
         if (state.rainbowQueue > 0) {
           const total = 7;
           const idx = total - state.rainbowQueue;
           spawnPickup({ rainbow: true, hue: 0.1 + (idx / total) * 0.75, idx });
           state.rainbowQueue -= 1;
-          state.spawnTimer = state.rainbowQueue > 0 ? tuning.RAINBOW_RING_SPAWN_INTERVAL : 2.4 + Math.random() * 2.0;
+          state.spawnTimer = (state.rainbowQueue > 0 ? tuning.RAINBOW_RING_SPAWN_INTERVAL : 2.4 + Math.random() * 2.0) * tuning.BASE_SPEED;
         } else {
           spawnPickup();
           if (Math.random() < 0.07) {
             state.rainbowQueue = 7;
-            state.spawnTimer = 1.8;
+            state.spawnTimer = 1.8 * tuning.BASE_SPEED;
           } else if (Math.random() < 0.4) {
-            state.spawnTimer = 0.4 + Math.random() * 0.9;
+            state.spawnTimer = (0.4 + Math.random() * 0.9) * tuning.BASE_SPEED;
           } else {
-            state.spawnTimer = 1.6 + Math.random() * 3.4;
+            state.spawnTimer = (1.6 + Math.random() * 3.4) * tuning.BASE_SPEED;
           }
         }
       }
