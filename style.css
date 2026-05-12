@@ -381,11 +381,7 @@
 
     body.touch-swap .boost {
       right: auto;
-      left: 78px;
-    }
-
-    body.touch-swap .bottom {
-      justify-self: start;
+      left: 12px;
     }
 
     .tips kbd {
@@ -583,7 +579,7 @@
 
     .touch {
       position: fixed;
-      inset: auto 16px 18px 16px;
+      inset: auto 16px 12px 16px;
       display: none;
       justify-content: flex-start;
       pointer-events: none;
@@ -618,7 +614,7 @@
 
     .boost {
       position: fixed;
-      right: 78px;
+      right: 12px;
       bottom: 12px;
       width: min(154px, 38vw);
       height: 58px;
@@ -654,8 +650,12 @@
       }
 
       .bottom {
-        grid-template-columns: 1fr;
-        justify-items: end;
+        position: fixed;
+        left: 50%;
+        bottom: 12px;
+        transform: translateX(-50%);
+        grid-template-columns: auto;
+        justify-items: center;
       }
 
       body:has(#menu[hidden]) .touch {
