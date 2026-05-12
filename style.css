@@ -228,7 +228,7 @@
     }
 
     .bgm-toggle input:checked::before {
-      content: "✓";
+      content: "\2713";
     }
 
     .bgm-toggle small {
