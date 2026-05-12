@@ -2097,7 +2097,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         applyRainbow(sleeveR.children[1].material.color, 0.7);
         sleeveR.children[2].material.color.lerpColors(colorNormal.sleeve2, colorBoost.sleeve2, b);
         applyRainbow(sleeveR.children[2].material.color, 0.8);
-        const targetSpeed = Math.min(512, 17 + (state.loopCount - 1) * 5);
+        const targetSpeed = Math.min(tuning.MAX_SPEED, 17 + (state.loopCount - 1) * 5);
         state.speed += (targetSpeed - state.speed) * dt * 0.06;
         const boostSpeedFactor = 1 + state.boost * (tuning.BOOST_SPEED_MULTIPLIER - 1);
 
