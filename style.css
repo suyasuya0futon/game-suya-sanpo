@@ -10,6 +10,7 @@
       --lime: #bbff64;
       --amber: #ffc75a;
       --red: #ff5f7e;
+      --help-width: min(440px, calc(100vw - 48px));
     }
 
     * {
@@ -421,7 +422,7 @@
     }
 
     .help-content {
-      width: min(440px, calc(100vw - 48px));
+      width: var(--help-width);
       text-shadow: 0 2px 16px rgba(2, 8, 24, 0.65);
     }
 
@@ -443,7 +444,11 @@
     }
 
     .credits {
-      margin-top: 20px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 24px;
+      width: var(--help-width);
       padding-top: 14px;
       border-top: 1px solid rgba(255, 255, 255, 0.12);
       display: flex;
