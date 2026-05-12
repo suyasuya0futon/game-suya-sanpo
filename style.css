@@ -357,6 +357,7 @@
 
     .sound {
       pointer-events: auto;
+      touch-action: manipulation;
       width: 46px;
       min-width: 46px;
       height: 46px;
@@ -393,6 +394,7 @@
 
     .help {
       pointer-events: auto;
+      touch-action: manipulation;
       width: 46px;
       min-width: 46px;
       height: 46px;
