@@ -341,6 +341,53 @@
       line-height: 1;
     }
 
+    .touch-swap-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: rgba(246, 251, 255, 0.78);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .touch-swap-toggle input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 0;
+      background: transparent;
+      cursor: pointer;
+      display: inline-grid;
+      place-content: center;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .touch-swap-toggle input:checked::before {
+      content: "\2713";
+    }
+
+    body.touch-swap .touch {
+      justify-content: flex-end;
+    }
+
+    body.touch-swap .boost {
+      right: auto;
+      left: 78px;
+    }
+
+    body.touch-swap .bottom {
+      justify-self: start;
+    }
+
     .tips kbd {
       min-width: 26px;
       display: inline-grid;

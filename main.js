@@ -46,6 +46,10 @@
       if (event.target === helpOverlay) setHelpOpen(false);
     });
 
+    document.querySelector("#touchSwap").addEventListener("change", (event) => {
+      document.body.classList.toggle("touch-swap", event.target.checked);
+    });
+
     const SKY_SNOW_GRADIENT_STOPS = [
       [0, "#0a1322"],
       [0.18, "#152244"],
