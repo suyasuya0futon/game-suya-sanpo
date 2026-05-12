@@ -254,6 +254,7 @@
       rainbowQueue: 0,
       muted: false,
       debugMode: tuning.DEBUG_MODE,
+      autopilot: false,
       snow: false,
       rings: 0,
       ended: false,
@@ -1689,7 +1690,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       scoreEl.textContent = `SCORE：${score}`;
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
-        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  CHAIN=${state.combo}  SNOW=${state.snow ? "ON" : "OFF"}`;
+        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  CHAIN=${state.combo}  AUTO=${state.autopilot ? "ON" : "OFF"}  SNOW=${state.snow ? "ON" : "OFF"}`;
         debugInfoEl.hidden = false;
       } else {
         debugInfoEl.hidden = true;
@@ -1703,6 +1704,20 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (keys.has("KeyW") || keys.has("ArrowUp")) input.y += 1;
       if (keys.has("KeyS") || keys.has("ArrowDown")) input.y -= 1;
       input.add(touchInput);
+      if (state.debugMode && state.autopilot) {
+        let target = null;
+        let targetZ = -Infinity;
+        for (const item of pickups) {
+          if (item.userData.collected) continue;
+          if (item.position.z >= ship.position.z) continue;
+          if (item.position.z > targetZ) { targetZ = item.position.z; target = item; }
+        }
+        if (target) {
+          input.x = THREE.MathUtils.clamp(target.position.x - ship.position.x, -1, 1);
+          input.y = THREE.MathUtils.clamp(target.position.y - ship.position.y, -1, 1);
+        }
+        keys.add("Space");
+      }
       if (input.lengthSq() > 1) input.normalize();
     }
 
@@ -2297,6 +2312,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       keys.add(event.code);
       if (event.code === "Space") event.preventDefault();
       if (event.code === "KeyR" && state.debugMode) resetGame(state.practice);
+      if (event.code === "KeyP" && state.debugMode) {
+        state.autopilot = !state.autopilot;
+        if (!state.autopilot) keys.delete("Space");
+      }
       if (event.code === "Escape") {
         if (!helpOverlay.hidden) setHelpOpen(false);
         else if (state.running) setManualPause(true);
