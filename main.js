@@ -8,7 +8,6 @@
     const debugAutoEl = document.querySelector("#debugAuto");
     const menu = document.querySelector("#menu");
     const startBtn = document.querySelector("#start");
-    const practiceBtn = document.querySelector("#practice");
     const soundBtn = document.querySelector("#sound");
     const flash = document.querySelector("#flash");
     const stick = document.querySelector("#stick");
@@ -224,27 +223,21 @@
     let lastSkyHigh = -1;
     const keys = new Set();
     const pickups = [];
-    const hazards = [];
     const rails = [];
     const clouds = [];
     const particles = [];
     const groundObjects = [];
     const obstacles = [];
-    const lanes = [-7.5, -4.5, -1.5, 1.5, 4.5, 7.5];
     const state = {
       running: false,
       paused: false,
       manualPaused: false,
-      practice: false,
       loopCount: 1,
       score: 0,
       combo: 0,
-      shield: 100,
-      time: 90,
       speed: 17,
       distance: 0,
       spawnTimer: 0,
-      hazardTimer: 0,
       invulnerable: 0,
       boost: 0,
       boostFuel: 0,
@@ -1453,14 +1446,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         }
       });
     }
-    const hazardGeo = new THREE.IcosahedronGeometry(0.95, 0);
-    const hazardMat = new THREE.MeshStandardMaterial({
-      color: 0xff5f7e,
-      emissive: 0xff244f,
-      emissiveIntensity: 1.4,
-      roughness: 0.3,
-      metalness: 0.2
-    });
     const trailGeo = new THREE.SphereGeometry(0.035, 8, 6);
     const trailColors = [0xfffbe6, 0xffe49a, 0xffc870];
     const boostTrailColors = [0xfff8c0, 0xffd66b, 0xff9a2a];
@@ -1490,11 +1475,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       sleeve2: new THREE.Color(0xff9a28)
     };
     function resetObjects() {
-      for (const item of [...pickups, ...hazards, ...particles]) {
+      for (const item of [...pickups, ...particles]) {
         scene.remove(item);
       }
       pickups.length = 0;
-      hazards.length = 0;
       particles.length = 0;
     }
 
@@ -1560,10 +1544,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       pickup.userData.fadeMaterials = fadeMaterials;
       scene.add(pickup);
       pickups.push(pickup);
-    }
-
-    function spawnHazard() {
-      return null;
     }
 
     function burst(position, color, count = 14) {
@@ -1681,23 +1661,19 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       particles.push(p);
     }
 
-    function resetGame(practice = false) {
+    function resetGame() {
       resetObjects();
       state.running = true;
       startBgm();
-      state.practice = practice;
       state.score = 0;
       state.combo = 0;
       state.loopCount = 1;
       updateLoopDisplay();
       applySnowMode(false);
       ground.position.z = -400;
-      state.shield = 100;
-      state.time = 9999;
-      state.speed = practice ? 14 : 17;
+      state.speed = 17;
       state.distance = 0;
       state.spawnTimer = 0.1 * tuning.BASE_SPEED;
-      state.hazardTimer = 9999;
       state.invulnerable = 1.0;
       state.boost = 0;
       state.boostFuel = 0;
@@ -1733,7 +1709,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const resultScoreEl = document.querySelector("#resultScore");
       if (resultScoreEl) resultScoreEl.textContent = `SCORE：${String(state.score).padStart(tuning.SCORE_MAX_DIGITS, "0")}`;
       startBtn.textContent = "RETRY";
-      if (practiceBtn) practiceBtn.textContent = "";
     }
 
     function updateHud() {
@@ -1822,22 +1797,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       const halo = item.children[1];
       if (halo) halo.visible = false;
-    }
-
-    function hit(item, index) {
-      if (state.invulnerable > 0) return;
-      state.shield -= 24;
-      state.combo = 1;
-      state.invulnerable = 1.2;
-      burst(item.position, 0xff5f7e, 22);
-      tone(120, 0.16, "sawtooth", 0.04);
-      flash.classList.add("on");
-      window.setTimeout(() => flash.classList.remove("on"), 120);
-      scene.remove(item);
-      hazards.splice(index, 1);
-      if (state.shield <= 0) {
-        endGame("Crash", "シールドが尽きました。");
-      }
     }
 
     function crash(message = "障害物に衝突しました。") {
@@ -2382,7 +2341,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       keys.add(event.code);
       if (event.code === "Space") event.preventDefault();
-      if (event.code === "KeyR" && state.debugMode) resetGame(state.practice);
+      if (event.code === "KeyR" && state.debugMode) resetGame();
       if (event.code === "KeyP" && state.debugMode) {
         state.autopilot = !state.autopilot;
         if (!state.autopilot) keys.delete("Space");
@@ -2413,15 +2372,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
 
     startBtn.addEventListener("click", () => {
-      resetGame(false);
+      resetGame();
       if (!state.muted) audioCtx.resume();
     });
-    if (practiceBtn) {
-      practiceBtn.addEventListener("click", () => {
-        resetGame(true);
-        if (!state.muted) audioCtx.resume();
-      });
-    }
     soundBtn.addEventListener("click", () => {
       setSoundEnabled(state.muted);
       audioCtx.resume();
@@ -2463,7 +2416,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
 
     if (new URLSearchParams(window.location.search).has("play")) {
-      resetGame(false);
+      resetGame();
     }
 
     updateHud();
