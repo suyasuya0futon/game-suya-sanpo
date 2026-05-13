@@ -1798,7 +1798,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const scoreBoostMul = state.boost > 0.5 ? tuning.BOOST_SCORE_MULTIPLIER : 1;
       state.score = Math.min(tuning.SCORE_MAX, state.score + Math.floor(ringScore * scoreBoostMul * state.combo));
       const rewardMultiplier = isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1;
-      state.boostFuel += tuning.BOOST_FUEL_PER_RING * rewardMultiplier;
+      state.boostFuel = Math.min(tuning.FUEL_DISK_MAX_DIAMETER, state.boostFuel + tuning.BOOST_FUEL_PER_RING * rewardMultiplier);
       state.boostEmptyLatched = false;
       burstRing(
         item,
