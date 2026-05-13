@@ -134,6 +134,7 @@
       align-self: center;
       justify-self: center;
       width: min(660px, calc(100vw - 32px));
+      margin-top: 80px;
       padding: 0;
       border: 0;
       background: transparent;

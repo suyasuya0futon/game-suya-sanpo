@@ -1144,6 +1144,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     glow.renderOrder = 2;
     ship.add(glow);
 
+    const HALO_NATURAL_DIAMETER = 5.1; // RingGeometry(1.15, 2.55) の外周直径
     const halo = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.55, 96), new THREE.MeshBasicMaterial({
       color: tuning.SHIP_HALO_COLOR,
       transparent: true,
@@ -1726,7 +1727,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
         debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  SNOW=${state.snow ? "ON" : "OFF"}`;
-        debugStatsEl.textContent = `CHAIN=${state.combo}  FUEL/F=${state.fullBoost ? "MAX" : state.boostFuel.toFixed(2)}`;
+        const diskDiameter = Math.min(state.boostFuel, tuning.SHIP_HALO_MAX_DIAMETER);
+        debugStatsEl.textContent = `CHAIN=${state.combo}  FUEL/F=${state.fullBoost ? "MAX" : state.boostFuel.toFixed(2)}  DISK=${diskDiameter.toFixed(2)}`;
         debugAutoEl.textContent = `AUTOPILOT/P=${state.autopilot ? "ON" : "OFF"}  AUTOBOOST/B=${state.autoBoost ? "ON" : "OFF"}  TRAIL/T=${state.trail ? "ON" : "OFF"}`;
         debugInfoEl.hidden = false;
         debugStatsEl.hidden = false;
@@ -2211,7 +2213,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const boostExpand = 1 + b * fuelFactor * (tuning.SHIP_GLOW_BOOST_EXPAND + rb * tuning.SHIP_GLOW_RAINBOW_EXPAND);
         glow.scale.set(tuning.SHIP_GLOW_WIDTH * pulse * boostExpand, tuning.SHIP_GLOW_HEIGHT * pulse * boostExpand, 1);
         glow.material.opacity = Math.min(1, 1.0 + b * 0.2);
-        halo.scale.setScalar(fuelFactor * tuning.SHIP_HALO_MAX_SCALE);
+        const haloDiameter = Math.min(state.boostFuel, tuning.SHIP_HALO_MAX_DIAMETER);
+        halo.scale.setScalar(haloDiameter / HALO_NATURAL_DIAMETER);
         halo.rotation.z += dt * (0.22 + b * 0.32);
         const enginePulse = 1 + b * 0.6;
         engine.scale.set(0.55 * enginePulse, 0.55 * enginePulse, 1);
