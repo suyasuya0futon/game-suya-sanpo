@@ -223,10 +223,10 @@
     let lastSkyHigh = -1;
     const keys = new Set();
     const pickups = [];
-    const rails = [];
+    const loopingClouds = [];
     const clouds = [];
     const particles = [];
-    const groundObjects = [];
+    const loopingGroundObjects = [];
     const obstacles = [];
     const state = {
       running: false,
@@ -911,7 +911,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
     updateLoopDisplay();
 
-    groundObjects.push(ground);
+    loopingGroundObjects.push(ground);
     {
       const seen = new Set();
       const fadeMaterials = [];
@@ -943,7 +943,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       cloud.userData.speed = 0.04 + Math.random() * 0.08;
       cloud.userData.baseOpacity = baseOpacity;
       scene.add(cloud);
-      rails.push(cloud);
+      loopingClouds.push(cloud);
       clouds.push(cloud);
     }
 
@@ -1861,11 +1861,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function stepWorld(forward) {
-      for (const item of rails) {
+      for (const item of loopingClouds) {
         item.position.z += forward;
         if (item.position.z > 18) item.position.z -= tuning.CLOUD_WRAP_DISTANCE;
       }
-      for (const item of groundObjects) {
+      for (const item of loopingGroundObjects) {
         item.position.z += forward * 0.4;
         if (item.position.z > 120) {
           item.position.z -= tuning.GROUND_WRAP_DISTANCE;
