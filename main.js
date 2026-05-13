@@ -1144,15 +1144,21 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     glow.renderOrder = 2;
     ship.add(glow);
 
-    const FUEL_DISK_NATURAL_DIAMETER = 5.1; // RingGeometry(1.15, 2.55) の外周直径
-    const fuelDisk = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.55, 96), new THREE.MeshBasicMaterial({
+    const FUEL_DISK_NATURAL_DIAMETER = 5.1; // 外周直径（fuelDiskOuter の外周 2.55 × 2）
+    const fuelDiskMat = new THREE.MeshBasicMaterial({
       color: tuning.FUEL_DISK_COLOR,
       transparent: true,
       opacity: tuning.FUEL_DISK_OPACITY,
       side: THREE.DoubleSide,
       depthWrite: false,
       blending: THREE.AdditiveBlending
-    }));
+    });
+    const fuelDiskEdgeMat = fuelDiskMat.clone();
+    fuelDiskEdgeMat.opacity = tuning.FUEL_DISK_OPACITY * 0.5;
+    const fuelDiskInner = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.27, 96), fuelDiskMat);
+    const fuelDiskOuter = new THREE.Mesh(new THREE.RingGeometry(2.27, 2.55, 96), fuelDiskEdgeMat);
+    const fuelDisk = new THREE.Group();
+    fuelDisk.add(fuelDiskInner, fuelDiskOuter);
     fuelDisk.rotation.x = Math.PI / 2;
     fuelDisk.position.set(0, tuning.FUEL_DISK_Y_OFFSET, 0.08);
     ship.add(fuelDisk);
@@ -2174,8 +2180,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         applyRainbow(glow.material.color, 0.1);
         coreLight.material.color.lerpColors(colorNormal.core, colorBoost.core, b);
         applyRainbow(coreLight.material.color, 0.15);
-        fuelDisk.material.color.lerpColors(colorNormal.fuelDisk, colorBoost.fuelDisk, b);
-        applyRainbow(fuelDisk.material.color, 0.2);
+        fuelDiskMat.color.lerpColors(colorNormal.fuelDisk, colorBoost.fuelDisk, b);
+        applyRainbow(fuelDiskMat.color, 0.2);
+        fuelDiskEdgeMat.color.copy(fuelDiskMat.color);
         engineHalo.material.color.lerpColors(colorNormal.engineHalo, colorBoost.engineHalo, b);
         applyRainbow(engineHalo.material.color, 0.25);
         shipLight.color.lerpColors(colorNormal.light, colorBoost.light, b);
