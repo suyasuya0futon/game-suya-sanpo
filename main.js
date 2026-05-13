@@ -1144,18 +1144,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     glow.renderOrder = 2;
     ship.add(glow);
 
-    const HALO_NATURAL_DIAMETER = 5.1; // RingGeometry(1.15, 2.55) の外周直径
-    const halo = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.55, 96), new THREE.MeshBasicMaterial({
-      color: tuning.SHIP_HALO_COLOR,
+    const FUEL_DISK_NATURAL_DIAMETER = 5.1; // RingGeometry(1.15, 2.55) の外周直径
+    const fuelDisk = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.55, 96), new THREE.MeshBasicMaterial({
+      color: tuning.FUEL_DISK_COLOR,
       transparent: true,
-      opacity: tuning.SHIP_HALO_OPACITY,
+      opacity: tuning.FUEL_DISK_OPACITY,
       side: THREE.DoubleSide,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     }));
-    halo.rotation.x = Math.PI / 2;
-    halo.position.set(0, tuning.SHIP_HALO_Y_OFFSET, 0.08);
-    ship.add(halo);
+    fuelDisk.rotation.x = Math.PI / 2;
+    fuelDisk.position.set(0, tuning.FUEL_DISK_Y_OFFSET, 0.08);
+    ship.add(fuelDisk);
 
     const sleeveL = createSleeve(-1);
     const sleeveR = createSleeve(1);
@@ -1456,7 +1456,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       bodyEmissive: new THREE.Color(0x2a6fe0),
       glow: new THREE.Color(0x7fc2ff),
       core: new THREE.Color(0x9fd4ff),
-      halo: new THREE.Color(0x6fb8ff),
+      fuelDisk: new THREE.Color(0x6fb8ff),
       engineHalo: new THREE.Color(0x4f9bff),
       light: new THREE.Color(0x4f9bff),
       sleeve0: new THREE.Color(0xb6e2ff),
@@ -1468,7 +1468,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       bodyEmissive: new THREE.Color(0xffa830),
       glow: new THREE.Color(0xffd24a),
       core: new THREE.Color(0xfff6c8),
-      halo: new THREE.Color(0xffd24a),
+      fuelDisk: new THREE.Color(0xffd24a),
       engineHalo: new THREE.Color(0xffb13a),
       light: new THREE.Color(0xffc24a),
       sleeve0: new THREE.Color(0xfff2b8),
@@ -1727,7 +1727,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
         debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  SNOW=${state.snow ? "ON" : "OFF"}`;
-        const diskDiameter = Math.min(state.boostFuel, tuning.SHIP_HALO_MAX_DIAMETER);
+        const diskDiameter = Math.min(state.boostFuel, tuning.FUEL_DISK_MAX_DIAMETER);
         debugStatsEl.textContent = `CHAIN=${state.combo}  FUEL/F=${state.fullBoost ? "MAX" : state.boostFuel.toFixed(2)}  DISK=${diskDiameter.toFixed(2)}`;
         debugAutoEl.textContent = `AUTOPILOT/P=${state.autopilot ? "ON" : "OFF"}  AUTOBOOST/B=${state.autoBoost ? "ON" : "OFF"}  TRAIL/T=${state.trail ? "ON" : "OFF"}`;
         debugInfoEl.hidden = false;
@@ -2174,8 +2174,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         applyRainbow(glow.material.color, 0.1);
         coreLight.material.color.lerpColors(colorNormal.core, colorBoost.core, b);
         applyRainbow(coreLight.material.color, 0.15);
-        halo.material.color.lerpColors(colorNormal.halo, colorBoost.halo, b);
-        applyRainbow(halo.material.color, 0.2);
+        fuelDisk.material.color.lerpColors(colorNormal.fuelDisk, colorBoost.fuelDisk, b);
+        applyRainbow(fuelDisk.material.color, 0.2);
         engineHalo.material.color.lerpColors(colorNormal.engineHalo, colorBoost.engineHalo, b);
         applyRainbow(engineHalo.material.color, 0.25);
         shipLight.color.lerpColors(colorNormal.light, colorBoost.light, b);
@@ -2213,9 +2213,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const boostExpand = 1 + b * fuelFactor * (tuning.SHIP_GLOW_BOOST_EXPAND + rb * tuning.SHIP_GLOW_RAINBOW_EXPAND);
         glow.scale.set(tuning.SHIP_GLOW_WIDTH * pulse * boostExpand, tuning.SHIP_GLOW_HEIGHT * pulse * boostExpand, 1);
         glow.material.opacity = Math.min(1, 1.0 + b * 0.2);
-        const haloDiameter = Math.min(state.boostFuel, tuning.SHIP_HALO_MAX_DIAMETER);
-        halo.scale.setScalar(haloDiameter / HALO_NATURAL_DIAMETER);
-        halo.rotation.z += dt * (0.22 + b * 0.32);
+        const fuelDiskDiameter = Math.min(state.boostFuel, tuning.FUEL_DISK_MAX_DIAMETER);
+        fuelDisk.scale.setScalar(fuelDiskDiameter / FUEL_DISK_NATURAL_DIAMETER);
+        fuelDisk.rotation.z += dt * (0.22 + b * 0.32);
         const enginePulse = 1 + b * 0.6;
         engine.scale.set(0.55 * enginePulse, 0.55 * enginePulse, 1);
         engineHalo.scale.set(1.4 * enginePulse * (1 + b * 0.5), 1.0 * enginePulse * (1 + b * 0.5), 1);
@@ -2314,8 +2314,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         } else {
           ship.rotation.y += dt * 0.5;
           ship.position.y = 26 + Math.sin(clock.elapsedTime * 1.1) * 0.42;
-          halo.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
-          halo.rotation.z += dt * 0.16;
+          fuelDisk.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
+          fuelDisk.rotation.z += dt * 0.16;
           sleeveL.rotation.z = 0.18 + Math.sin(clock.elapsedTime * 1.8) * 0.08;
           sleeveR.rotation.z = -0.18 - Math.sin(clock.elapsedTime * 1.8 + 0.4) * 0.08;
           camera.up.set(0, 1, 0);
