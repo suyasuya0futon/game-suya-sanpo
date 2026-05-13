@@ -4,6 +4,7 @@
     const canvas = document.querySelector("#game");
     const scoreEl = document.querySelector("#score");
     const debugInfoEl = document.querySelector("#debugInfo");
+    const debugStatsEl = document.querySelector("#debugStats");
     const debugAutoEl = document.querySelector("#debugAuto");
     const menu = document.querySelector("#menu");
     const startBtn = document.querySelector("#start");
@@ -256,6 +257,7 @@
       debugMode: tuning.DEBUG_MODE,
       autopilot: false,
       autoBoost: false,
+      fullBoost: false,
       trail: true,
       snow: false,
       rings: 0,
@@ -451,6 +453,7 @@
 
     function setDebugMode(enabled) {
       state.debugMode = enabled;
+      if (enabled) state.fullBoost = false;
       document.body.classList.toggle("debug-on", enabled);
       updateHud();
       refreshLoopBuildingColor();
@@ -1142,15 +1145,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     ship.add(glow);
 
     const halo = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.55, 96), new THREE.MeshBasicMaterial({
-      color: 0x6fb8ff,
+      color: tuning.SHIP_HALO_COLOR,
       transparent: true,
-      opacity: 0.2,
+      opacity: tuning.SHIP_HALO_OPACITY,
       side: THREE.DoubleSide,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     }));
     halo.rotation.x = Math.PI / 2;
-    halo.position.z = 0.08;
+    halo.position.set(0, tuning.SHIP_HALO_Y_OFFSET, 0.08);
     ship.add(halo);
 
     const sleeveL = createSleeve(-1);
@@ -1722,12 +1725,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       scoreEl.textContent = `SCORE：${score}`;
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
-        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  CHAIN=${state.combo}  SNOW=${state.snow ? "ON" : "OFF"}`;
-        debugAutoEl.textContent = `AUTO(P)=${state.autopilot ? "ON" : "OFF"}  BOOST(B)=${state.autoBoost ? "ON" : "OFF"}  TRAIL(T)=${state.trail ? "ON" : "OFF"}`;
+        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  SNOW=${state.snow ? "ON" : "OFF"}`;
+        debugStatsEl.textContent = `CHAIN=${state.combo}  FUEL/F=${state.fullBoost ? "MAX" : state.boostFuel.toFixed(2)}`;
+        debugAutoEl.textContent = `AUTOPILOT/P=${state.autopilot ? "ON" : "OFF"}  AUTOBOOST/B=${state.autoBoost ? "ON" : "OFF"}  TRAIL/T=${state.trail ? "ON" : "OFF"}`;
         debugInfoEl.hidden = false;
+        debugStatsEl.hidden = false;
         debugAutoEl.hidden = false;
       } else {
         debugInfoEl.hidden = true;
+        debugStatsEl.hidden = true;
         debugAutoEl.hidden = true;
       }
     }
@@ -2136,7 +2142,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (state.running) {
         state.invulnerable = Math.max(0, state.invulnerable - dt);
         const wantsBoost = keys.has("Space");
-        const debugBoosting = state.debugMode && wantsBoost;
+        const debugBoosting = state.debugMode && state.fullBoost && wantsBoost;
         const boosting = wantsBoost && (state.boostFuel > 0 || debugBoosting);
         if (boosting && !debugBoosting) {
           state.boostFuel = Math.max(0, state.boostFuel - dt);
@@ -2205,7 +2211,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const boostExpand = 1 + b * fuelFactor * (tuning.SHIP_GLOW_BOOST_EXPAND + rb * tuning.SHIP_GLOW_RAINBOW_EXPAND);
         glow.scale.set(tuning.SHIP_GLOW_WIDTH * pulse * boostExpand, tuning.SHIP_GLOW_HEIGHT * pulse * boostExpand, 1);
         glow.material.opacity = Math.min(1, 1.0 + b * 0.2);
-        halo.scale.setScalar(1 + Math.sin(clock.elapsedTime * 2.2) * 0.08);
+        halo.scale.setScalar(fuelFactor * tuning.SHIP_HALO_MAX_SCALE);
         halo.rotation.z += dt * (0.22 + b * 0.32);
         const enginePulse = 1 + b * 0.6;
         engine.scale.set(0.55 * enginePulse, 0.55 * enginePulse, 1);
@@ -2363,6 +2369,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (event.code === "KeyB" && state.debugMode) {
         state.autoBoost = !state.autoBoost;
         if (!state.autoBoost) keys.delete("Space");
+      }
+      if (event.code === "KeyF" && state.debugMode) {
+        state.fullBoost = !state.fullBoost;
       }
       if (event.code === "KeyT" && state.debugMode) {
         state.trail = !state.trail;
