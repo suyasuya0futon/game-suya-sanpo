@@ -1158,12 +1158,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     fuelDiskEdgeMat.opacity = tuning.FUEL_DISK_OPACITY * 0.5;
     const fuelDiskInner = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.55, 96), fuelDiskMat);
     const tankOuterR = tuning.FUEL_DISK_MAX_DIAMETER / 2;
-    const fuelDiskOuter = new THREE.Mesh(new THREE.RingGeometry(tankOuterR - 0.15, tankOuterR, 96), fuelDiskEdgeMat);
+    const fuelDiskOuter = new THREE.Mesh(
+      new THREE.CylinderGeometry(tankOuterR, tankOuterR, 0.15, 96, 1, true),
+      fuelDiskEdgeMat
+    );
     const fuelDisk = new THREE.Group();
-    fuelDisk.add(fuelDiskInner, fuelDiskOuter);
+    fuelDisk.add(fuelDiskInner);
     fuelDisk.rotation.x = Math.PI / 2;
     fuelDisk.position.set(0, tuning.FUEL_DISK_Y_OFFSET, 0.08);
     ship.add(fuelDisk);
+    fuelDiskOuter.position.set(0, tuning.FUEL_DISK_Y_OFFSET, 0.08);
+    ship.add(fuelDiskOuter);
 
     const sleeveL = createSleeve(-1);
     const sleeveR = createSleeve(1);
