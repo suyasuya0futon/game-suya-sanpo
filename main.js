@@ -1860,11 +1860,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     }
 
-    function stepObjects(dt) {
-      const forward = state.speed * dt;
-      state.distance += forward;
-      grid.position.z = -62 + (state.distance % 7);
-
+    function stepWorld(forward) {
       for (const item of rails) {
         item.position.z += forward;
         if (item.position.z > 18) item.position.z -= tuning.CLOUD_WRAP_DISTANCE;
@@ -1894,7 +1890,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
         }
       }
+    }
 
+    function stepSpawnTimer(forward) {
       state.spawnTimer -= forward;
       if (state.spawnTimer <= 0) {
         if (state.rainbowQueue > 0) {
@@ -1915,7 +1913,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
         }
       }
+    }
 
+    function stepPickups(dt, forward) {
       playerBox.setFromObject(ship);
       for (let i = pickups.length - 1; i >= 0; i -= 1) {
         const item = pickups[i];
@@ -1975,7 +1975,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           if (!item.userData.collected) state.combo = 0;
         }
       }
+    }
 
+    function stepGuide() {
       let nearest = null;
       let nearestZ = -Infinity;
       for (const item of pickups) {
@@ -2041,7 +2043,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         guideDisk.visible = false;
         chainSprite.visible = false;
       }
+    }
 
+    function stepParticles(dt) {
       for (let i = particles.length - 1; i >= 0; i -= 1) {
         const p = particles[i];
         p.userData.life -= dt;
@@ -2066,7 +2070,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           particles.splice(i, 1);
         }
       }
+    }
 
+    function stepObstacleCollision() {
       if (state.invulnerable <= 0) {
         const sx = 0.9 + state.boost * 0.5;
         const sy = 0.22;
@@ -2084,6 +2090,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           break;
         }
       }
+    }
+
+    function stepObjects(dt) {
+      const forward = state.speed * dt;
+      state.distance += forward;
+      grid.position.z = -62 + (state.distance % 7);
+      stepWorld(forward);
+      stepSpawnTimer(forward);
+      stepPickups(dt, forward);
+      stepGuide();
+      stepParticles(dt);
+      stepObstacleCollision();
     }
 
     function updateClouds(dt) {
