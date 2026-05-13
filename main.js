@@ -248,7 +248,6 @@
       boost: 0,
       boostFuel: 0,
       boostEmptyLatched: false,
-      boostEmptyFeedback: 0,
       trailSpawnCarry: 0,
       atmosphereSparkCarry: 0,
       rainbowTimer: 0,
@@ -598,7 +597,6 @@
       if (state.boostEmptyLatched) return;
       state.boostEmptyLatched = true;
       emptyBoostBuzz();
-      state.boostEmptyFeedback = 0.4;
     }
 
     const ambient = new THREE.HemisphereLight(0xd7c6c5, 0x171f46, 1.45);
@@ -1686,7 +1684,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.boost = 0;
       state.boostFuel = 0;
       state.boostEmptyLatched = false;
-      state.boostEmptyFeedback = 0;
       state.trailSpawnCarry = 0;
       state.atmosphereSparkCarry = 0;
       state.rainbowTimer = 0;
@@ -2115,12 +2112,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         return;
       }
       updateInput();
-      state.boostEmptyFeedback = Math.max(0, state.boostEmptyFeedback - dt);
-      const empty = state.boostEmptyFeedback / 0.4;
-      if (empty > 0) {
-        const shake = Math.sin(clock.elapsedTime * Math.PI * 10) * empty;
-        input.x = input.x * (1 - empty) + shake * empty;
-      }
       stars.rotation.y = Math.sin(clock.elapsedTime * 0.05) * 0.015;
 
       for (const cloud of clouds) {
