@@ -1154,6 +1154,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       blending: THREE.AdditiveBlending
     });
     const fuelDiskEdgeMat = fuelDiskMat.clone();
+    fuelDiskEdgeMat.color.setHex(tuning.FUEL_DISK_TANK_COLOR);
     fuelDiskEdgeMat.opacity = tuning.FUEL_DISK_OPACITY * 0.5;
     const fuelDiskInner = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.55, 96), fuelDiskMat);
     const tankOuterR = tuning.FUEL_DISK_MAX_DIAMETER / 2;
@@ -1463,7 +1464,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       bodyEmissive: new THREE.Color(0x2a6fe0),
       glow: new THREE.Color(0x7fc2ff),
       core: new THREE.Color(0x9fd4ff),
-      fuelDisk: new THREE.Color(0x6fb8ff),
+      fuelDisk: new THREE.Color(0xffd66b),
       engineHalo: new THREE.Color(0x4f9bff),
       light: new THREE.Color(0x4f9bff),
       sleeve0: new THREE.Color(0xb6e2ff),
@@ -2183,7 +2184,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         applyRainbow(coreLight.material.color, 0.15);
         fuelDiskMat.color.lerpColors(colorNormal.fuelDisk, colorBoost.fuelDisk, b);
         applyRainbow(fuelDiskMat.color, 0.2);
-        fuelDiskEdgeMat.color.copy(fuelDiskMat.color);
         engineHalo.material.color.lerpColors(colorNormal.engineHalo, colorBoost.engineHalo, b);
         applyRainbow(engineHalo.material.color, 0.25);
         shipLight.color.lerpColors(colorNormal.light, colorBoost.light, b);

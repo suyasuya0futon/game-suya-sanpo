@@ -18,7 +18,8 @@ export const SHIP_SHADOW_OFFSET_Z = 10; // 影が機体より z 方向で何 uni
 // 燃料円盤（ブースト燃料インジケータ）の見た目
 export const FUEL_DISK_Y_OFFSET = 1; // 円盤が機体からどれだけ上に浮くか。
 export const FUEL_DISK_MAX_DIAMETER = 15.0; // 円盤の最大外周直径。FUEL値と直径が1:1対応するため、貯められる燃料の秒数上限も兼ねる。
-export const FUEL_DISK_COLOR = 0x6fb8ff; // 円盤の色。
+export const FUEL_DISK_COLOR = 0xffd66b; // 内側（現燃料）の色（黄金色 — リングから集めた燃料のイメージ）。
+export const FUEL_DISK_TANK_COLOR = 0x6fb8ff; // 外側タンク枠の色。
 export const FUEL_DISK_OPACITY = 0.1; // 円盤の不透明度。
 
 // 機体の移動範囲
