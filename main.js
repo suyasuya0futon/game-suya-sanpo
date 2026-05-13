@@ -248,6 +248,7 @@
       invulnerable: 0,
       boost: 0,
       boostFuel: 0,
+      fuelDisplay: 0,
       boostEmptyLatched: false,
       trailSpawnCarry: 0,
       atmosphereSparkCarry: 0,
@@ -1700,6 +1701,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.invulnerable = 1.0;
       state.boost = 0;
       state.boostFuel = 0;
+      state.fuelDisplay = 0;
       state.boostEmptyLatched = false;
       state.trailSpawnCarry = 0;
       state.atmosphereSparkCarry = 0;
@@ -2226,7 +2228,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const boostExpand = 1 + b * fuelFactor * (tuning.SHIP_GLOW_BOOST_EXPAND + rb * tuning.SHIP_GLOW_RAINBOW_EXPAND);
         glow.scale.set(tuning.SHIP_GLOW_WIDTH * pulse * boostExpand, tuning.SHIP_GLOW_HEIGHT * pulse * boostExpand, 1);
         glow.material.opacity = Math.min(1, 1.0 + b * 0.2);
-        const fuelDiskDiameter = Math.min(state.boostFuel, tuning.FUEL_DISK_MAX_DIAMETER);
+        state.fuelDisplay += (state.boostFuel - state.fuelDisplay) * Math.min(1, dt * 2);
+        const fuelDiskDiameter = Math.min(state.fuelDisplay, tuning.FUEL_DISK_MAX_DIAMETER);
         fuelDiskInner.scale.setScalar(fuelDiskDiameter / FUEL_DISK_NATURAL_DIAMETER);
         fuelDiskOuter.scale.setScalar(1);
         fuelDisk.rotation.z += dt * (0.22 + b * 0.32);
