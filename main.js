@@ -1144,7 +1144,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     glow.renderOrder = 2;
     ship.add(glow);
 
-    const FUEL_DISK_NATURAL_DIAMETER = 5.1; // 外周直径（fuelDiskOuter の外周 2.55 × 2）
+    const FUEL_DISK_NATURAL_DIAMETER = 5.1; // 内側リングの外周直径（2.55 × 2）
     const fuelDiskMat = new THREE.MeshBasicMaterial({
       color: tuning.FUEL_DISK_COLOR,
       transparent: true,
@@ -1155,8 +1155,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
     const fuelDiskEdgeMat = fuelDiskMat.clone();
     fuelDiskEdgeMat.opacity = tuning.FUEL_DISK_OPACITY * 0.5;
-    const fuelDiskInner = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.27, 96), fuelDiskMat);
-    const fuelDiskOuter = new THREE.Mesh(new THREE.RingGeometry(2.27, 2.55, 96), fuelDiskEdgeMat);
+    const fuelDiskInner = new THREE.Mesh(new THREE.RingGeometry(1.15, 2.55, 96), fuelDiskMat);
+    const tankOuterR = tuning.FUEL_DISK_MAX_DIAMETER / 2;
+    const fuelDiskOuter = new THREE.Mesh(new THREE.RingGeometry(tankOuterR - 0.15, tankOuterR, 96), fuelDiskEdgeMat);
     const fuelDisk = new THREE.Group();
     fuelDisk.add(fuelDiskInner, fuelDiskOuter);
     fuelDisk.rotation.x = Math.PI / 2;
@@ -2221,7 +2222,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         glow.scale.set(tuning.SHIP_GLOW_WIDTH * pulse * boostExpand, tuning.SHIP_GLOW_HEIGHT * pulse * boostExpand, 1);
         glow.material.opacity = Math.min(1, 1.0 + b * 0.2);
         const fuelDiskDiameter = Math.min(state.boostFuel, tuning.FUEL_DISK_MAX_DIAMETER);
-        fuelDisk.scale.setScalar(fuelDiskDiameter / FUEL_DISK_NATURAL_DIAMETER);
+        fuelDiskInner.scale.setScalar(fuelDiskDiameter / FUEL_DISK_NATURAL_DIAMETER);
+        fuelDiskOuter.scale.setScalar(1);
         fuelDisk.rotation.z += dt * (0.22 + b * 0.32);
         const enginePulse = 1 + b * 0.6;
         engine.scale.set(0.55 * enginePulse, 0.55 * enginePulse, 1);
@@ -2321,7 +2323,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         } else {
           ship.rotation.y += dt * 0.5;
           ship.position.y = 26 + Math.sin(clock.elapsedTime * 1.1) * 0.42;
-          fuelDisk.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
+          fuelDiskInner.scale.setScalar(0);
+          fuelDiskOuter.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
           fuelDisk.rotation.z += dt * 0.16;
           sleeveL.rotation.z = 0.18 + Math.sin(clock.elapsedTime * 1.8) * 0.08;
           sleeveR.rotation.z = -0.18 - Math.sin(clock.elapsedTime * 1.8 + 0.4) * 0.08;
