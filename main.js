@@ -2086,224 +2086,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     }
 
-    function animate() {
-      requestAnimationFrame(animate);
-      const dt = Math.min(clock.getDelta(), 0.04);
-      if (state.paused) {
-        renderer.render(scene, camera);
-        return;
-      }
-      updateInput();
-      stars.rotation.y = Math.sin(clock.elapsedTime * 0.05) * 0.015;
-
+    function updateClouds(dt) {
       for (const cloud of clouds) {
         cloud.position.x += cloud.userData.speed * dt;
         cloud.position.y += Math.sin(clock.elapsedTime * 0.18 + cloud.position.z) * dt * 0.08;
         if (cloud.position.x > 78) cloud.position.x = -82;
       }
+    }
 
-      const high = altitudeFactor();
-      scene.fog.color.copy(snowSky ? lowFogColorSnow : lowFogColor).lerp(highFogColor, high);
-      scene.fog.density = THREE.MathUtils.lerp(0.007, 0.0032, high);
-      renderer.toneMappingExposure = THREE.MathUtils.lerp(0.95, 0.74, high);
-      ambient.intensity = THREE.MathUtils.lerp(1.45, 0.74, high);
-      sun.intensity = THREE.MathUtils.lerp(1.2, 0.28, high);
-      moonDisk.material.opacity = THREE.MathUtils.lerp(0.34, 0.92, high);
-      moonGlow.material.opacity = THREE.MathUtils.lerp(0.55, 1, high);
-      starMat.opacity = THREE.MathUtils.lerp(0.68, 1, high);
-      if (Math.abs(high - lastSkyHigh) > 0.01) {
-        skyTexture.userData.drawSky(high);
-        lastSkyHigh = high;
-      }
-      if (state.running) {
-        state.invulnerable = Math.max(0, state.invulnerable - dt);
-        const wantsBoost = keys.has("Space");
-        const debugBoosting = state.debugMode && state.fullBoost && wantsBoost;
-        const boosting = wantsBoost && (state.boostFuel > 0 || debugBoosting);
-        if (boosting && !debugBoosting) {
-          state.boostFuel = Math.max(0, state.boostFuel - dt);
-          if (state.boostFuel <= 0) playEmptyBoostOnce();
-        } else if (wantsBoost && !debugBoosting) {
-          playEmptyBoostOnce();
-        } else {
-          state.boostEmptyLatched = false;
-        }
-        state.boost += ((boosting ? 1 : 0) - state.boost) * Math.min(1, dt * 7);
-
-        state.rainbowTimer = Math.max(0, state.rainbowTimer - dt);
-        const rb = Math.min(1, state.rainbowTimer / 8);
-        const b = state.boost;
-        const tmpRainbow = new THREE.Color();
-        const hueBase = (clock.elapsedTime * 0.35) % 1;
-        function applyRainbow(target, hueOffset) {
-          if (rb <= 0) return;
-          tmpRainbow.setHSL((hueBase + hueOffset) % 1, 1.0, 0.56);
-          target.lerp(tmpRainbow, rb);
-        }
-        bodyMat.color.lerpColors(colorNormal.body, colorBoost.body, b);
-        applyRainbow(bodyMat.color, 0.0);
-        bodyMat.emissive.lerpColors(colorNormal.bodyEmissive, colorBoost.bodyEmissive, b);
-        applyRainbow(bodyMat.emissive, 0.05);
-        glow.material.color.lerpColors(colorNormal.glow, colorBoost.glow, b);
-        applyRainbow(glow.material.color, 0.1);
-        coreLight.material.color.lerpColors(colorNormal.core, colorBoost.core, b);
-        applyRainbow(coreLight.material.color, 0.15);
-        fuelDiskMat.color.lerpColors(colorNormal.fuelDisk, colorBoost.fuelDisk, b);
-        applyRainbow(fuelDiskMat.color, 0.2);
-        engineHalo.material.color.lerpColors(colorNormal.engineHalo, colorBoost.engineHalo, b);
-        applyRainbow(engineHalo.material.color, 0.25);
-        shipLight.color.lerpColors(colorNormal.light, colorBoost.light, b);
-        applyRainbow(shipLight.color, 0.1);
-        sleeveL.children[0].material.color.lerpColors(colorNormal.sleeve0, colorBoost.sleeve0, b);
-        applyRainbow(sleeveL.children[0].material.color, 0.3);
-        sleeveL.children[1].material.color.lerpColors(colorNormal.sleeve1, colorBoost.sleeve1, b);
-        applyRainbow(sleeveL.children[1].material.color, 0.4);
-        sleeveL.children[2].material.color.lerpColors(colorNormal.sleeve2, colorBoost.sleeve2, b);
-        applyRainbow(sleeveL.children[2].material.color, 0.5);
-        sleeveR.children[0].material.color.lerpColors(colorNormal.sleeve0, colorBoost.sleeve0, b);
-        applyRainbow(sleeveR.children[0].material.color, 0.6);
-        sleeveR.children[1].material.color.lerpColors(colorNormal.sleeve1, colorBoost.sleeve1, b);
-        applyRainbow(sleeveR.children[1].material.color, 0.7);
-        sleeveR.children[2].material.color.lerpColors(colorNormal.sleeve2, colorBoost.sleeve2, b);
-        applyRainbow(sleeveR.children[2].material.color, 0.8);
-        const targetSpeed = Math.min(tuning.MAX_SPEED, 17 + (state.loopCount - 1) * 5);
-        state.speed += (targetSpeed - state.speed) * dt * 0.06;
-        const boostSpeedFactor = 1 + state.boost * (tuning.BOOST_SPEED_MULTIPLIER - 1);
-
-        const floatBob = Math.sin(clock.elapsedTime * 1.6 + ship.position.x * 0.08) * dt * 0.55;
-        ship.position.x = THREE.MathUtils.clamp(ship.position.x + input.x * dt * 10.5 * boostSpeedFactor, -10.5, 10.5);
-        ship.position.y = THREE.MathUtils.clamp(
-          ship.position.y + input.y * dt * 11.2 * boostSpeedFactor + floatBob,
-          tuning.SHIP_MOVE_MIN_Y,
-          tuning.SHIP_MOVE_MAX_Y
-        );
-        updateAtmosphereDanger(dt);
-        updateHud();
-        ship.rotation.z += ((-input.x * 0.48) - ship.rotation.z) * dt * 8;
-        ship.rotation.x += ((input.y * 0.22) - ship.rotation.x) * dt * 6;
-        ship.rotation.y = Math.sin(clock.elapsedTime * 4.8) * 0.035;
-        const pulse = 1 + Math.sin(clock.elapsedTime * 9) * 0.08;
-        const fuelFactor = Math.min(1, state.boostFuel / 1.5);
-        const boostExpand = 1 + b * fuelFactor * (tuning.SHIP_GLOW_BOOST_EXPAND + rb * tuning.SHIP_GLOW_RAINBOW_EXPAND);
-        glow.scale.set(tuning.SHIP_GLOW_WIDTH * pulse * boostExpand, tuning.SHIP_GLOW_HEIGHT * pulse * boostExpand, 1);
-        glow.material.opacity = Math.min(1, 1.0 + b * 0.2);
-        state.fuelDisplay += (state.boostFuel - state.fuelDisplay) * Math.min(1, dt * 2);
-        const fuelDiskDiameter = Math.min(state.fuelDisplay, tuning.FUEL_DISK_MAX_DIAMETER);
-        fuelDiskInner.scale.setScalar(fuelDiskDiameter / FUEL_DISK_NATURAL_DIAMETER);
-        fuelDiskOuter.scale.setScalar(1);
-        fuelDisk.rotation.z += dt * (0.22 + b * 0.32);
-        const enginePulse = 1 + b * 0.6;
-        engine.scale.set(0.55 * enginePulse, 0.55 * enginePulse, 1);
-        engineHalo.scale.set(1.4 * enginePulse * (1 + b * 0.5), 1.0 * enginePulse * (1 + b * 0.5), 1);
-        const sleeveExpand = 1 + b * (1.0 + rb * 0.4);
-        sleeveL.scale.set(sleeveExpand, 1, sleeveExpand);
-        sleeveR.scale.set(sleeveExpand, 1, sleeveExpand);
-        body.rotation.x = Math.sin(clock.elapsedTime * 1.6) * 0.035 + input.y * 0.025;
-        body.rotation.z = -input.x * 0.035;
-        sleeveL.rotation.z = 0.18 + Math.sin(clock.elapsedTime * 2.8) * 0.11 + input.x * 0.025;
-        sleeveR.rotation.z = -0.18 - Math.sin(clock.elapsedTime * 2.8 + 0.4) * 0.11 + input.x * 0.025;
-        sleeveL.rotation.y = -0.12 + Math.sin(clock.elapsedTime * 1.8) * 0.045;
-        sleeveR.rotation.y = 0.12 + Math.sin(clock.elapsedTime * 1.8 + 0.5) * 0.045;
-        cyanLight.position.x = ship.position.x;
-        cyanLight.position.y = ship.position.y + 3;
-        cyanLight.intensity = 14 + state.boost * 12;
-
-        const shadowAlt = ship.position.y - ground.position.y;
-        const shadowVisibility = 1 - THREE.MathUtils.smoothstep(shadowAlt, 4, 45);
-        const shadowZ = ship.position.z - tuning.SHIP_SHADOW_OFFSET_Z;
-        const lx = ship.position.x - ground.position.x;
-        const lz = shadowZ - ground.position.z;
-        let coverage = 0;
-        for (const f of islandFootprints) {
-          const dx = (lx - f.x) / f.rx;
-          const dz = (lz - f.z) / f.rz;
-          const r = Math.sqrt(dx * dx + dz * dz);
-          const c = 1 - THREE.MathUtils.smoothstep(r, 0.88, 1.0);
-          if (c > coverage) coverage = c;
-        }
-        shipShadow.material.opacity = 0.65 * shadowVisibility * coverage;
-        shipShadow.position.set(ship.position.x, ground.position.y + 0.06, shadowZ);
-        const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
-        shipShadow.scale.set(shadowSize * 1.6 * (1 + state.boost * 0.4), shadowSize, 1);
-        const baseTrailTarget = Math.floor(state.boostFuel * tuning.TRAIL_PER_BOOST_SECOND);
-        const trailTarget = state.trail ? Math.min(tuning.TRAIL_MAX, baseTrailTarget) : 0;
-        let aliveTrail = 0;
-        for (const p of particles) if (p.userData.trail) aliveTrail += 1;
-        if (boosting && state.trail) {
-          state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE * tuning.BOOST_TRAIL_MULTIPLIER;
-          const room = Math.max(0, tuning.TRAIL_MAX - aliveTrail);
-          const toSpawn = Math.min(room, Math.floor(state.trailSpawnCarry));
-          state.trailSpawnCarry -= toSpawn;
-          state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
-          for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(Math.max(0.75, state.boost));
-        } else {
-          const deficit = trailTarget - aliveTrail;
-          if (deficit > 0) {
-            state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE;
-            const toSpawn = Math.min(deficit, Math.floor(state.trailSpawnCarry));
-            state.trailSpawnCarry -= toSpawn;
-            state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
-            for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(state.boost);
-          } else if (deficit < 0) {
-            state.trailSpawnCarry = 0;
-            let toShorten = -deficit;
-            for (let i = 0; i < particles.length && toShorten > 0; i += 1) {
-              const p = particles[i];
-              if (p.userData.trail && p.userData.life > 0.35) {
-                p.userData.life = 0.35;
-                p.userData.maxLife = 0.35;
-                toShorten -= 1;
-              }
-            }
-          } else {
-            state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
-          }
-        }
-
-        camera.position.x += (ship.position.x * 0.5 - camera.position.x) * dt * 2.4;
-        camera.position.y += (ship.position.y + 4.2 - camera.position.y) * dt * 2.2;
-        camera.position.z += (28 + state.boost * 3.5 - camera.position.z) * dt * 2.1;
-        camera.up.set(0, 1, 0);
-        camera.lookAt(ship.position.x * 0.25, ship.position.y + 1.4, -24);
-
-        stepObjects(dt);
-        updateHud();
-      } else {
-        shipShadow.material.opacity = 0;
-        if (state.crashCameraActive) {
-          state.crashCameraTime += dt;
-          const t = Math.min(1, state.crashCameraTime / state.crashCameraDuration);
-          const ease = 1 - Math.pow(1 - t, 3);
-          const roll = Math.sin(ease * Math.PI) * 0.35 + ease * Math.PI;
-          const target = new THREE.Vector3(
-            THREE.MathUtils.lerp(state.crashCameraStartTarget.x, ship.position.x * 0.18, ease),
-            THREE.MathUtils.lerp(state.crashCameraStartTarget.y, ship.position.y + 54, ease),
-            THREE.MathUtils.lerp(state.crashCameraStartTarget.z, -48, ease)
-          );
-          camera.position.set(
-            THREE.MathUtils.lerp(state.crashCameraStartPosition.x, ship.position.x * 0.2, ease),
-            THREE.MathUtils.lerp(state.crashCameraStartPosition.y, ship.position.y + 7.5, ease),
-            THREE.MathUtils.lerp(state.crashCameraStartPosition.z, 18, ease)
-          );
-          camera.up.set(Math.sin(roll), Math.cos(roll), 0);
-          camera.lookAt(target);
-        } else {
-          ship.rotation.y += dt * 0.5;
-          ship.position.y = 26 + Math.sin(clock.elapsedTime * 1.1) * 0.42;
-          fuelDiskInner.scale.setScalar(0);
-          fuelDiskOuter.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
-          fuelDisk.rotation.z += dt * 0.16;
-          sleeveL.rotation.z = 0.18 + Math.sin(clock.elapsedTime * 1.8) * 0.08;
-          sleeveR.rotation.z = -0.18 - Math.sin(clock.elapsedTime * 1.8 + 0.4) * 0.08;
-          camera.up.set(0, 1, 0);
-          camera.position.y += (38 - camera.position.y) * dt * 2;
-          camera.position.z += (28 - camera.position.z) * dt * 2;
-          camera.lookAt(0, 26.5, -12);
-        }
-      }
-
-      updateEngineAudio();
-      updateBgmAudio();
+    function updateCloudFade() {
       for (const cloud of clouds) {
         if (cloud.userData.baseOpacity === undefined) continue;
         const z = cloud.position.z;
@@ -2316,6 +2107,258 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         }
         cloud.material.opacity = cloud.userData.baseOpacity * factor;
       }
+    }
+
+    function updateSkyAtmosphere(high) {
+      scene.fog.color.copy(snowSky ? lowFogColorSnow : lowFogColor).lerp(highFogColor, high);
+      scene.fog.density = THREE.MathUtils.lerp(0.007, 0.0032, high);
+      renderer.toneMappingExposure = THREE.MathUtils.lerp(0.95, 0.74, high);
+      ambient.intensity = THREE.MathUtils.lerp(1.45, 0.74, high);
+      sun.intensity = THREE.MathUtils.lerp(1.2, 0.28, high);
+      moonDisk.material.opacity = THREE.MathUtils.lerp(0.34, 0.92, high);
+      moonGlow.material.opacity = THREE.MathUtils.lerp(0.55, 1, high);
+      starMat.opacity = THREE.MathUtils.lerp(0.68, 1, high);
+      if (Math.abs(high - lastSkyHigh) > 0.01) {
+        skyTexture.userData.drawSky(high);
+        lastSkyHigh = high;
+      }
+    }
+
+    function updateBoostState(dt) {
+      state.invulnerable = Math.max(0, state.invulnerable - dt);
+      const wantsBoost = keys.has("Space");
+      const debugBoosting = state.debugMode && state.fullBoost && wantsBoost;
+      const boosting = wantsBoost && (state.boostFuel > 0 || debugBoosting);
+      if (boosting && !debugBoosting) {
+        state.boostFuel = Math.max(0, state.boostFuel - dt);
+        if (state.boostFuel <= 0) playEmptyBoostOnce();
+      } else if (wantsBoost && !debugBoosting) {
+        playEmptyBoostOnce();
+      } else {
+        state.boostEmptyLatched = false;
+      }
+      state.boost += ((boosting ? 1 : 0) - state.boost) * Math.min(1, dt * 7);
+      state.rainbowTimer = Math.max(0, state.rainbowTimer - dt);
+      return { b: state.boost, rb: Math.min(1, state.rainbowTimer / 8), boosting };
+    }
+
+    function updateShipColors(b, rb) {
+      const tmpRainbow = new THREE.Color();
+      const hueBase = (clock.elapsedTime * 0.35) % 1;
+      function applyRainbow(target, hueOffset) {
+        if (rb <= 0) return;
+        tmpRainbow.setHSL((hueBase + hueOffset) % 1, 1.0, 0.56);
+        target.lerp(tmpRainbow, rb);
+      }
+      bodyMat.color.lerpColors(colorNormal.body, colorBoost.body, b);
+      applyRainbow(bodyMat.color, 0.0);
+      bodyMat.emissive.lerpColors(colorNormal.bodyEmissive, colorBoost.bodyEmissive, b);
+      applyRainbow(bodyMat.emissive, 0.05);
+      glow.material.color.lerpColors(colorNormal.glow, colorBoost.glow, b);
+      applyRainbow(glow.material.color, 0.1);
+      coreLight.material.color.lerpColors(colorNormal.core, colorBoost.core, b);
+      applyRainbow(coreLight.material.color, 0.15);
+      fuelDiskMat.color.lerpColors(colorNormal.fuelDisk, colorBoost.fuelDisk, b);
+      applyRainbow(fuelDiskMat.color, 0.2);
+      engineHalo.material.color.lerpColors(colorNormal.engineHalo, colorBoost.engineHalo, b);
+      applyRainbow(engineHalo.material.color, 0.25);
+      shipLight.color.lerpColors(colorNormal.light, colorBoost.light, b);
+      applyRainbow(shipLight.color, 0.1);
+      sleeveL.children[0].material.color.lerpColors(colorNormal.sleeve0, colorBoost.sleeve0, b);
+      applyRainbow(sleeveL.children[0].material.color, 0.3);
+      sleeveL.children[1].material.color.lerpColors(colorNormal.sleeve1, colorBoost.sleeve1, b);
+      applyRainbow(sleeveL.children[1].material.color, 0.4);
+      sleeveL.children[2].material.color.lerpColors(colorNormal.sleeve2, colorBoost.sleeve2, b);
+      applyRainbow(sleeveL.children[2].material.color, 0.5);
+      sleeveR.children[0].material.color.lerpColors(colorNormal.sleeve0, colorBoost.sleeve0, b);
+      applyRainbow(sleeveR.children[0].material.color, 0.6);
+      sleeveR.children[1].material.color.lerpColors(colorNormal.sleeve1, colorBoost.sleeve1, b);
+      applyRainbow(sleeveR.children[1].material.color, 0.7);
+      sleeveR.children[2].material.color.lerpColors(colorNormal.sleeve2, colorBoost.sleeve2, b);
+      applyRainbow(sleeveR.children[2].material.color, 0.8);
+    }
+
+    function updateShipPhysics(dt) {
+      const targetSpeed = Math.min(tuning.MAX_SPEED, 17 + (state.loopCount - 1) * 5);
+      state.speed += (targetSpeed - state.speed) * dt * 0.06;
+      const boostSpeedFactor = 1 + state.boost * (tuning.BOOST_SPEED_MULTIPLIER - 1);
+      const floatBob = Math.sin(clock.elapsedTime * 1.6 + ship.position.x * 0.08) * dt * 0.55;
+      ship.position.x = THREE.MathUtils.clamp(ship.position.x + input.x * dt * 10.5 * boostSpeedFactor, -10.5, 10.5);
+      ship.position.y = THREE.MathUtils.clamp(
+        ship.position.y + input.y * dt * 11.2 * boostSpeedFactor + floatBob,
+        tuning.SHIP_MOVE_MIN_Y,
+        tuning.SHIP_MOVE_MAX_Y
+      );
+    }
+
+    function updateShipVisuals(dt, b, rb) {
+      ship.rotation.z += ((-input.x * 0.48) - ship.rotation.z) * dt * 8;
+      ship.rotation.x += ((input.y * 0.22) - ship.rotation.x) * dt * 6;
+      ship.rotation.y = Math.sin(clock.elapsedTime * 4.8) * 0.035;
+      const pulse = 1 + Math.sin(clock.elapsedTime * 9) * 0.08;
+      const fuelFactor = Math.min(1, state.boostFuel / 1.5);
+      const boostExpand = 1 + b * fuelFactor * (tuning.SHIP_GLOW_BOOST_EXPAND + rb * tuning.SHIP_GLOW_RAINBOW_EXPAND);
+      glow.scale.set(tuning.SHIP_GLOW_WIDTH * pulse * boostExpand, tuning.SHIP_GLOW_HEIGHT * pulse * boostExpand, 1);
+      glow.material.opacity = Math.min(1, 1.0 + b * 0.2);
+      state.fuelDisplay += (state.boostFuel - state.fuelDisplay) * Math.min(1, dt * 2);
+      const fuelDiskDiameter = Math.min(state.fuelDisplay, tuning.FUEL_DISK_MAX_DIAMETER);
+      fuelDiskInner.scale.setScalar(fuelDiskDiameter / FUEL_DISK_NATURAL_DIAMETER);
+      fuelDiskOuter.scale.setScalar(1);
+      fuelDisk.rotation.z += dt * (0.22 + b * 0.32);
+      const enginePulse = 1 + b * 0.6;
+      engine.scale.set(0.55 * enginePulse, 0.55 * enginePulse, 1);
+      engineHalo.scale.set(1.4 * enginePulse * (1 + b * 0.5), 1.0 * enginePulse * (1 + b * 0.5), 1);
+      const sleeveExpand = 1 + b * (1.0 + rb * 0.4);
+      sleeveL.scale.set(sleeveExpand, 1, sleeveExpand);
+      sleeveR.scale.set(sleeveExpand, 1, sleeveExpand);
+      body.rotation.x = Math.sin(clock.elapsedTime * 1.6) * 0.035 + input.y * 0.025;
+      body.rotation.z = -input.x * 0.035;
+      sleeveL.rotation.z = 0.18 + Math.sin(clock.elapsedTime * 2.8) * 0.11 + input.x * 0.025;
+      sleeveR.rotation.z = -0.18 - Math.sin(clock.elapsedTime * 2.8 + 0.4) * 0.11 + input.x * 0.025;
+      sleeveL.rotation.y = -0.12 + Math.sin(clock.elapsedTime * 1.8) * 0.045;
+      sleeveR.rotation.y = 0.12 + Math.sin(clock.elapsedTime * 1.8 + 0.5) * 0.045;
+      cyanLight.position.x = ship.position.x;
+      cyanLight.position.y = ship.position.y + 3;
+      cyanLight.intensity = 14 + state.boost * 12;
+    }
+
+    function updateShipShadow() {
+      const shadowAlt = ship.position.y - ground.position.y;
+      const shadowVisibility = 1 - THREE.MathUtils.smoothstep(shadowAlt, 4, 45);
+      const shadowZ = ship.position.z - tuning.SHIP_SHADOW_OFFSET_Z;
+      const lx = ship.position.x - ground.position.x;
+      const lz = shadowZ - ground.position.z;
+      let coverage = 0;
+      for (const f of islandFootprints) {
+        const dx = (lx - f.x) / f.rx;
+        const dz = (lz - f.z) / f.rz;
+        const r = Math.sqrt(dx * dx + dz * dz);
+        const c = 1 - THREE.MathUtils.smoothstep(r, 0.88, 1.0);
+        if (c > coverage) coverage = c;
+      }
+      shipShadow.material.opacity = 0.65 * shadowVisibility * coverage;
+      shipShadow.position.set(ship.position.x, ground.position.y + 0.06, shadowZ);
+      const shadowSize = THREE.MathUtils.lerp(0.5, 3.6, shadowVisibility);
+      shipShadow.scale.set(shadowSize * 1.6 * (1 + state.boost * 0.4), shadowSize, 1);
+    }
+
+    function updateTrailParticles(dt, boosting) {
+      const baseTrailTarget = Math.floor(state.boostFuel * tuning.TRAIL_PER_BOOST_SECOND);
+      const trailTarget = state.trail ? Math.min(tuning.TRAIL_MAX, baseTrailTarget) : 0;
+      let aliveTrail = 0;
+      for (const p of particles) if (p.userData.trail) aliveTrail += 1;
+      if (boosting && state.trail) {
+        state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE * tuning.BOOST_TRAIL_MULTIPLIER;
+        const room = Math.max(0, tuning.TRAIL_MAX - aliveTrail);
+        const toSpawn = Math.min(room, Math.floor(state.trailSpawnCarry));
+        state.trailSpawnCarry -= toSpawn;
+        state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
+        for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(Math.max(0.75, state.boost));
+      } else {
+        const deficit = trailTarget - aliveTrail;
+        if (deficit > 0) {
+          state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE;
+          const toSpawn = Math.min(deficit, Math.floor(state.trailSpawnCarry));
+          state.trailSpawnCarry -= toSpawn;
+          state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
+          for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(state.boost);
+        } else if (deficit < 0) {
+          state.trailSpawnCarry = 0;
+          let toShorten = -deficit;
+          for (let i = 0; i < particles.length && toShorten > 0; i += 1) {
+            const p = particles[i];
+            if (p.userData.trail && p.userData.life > 0.35) {
+              p.userData.life = 0.35;
+              p.userData.maxLife = 0.35;
+              toShorten -= 1;
+            }
+          }
+        } else {
+          state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
+        }
+      }
+    }
+
+    function updateRunningCamera(dt) {
+      camera.position.x += (ship.position.x * 0.5 - camera.position.x) * dt * 2.4;
+      camera.position.y += (ship.position.y + 4.2 - camera.position.y) * dt * 2.2;
+      camera.position.z += (28 + state.boost * 3.5 - camera.position.z) * dt * 2.1;
+      camera.up.set(0, 1, 0);
+      camera.lookAt(ship.position.x * 0.25, ship.position.y + 1.4, -24);
+    }
+
+    function updateCrashCamera(dt) {
+      state.crashCameraTime += dt;
+      const t = Math.min(1, state.crashCameraTime / state.crashCameraDuration);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const roll = Math.sin(ease * Math.PI) * 0.35 + ease * Math.PI;
+      const target = new THREE.Vector3(
+        THREE.MathUtils.lerp(state.crashCameraStartTarget.x, ship.position.x * 0.18, ease),
+        THREE.MathUtils.lerp(state.crashCameraStartTarget.y, ship.position.y + 54, ease),
+        THREE.MathUtils.lerp(state.crashCameraStartTarget.z, -48, ease)
+      );
+      camera.position.set(
+        THREE.MathUtils.lerp(state.crashCameraStartPosition.x, ship.position.x * 0.2, ease),
+        THREE.MathUtils.lerp(state.crashCameraStartPosition.y, ship.position.y + 7.5, ease),
+        THREE.MathUtils.lerp(state.crashCameraStartPosition.z, 18, ease)
+      );
+      camera.up.set(Math.sin(roll), Math.cos(roll), 0);
+      camera.lookAt(target);
+    }
+
+    function updateIdleMenuScene(dt) {
+      ship.rotation.y += dt * 0.5;
+      ship.position.y = 26 + Math.sin(clock.elapsedTime * 1.1) * 0.42;
+      fuelDiskInner.scale.setScalar(0);
+      fuelDiskOuter.scale.setScalar(1 + Math.sin(clock.elapsedTime * 1.6) * 0.06);
+      fuelDisk.rotation.z += dt * 0.16;
+      sleeveL.rotation.z = 0.18 + Math.sin(clock.elapsedTime * 1.8) * 0.08;
+      sleeveR.rotation.z = -0.18 - Math.sin(clock.elapsedTime * 1.8 + 0.4) * 0.08;
+      camera.up.set(0, 1, 0);
+      camera.position.y += (38 - camera.position.y) * dt * 2;
+      camera.position.z += (28 - camera.position.z) * dt * 2;
+      camera.lookAt(0, 26.5, -12);
+    }
+
+    function updateMenuScene(dt) {
+      shipShadow.material.opacity = 0;
+      if (state.crashCameraActive) {
+        updateCrashCamera(dt);
+      } else {
+        updateIdleMenuScene(dt);
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.04);
+      if (state.paused) {
+        renderer.render(scene, camera);
+        return;
+      }
+      updateInput();
+      stars.rotation.y = Math.sin(clock.elapsedTime * 0.05) * 0.015;
+      updateClouds(dt);
+      const high = altitudeFactor();
+      updateSkyAtmosphere(high);
+      if (state.running) {
+        const { b, rb, boosting } = updateBoostState(dt);
+        updateShipColors(b, rb);
+        updateShipPhysics(dt);
+        updateAtmosphereDanger(dt);
+        updateHud();
+        updateShipVisuals(dt, b, rb);
+        updateShipShadow();
+        updateTrailParticles(dt, boosting);
+        updateRunningCamera(dt);
+        stepObjects(dt);
+        updateHud();
+      } else {
+        updateMenuScene(dt);
+      }
+      updateEngineAudio();
+      updateBgmAudio();
+      updateCloudFade();
       renderer.render(scene, camera);
     }
 
