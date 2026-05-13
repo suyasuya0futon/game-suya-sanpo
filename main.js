@@ -1,4 +1,5 @@
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
+    import { createAudioSystem } from "./audio.js";
     import * as tuning from "./tuning.js";
 
     const canvas = document.querySelector("#game");
@@ -26,8 +27,8 @@
       state.paused = state.manualPaused || helpOpen;
       pauseOverlay.hidden = !(state.manualPaused && !helpOpen);
       if (state.running && state.paused !== wasPaused) {
-        if (state.paused) stopBgm();
-        else startBgm();
+        if (state.paused) audio.stopBgm();
+        else audio.startBgm();
       }
     }
 
@@ -284,152 +285,11 @@
       );
     }
 
-    const listener = new THREE.AudioListener();
-    camera.add(listener);
-    const audioCtx = listener.context;
-    const masterGain = audioCtx.createGain();
-    const engineGain = audioCtx.createGain();
-    const engineFilter = audioCtx.createBiquadFilter();
-    const engineOsc = audioCtx.createOscillator();
-    const enginePulse = audioCtx.createOscillator();
-    const bgmGain = audioCtx.createGain();
-    const stringGain = audioCtx.createGain();
-    const stringFilter = audioCtx.createBiquadFilter();
-    const drumGain = audioCtx.createGain();
-    const drumPattern = [
-      ["kick", 0],
-      ["hat", 0.78],
-      ["snare", 1.55],
-      ["hat", 2.33],
-      ["kick", 3.1],
-      ["hat", 3.88],
-      ["snare", 4.65],
-      ["hat", 5.43]
-    ];
-    const stringChords = [
-      [138.59, 174.61, 207.65, 261.63, 311.13],
-      [116.54, 138.59, 174.61, 207.65, 261.63],
-      [130.81, 164.81, 196, 246.94, 293.66],
-      [146.83, 174.61, 220, 261.63, 329.63],
-      [155.56, 196, 233.08, 293.66, 349.23],
-      [174.61, 220, 261.63, 329.63, 392],
-      [164.81, 196, 246.94, 293.66, 369.99],
-      [138.59, 174.61, 207.65, 261.63, 311.13]
-    ];
-    const stringVoices = [];
-    let nextStringChordTime = 0;
-    let stringChordIndex = 0;
-
-    masterGain.gain.value = 0.86;
-    engineGain.gain.value = 0;
-    bgmGain.gain.value = 0;
-    stringGain.gain.value = 0;
-    drumGain.gain.value = 0.55;
-    engineFilter.type = "lowpass";
-    engineFilter.frequency.value = 520;
-    engineOsc.type = "sawtooth";
-    engineOsc.frequency.value = 82;
-    enginePulse.type = "triangle";
-    enginePulse.frequency.value = 164;
-    stringFilter.type = "lowpass";
-    stringFilter.frequency.value = 1180;
-    stringFilter.Q.value = 0.35;
-    engineOsc.connect(engineFilter);
-    enginePulse.connect(engineFilter);
-    engineFilter.connect(engineGain);
-    engineGain.connect(masterGain);
-    for (let i = 0; i < 5; i += 1) {
-      const voiceGain = audioCtx.createGain();
-      const main = audioCtx.createOscillator();
-      const shimmer = audioCtx.createOscillator();
-      main.type = "sawtooth";
-      shimmer.type = "triangle";
-      main.frequency.value = stringChords[0][i];
-      shimmer.frequency.value = stringChords[0][i] * 2;
-      main.detune.value = -4 + i * 1.8;
-      shimmer.detune.value = 3 - i * 0.8;
-      voiceGain.gain.value = 0;
-      main.connect(voiceGain);
-      shimmer.connect(voiceGain);
-      voiceGain.connect(stringFilter);
-      main.start();
-      shimmer.start();
-      stringVoices.push({ main, shimmer, gain: voiceGain });
-    }
-    stringFilter.connect(stringGain);
-    stringGain.connect(bgmGain);
-    drumGain.connect(bgmGain);
-    bgmGain.connect(masterGain);
-    masterGain.connect(audioCtx.destination);
-    engineOsc.start();
-    enginePulse.start();
-
-    function tone(freq, duration = 0.08, type = "sine", gain = 0.04, delay = 0, destination = masterGain) {
-      if (state.muted || audioCtx.state !== "running") return;
-      const start = audioCtx.currentTime + delay;
-      const osc = audioCtx.createOscillator();
-      const envelope = audioCtx.createGain();
-      osc.frequency.value = freq;
-      osc.type = type;
-      envelope.gain.setValueAtTime(0.0001, start);
-      envelope.gain.linearRampToValueAtTime(gain, start + 0.015);
-      envelope.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      osc.connect(envelope);
-      envelope.connect(destination);
-      osc.start(start);
-      osc.stop(start + duration + 0.02);
-    }
-
-    function noiseHit(delay, duration, gain, filterType, frequency) {
-      if (state.muted || audioCtx.state !== "running") return;
-      const start = audioCtx.currentTime + delay;
-      const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i += 1) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      const source = audioCtx.createBufferSource();
-      const filter = audioCtx.createBiquadFilter();
-      const envelope = audioCtx.createGain();
-      source.buffer = buffer;
-      filter.type = filterType;
-      filter.frequency.value = frequency;
-      envelope.gain.setValueAtTime(0.0001, start);
-      envelope.gain.linearRampToValueAtTime(gain, start + 0.012);
-      envelope.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      source.connect(filter);
-      filter.connect(envelope);
-      envelope.connect(drumGain);
-      source.start(start);
-      source.stop(start + duration + 0.02);
-    }
-
-    function drumHit(kind, delay) {
-      if (kind === "kick") {
-        tone(72, 0.16, "sine", 0.055, delay, drumGain);
-        tone(42, 0.22, "sine", 0.04, delay + 0.025, drumGain);
-      } else if (kind === "snare") {
-        noiseHit(delay, 0.18, 0.028, "bandpass", 1450);
-        tone(190, 0.12, "triangle", 0.012, delay, drumGain);
-      } else {
-        noiseHit(delay, 0.055, 0.014, "highpass", 6800);
-      }
-    }
-
-    function setSoundEnabled(enabled) {
-      state.muted = !enabled;
-      soundBtn.textContent = "♫";
-      soundBtn.setAttribute("aria-label", state.muted ? "Sound off" : "Sound on");
-      soundBtn.classList.toggle("is-muted", state.muted);
-      masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-      masterGain.gain.setTargetAtTime(state.muted ? 0 : 0.86, audioCtx.currentTime, 0.04);
-      const bgmToggle = document.querySelector("#bgmToggle");
-      if (bgmToggle) bgmToggle.checked = enabled;
-    }
-
-    document.querySelector("#bgmToggle").addEventListener("change", (event) => {
-      setSoundEnabled(event.target.checked);
+    const audio = createAudioSystem({
+      camera,
+      soundBtn,
+      bgmToggle: document.querySelector("#bgmToggle"),
+      state
     });
 
     let loopBuildingMaterial = null;
@@ -453,148 +313,6 @@
       refreshLoopBuildingColor();
     }
     setDebugMode(state.debugMode);
-
-    function updateEngineAudio() {
-      if (audioCtx.state !== "running") return;
-      const now = audioCtx.currentTime;
-      engineGain.gain.setTargetAtTime(0, now, 0.03);
-    }
-
-    function updateBgmAudio() {
-      if (audioCtx.state !== "running") return;
-      const now = audioCtx.currentTime;
-      const active = !state.muted && state.running;
-      bgmGain.gain.setTargetAtTime(active ? 0.36 : 0, now, 0.9);
-      stringGain.gain.setTargetAtTime(active ? 0.78 : 0, now, 1.2);
-      if (!active) return;
-
-      if (now >= nextStringChordTime) {
-        const chord = stringChords[stringChordIndex % stringChords.length];
-        for (let i = 0; i < stringVoices.length; i += 1) {
-          const voice = stringVoices[i];
-          const freq = chord[i];
-          voice.gain.gain.cancelScheduledValues(now);
-          voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
-          voice.gain.gain.linearRampToValueAtTime(0.0001, now + 0.22);
-          voice.main.frequency.setValueAtTime(freq, now + 0.24);
-          voice.shimmer.frequency.setValueAtTime(freq * 2, now + 0.24);
-          voice.gain.gain.linearRampToValueAtTime(0.009 + i * 0.0008, now + 1.0);
-        }
-        tone(chord[0] * 0.5, 4.8, "sine", 0.014, 0.34, bgmGain);
-        tone(chord[1] * 0.5, 2.8, "sine", 0.007, 3.25, bgmGain);
-        for (const [kind, delay] of drumPattern) {
-          drumHit(kind, delay);
-        }
-        stringChordIndex += 1;
-        nextStringChordTime = now + 6.2;
-      }
-    }
-
-    function stopBgm() {
-      if (audioCtx.state !== "running") return;
-      const now = audioCtx.currentTime;
-      const fade = 0.18;
-      for (const g of [bgmGain.gain, stringGain.gain]) {
-        g.cancelScheduledValues(now);
-        g.setValueAtTime(g.value, now);
-        g.linearRampToValueAtTime(0, now + fade);
-      }
-      for (const voice of stringVoices) {
-        voice.gain.gain.cancelScheduledValues(now);
-        voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
-        voice.gain.gain.linearRampToValueAtTime(0, now + fade);
-      }
-      nextStringChordTime = Infinity;
-    }
-
-    function startBgm() {
-      nextStringChordTime = 0;
-    }
-
-    function sparkleTone() {
-      tone(1175, 0.09, "sine", 0.028);
-      window.setTimeout(() => tone(1568, 0.08, "triangle", 0.022), 38);
-      window.setTimeout(() => tone(2093, 0.12, "sine", 0.018), 74);
-    }
-
-    function rainbowTone() {
-      const notes = [1047, 1319, 1568, 1976, 2349, 2637, 3136];
-      notes.forEach((f, i) => {
-        window.setTimeout(() => tone(f, 0.11, "sine", 0.024), i * 28);
-        window.setTimeout(() => tone(f * 1.5, 0.08, "triangle", 0.014), i * 28 + 14);
-      });
-      window.setTimeout(() => tone(3951, 0.22, "sine", 0.026), 220);
-      window.setTimeout(() => tone(4699, 0.18, "triangle", 0.018), 260);
-    }
-
-    function emptyBoostClick() {
-      if (state.muted || audioCtx.state !== "running") return;
-      const start = audioCtx.currentTime;
-      const duration = 0.026;
-      const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i += 1) {
-        const falloff = 1 - i / bufferSize;
-        data[i] = (Math.random() * 2 - 1) * falloff * falloff;
-      }
-      const source = audioCtx.createBufferSource();
-      const highpass = audioCtx.createBiquadFilter();
-      const bandpass = audioCtx.createBiquadFilter();
-      const envelope = audioCtx.createGain();
-      const tick = audioCtx.createOscillator();
-      const tickGain = audioCtx.createGain();
-      highpass.type = "highpass";
-      highpass.frequency.value = 5200;
-      bandpass.type = "bandpass";
-      bandpass.frequency.value = 7600;
-      bandpass.Q.value = 8;
-      envelope.gain.setValueAtTime(0.0001, start);
-      envelope.gain.linearRampToValueAtTime(0.026, start + 0.001);
-      envelope.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      source.buffer = buffer;
-      source.connect(highpass);
-      highpass.connect(bandpass);
-      bandpass.connect(envelope);
-      envelope.connect(masterGain);
-      tick.type = "square";
-      tick.frequency.setValueAtTime(3100, start);
-      tickGain.gain.setValueAtTime(0.010, start);
-      tickGain.gain.exponentialRampToValueAtTime(0.001, start + 0.006);
-      tick.connect(tickGain);
-      tickGain.connect(masterGain);
-      source.start(start);
-      source.stop(start + duration + 0.01);
-      tick.start(start);
-      tick.stop(start + 0.008);
-    }
-
-    function emptyBoostBuzz() {
-      if (state.muted || audioCtx.state !== "running") return;
-      const start = audioCtx.currentTime;
-      function beep(when, freq, dur) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "square";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.0001, when);
-        gain.gain.linearRampToValueAtTime(0.022, when + 0.012);
-        gain.gain.linearRampToValueAtTime(0.02, when + dur - 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start(when);
-        osc.stop(when + dur + 0.02);
-      }
-      beep(start, 70, 0.12);
-      beep(start + 0.16, 70, 0.16);
-    }
-
-    function playEmptyBoostOnce() {
-      if (state.boostEmptyLatched) return;
-      state.boostEmptyLatched = true;
-      emptyBoostBuzz();
-    }
 
     const ambient = new THREE.HemisphereLight(0xd7c6c5, 0x171f46, 1.45);
     scene.add(ambient);
@@ -1664,7 +1382,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function resetGame() {
       resetObjects();
       state.running = true;
-      startBgm();
+      audio.startBgm();
       state.score = 0;
       state.combo = 0;
       state.loopCount = 1;
@@ -1698,7 +1416,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function endGame(title, detail) {
       state.running = false;
-      stopBgm();
+      audio.stopBgm();
       state.ended = true;
       menu.hidden = false;
       menu.classList.add("is-result");
@@ -1790,10 +1508,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         isRainbow ? tuning.RAINBOW_RING_BURST_COUNT : tuning.RING_BURST_COUNT
       );
       if (isRainbow) {
-        rainbowTone();
+        audio.rainbowTone();
         state.rainbowTimer = 8;
       } else {
-        sparkleTone();
+        audio.sparkleTone();
       }
       const halo = item.children[1];
       if (halo) halo.visible = false;
@@ -1806,7 +1524,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.crashCameraStartPosition.copy(camera.position);
       state.crashCameraStartTarget.set(ship.position.x * 0.25, ship.position.y + 1.4, -24);
       burst(ship.position, 0xff8866, 40);
-      tone(80, 0.35, "sawtooth", 0.06);
+      audio.tone(80, 0.35, "sawtooth", 0.06);
       flash.classList.add("on");
       window.setTimeout(() => flash.classList.remove("on"), 240);
       if (state.debugMode) {
@@ -1824,7 +1542,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.crashCameraStartTarget.set(ship.position.x * 0.25, ship.position.y + 1.4, -24);
       burst(ship.position, 0xffa04a, tuning.ATMOSPHERE_EXPLOSION_PARTICLES);
       burst(ship.position, 0x8cefff, Math.floor(tuning.ATMOSPHERE_EXPLOSION_PARTICLES * 0.4));
-      tone(64, 0.42, "sawtooth", 0.08);
+      audio.tone(64, 0.42, "sawtooth", 0.08);
       flash.classList.add("on");
       window.setTimeout(() => flash.classList.remove("on"), 280);
       if (state.debugMode) {
@@ -2149,9 +1867,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const boosting = wantsBoost && (state.boostFuel > 0 || debugBoosting);
       if (boosting && !debugBoosting) {
         state.boostFuel = Math.max(0, state.boostFuel - dt);
-        if (state.boostFuel <= 0) playEmptyBoostOnce();
+        if (state.boostFuel <= 0) audio.playEmptyBoostOnce();
       } else if (wantsBoost && !debugBoosting) {
-        playEmptyBoostOnce();
+        audio.playEmptyBoostOnce();
       } else {
         state.boostEmptyLatched = false;
       }
@@ -2374,8 +2092,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       } else {
         updateMenuScene(dt);
       }
-      updateEngineAudio();
-      updateBgmAudio();
+      audio.updateEngineAudio();
+      audio.updateBgmAudio();
       updateCloudFade();
       renderer.render(scene, camera);
     }
@@ -2390,9 +2108,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     window.addEventListener("resize", resize);
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        stopBgm();
+        audio.stopBgm();
       } else if (state.running) {
-        startBgm();
+        audio.startBgm();
       }
     });
     window.addEventListener("keydown", (event) => {
@@ -2434,11 +2152,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     startBtn.addEventListener("click", () => {
       resetGame();
-      if (!state.muted) audioCtx.resume();
+      if (!state.muted) audio.resume();
     });
     soundBtn.addEventListener("click", () => {
-      setSoundEnabled(state.muted);
-      audioCtx.resume();
+      audio.setSoundEnabled(state.muted);
+      audio.resume();
       soundBtn.blur();
     });
 
