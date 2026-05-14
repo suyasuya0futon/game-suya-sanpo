@@ -135,7 +135,9 @@ export const RING_BURST_LIFE_BASE = 0.5; // 火花の基本寿命。
 export const RING_BURST_LIFE_RANDOM = 0.35; // 火花の寿命のばらつき。
 
 // 地面と島のループ/遠景フェード
+export const GROUND_WRAP_END_Z = 120; // この奥行きまで来たら島を奥へ戻して次のループに入る。
 export const GROUND_WRAP_DISTANCE = 520; // 地面/島がループする距離。大きいほど遠くから島が現れ、現れる頻度は下がる。
+export const GROUND_LOOP_START_Z = GROUND_WRAP_END_Z - GROUND_WRAP_DISTANCE; // 地面/島ループの開始Z。折り返し位置からループ距離ぶん奥へ戻した位置。
 export const GROUND_FADE_NEAR_Z = -150; // この奥行きより手前では島が完全不透明。
 export const GROUND_FADE_FAR_Z = -380; // この奥行きより奥では島を最低不透明度に近づける。
 export const GROUND_FADE_MIN_OPACITY = 0.05; // 遠景の島が完全に消えずに残る最低不透明度。

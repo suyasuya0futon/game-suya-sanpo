@@ -402,7 +402,7 @@
     grid.position.z = -62;
 
     const ground = new THREE.Group();
-    ground.position.set(0, -36, -400);
+    ground.position.set(0, -36, tuning.GROUND_LOOP_START_Z);
     scene.add(ground);
     const islandFootprints = [];
 
@@ -1388,7 +1388,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.loopCount = 1;
       updateLoopDisplay();
       applySnowMode(false);
-      ground.position.z = -400;
+      ground.position.z = tuning.GROUND_LOOP_START_Z;
       state.speed = 17;
       state.distance = 0;
       state.spawnTimer = 0.1 * tuning.BASE_SPEED;
@@ -1433,7 +1433,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const score = String(state.score).padStart(tuning.SCORE_MAX_DIGITS, "0");
       scoreEl.textContent = `SCORE：${score}`;
       if (state.debugMode) {
-        const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
+        const loopProgress = Math.max(0, Math.min(100, Math.floor(
+          ((ground.position.z - tuning.GROUND_LOOP_START_Z) / tuning.GROUND_WRAP_DISTANCE) * 100
+        )));
         debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  Z=${Math.round(ground.position.z)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  SNOW=${state.snow ? "ON" : "OFF"}`;
         const diskDiameter = Math.min(state.boostFuel, tuning.FUEL_DISK_MAX_DIAMETER);
         debugStatsEl.textContent = `CHAIN=${state.combo}  FUEL/F=${state.fullBoost ? "MAX" : state.boostFuel.toFixed(2)}  DISK=${diskDiameter.toFixed(2)}`;
@@ -1585,7 +1587,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       for (const item of loopingGroundObjects) {
         item.position.z += forward * 0.4;
-        if (item.position.z > 120) {
+        if (item.position.z > tuning.GROUND_WRAP_END_Z) {
           item.position.z -= tuning.GROUND_WRAP_DISTANCE;
           state.loopCount += 1;
           updateLoopDisplay();
