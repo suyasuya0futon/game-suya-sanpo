@@ -5,10 +5,6 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   camera.add(listener);
   const audioCtx = listener.context;
   const masterGain = audioCtx.createGain();
-  const engineGain = audioCtx.createGain();
-  const engineFilter = audioCtx.createBiquadFilter();
-  const engineOsc = audioCtx.createOscillator();
-  const enginePulse = audioCtx.createOscillator();
   const bgmGain = audioCtx.createGain();
   const stringGain = audioCtx.createGain();
   const stringFilter = audioCtx.createBiquadFilter();
@@ -39,23 +35,12 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   let boostEmptyLatched = false;
 
   masterGain.gain.value = 0.86;
-  engineGain.gain.value = 0;
   bgmGain.gain.value = 0;
   stringGain.gain.value = 0;
   drumGain.gain.value = 0.55;
-  engineFilter.type = "lowpass";
-  engineFilter.frequency.value = 520;
-  engineOsc.type = "sawtooth";
-  engineOsc.frequency.value = 82;
-  enginePulse.type = "triangle";
-  enginePulse.frequency.value = 164;
   stringFilter.type = "lowpass";
   stringFilter.frequency.value = 1180;
   stringFilter.Q.value = 0.35;
-  engineOsc.connect(engineFilter);
-  enginePulse.connect(engineFilter);
-  engineFilter.connect(engineGain);
-  engineGain.connect(masterGain);
   for (let i = 0; i < 5; i += 1) {
     const voiceGain = audioCtx.createGain();
     const main = audioCtx.createOscillator();
@@ -79,8 +64,6 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   drumGain.connect(bgmGain);
   bgmGain.connect(masterGain);
   masterGain.connect(audioCtx.destination);
-  engineOsc.start();
-  enginePulse.start();
 
   function tone(freq, duration = 0.08, type = "sine", gain = 0.04, delay = 0, destination = masterGain) {
     if (state.muted || audioCtx.state !== "running") return;
@@ -154,12 +137,6 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
     bgmToggle.addEventListener("change", (event) => {
       setSoundEnabled(event.target.checked);
     });
-  }
-
-  function updateEngineAudio() {
-    if (audioCtx.state !== "running") return;
-    const now = audioCtx.currentTime;
-    engineGain.gain.setTargetAtTime(0, now, 0.03);
   }
 
   function updateBgmAudio() {
@@ -267,7 +244,6 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   return {
     tone,
     setSoundEnabled,
-    updateEngineAudio,
     updateBgmAudio,
     stopBgm,
     startBgm,
