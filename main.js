@@ -1434,7 +1434,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       scoreEl.textContent = `SCORE：${score}`;
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(((ground.position.z + 400) / 520) * 100)));
-        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  SNOW=${state.snow ? "ON" : "OFF"}`;
+        debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  Z=${Math.round(ground.position.z)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  SNOW=${state.snow ? "ON" : "OFF"}`;
         const diskDiameter = Math.min(state.boostFuel, tuning.FUEL_DISK_MAX_DIAMETER);
         debugStatsEl.textContent = `CHAIN=${state.combo}  FUEL/F=${state.fullBoost ? "MAX" : state.boostFuel.toFixed(2)}  DISK=${diskDiameter.toFixed(2)}`;
         debugAutoEl.textContent = `AUTOPILOT/P=${state.autopilot ? "ON" : "OFF"}  AUTOBOOST/B=${state.autoBoost ? "ON" : "OFF"}  TRAIL/T=${state.trail ? "ON" : "OFF"}`;
