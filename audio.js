@@ -36,6 +36,7 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   const stringVoices = [];
   let nextStringChordTime = 0;
   let stringChordIndex = 0;
+  let boostEmptyLatched = false;
 
   masterGain.gain.value = 0.86;
   engineGain.gain.value = 0;
@@ -136,13 +137,18 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
 
   function setSoundEnabled(enabled) {
     state.muted = !enabled;
-    soundBtn.textContent = "♫";
     soundBtn.setAttribute("aria-label", state.muted ? "Sound off" : "Sound on");
     soundBtn.classList.toggle("is-muted", state.muted);
     masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
     masterGain.gain.setTargetAtTime(state.muted ? 0 : 0.86, audioCtx.currentTime, 0.04);
     if (bgmToggle) bgmToggle.checked = enabled;
   }
+
+  soundBtn.addEventListener("click", () => {
+    setSoundEnabled(state.muted);
+    resume();
+    soundBtn.blur();
+  });
 
   if (bgmToggle) {
     bgmToggle.addEventListener("change", (event) => {
@@ -245,9 +251,13 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   }
 
   function playEmptyBoostOnce() {
-    if (state.boostEmptyLatched) return;
-    state.boostEmptyLatched = true;
+    if (boostEmptyLatched) return;
+    boostEmptyLatched = true;
     emptyBoostBuzz();
+  }
+
+  function resetEmptyBoostLatch() {
+    boostEmptyLatched = false;
   }
 
   function resume() {
@@ -264,6 +274,7 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
     sparkleTone,
     rainbowTone,
     playEmptyBoostOnce,
+    resetEmptyBoostLatch,
     resume
   };
 }

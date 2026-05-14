@@ -243,7 +243,6 @@
       boost: 0,
       boostFuel: 0,
       fuelDisplay: 0,
-      boostEmptyLatched: false,
       trailSpawnCarry: 0,
       atmosphereSparkCarry: 0,
       rainbowTimer: 0,
@@ -1396,7 +1395,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.boost = 0;
       state.boostFuel = 0;
       state.fuelDisplay = 0;
-      state.boostEmptyLatched = false;
+      audio.resetEmptyBoostLatch();
       state.trailSpawnCarry = 0;
       state.atmosphereSparkCarry = 0;
       state.rainbowTimer = 0;
@@ -1503,7 +1502,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.score = Math.min(tuning.SCORE_MAX, state.score + Math.floor(ringScore * scoreBoostMul * state.combo));
       const rewardMultiplier = isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1;
       state.boostFuel = Math.min(tuning.FUEL_DISK_MAX_DIAMETER, state.boostFuel + tuning.BOOST_FUEL_PER_RING * rewardMultiplier);
-      state.boostEmptyLatched = false;
+      audio.resetEmptyBoostLatch();
       burstRing(
         item,
         isRainbow ? 0xffffff : 0xffd66b,
@@ -1873,7 +1872,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       } else if (wantsBoost && !debugBoosting) {
         audio.playEmptyBoostOnce();
       } else {
-        state.boostEmptyLatched = false;
+        audio.resetEmptyBoostLatch();
       }
       state.boost += ((boosting ? 1 : 0) - state.boost) * Math.min(1, dt * 7);
       state.rainbowTimer = Math.max(0, state.rainbowTimer - dt);
@@ -2149,17 +2148,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
     window.addEventListener("keyup", (event) => {
       keys.delete(event.code);
-      if (event.code === "Space") state.boostEmptyLatched = false;
+      if (event.code === "Space") audio.resetEmptyBoostLatch();
     });
 
     startBtn.addEventListener("click", () => {
       resetGame();
       if (!state.muted) audio.resume();
-    });
-    soundBtn.addEventListener("click", () => {
-      audio.setSoundEnabled(state.muted);
-      audio.resume();
-      soundBtn.blur();
     });
 
     let touchId = null;
@@ -2189,11 +2183,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     touchBoost.addEventListener("pointerdown", () => keys.add("Space"));
     touchBoost.addEventListener("pointerup", () => {
       keys.delete("Space");
-      state.boostEmptyLatched = false;
+      audio.resetEmptyBoostLatch();
     });
     touchBoost.addEventListener("pointercancel", () => {
       keys.delete("Space");
-      state.boostEmptyLatched = false;
+      audio.resetEmptyBoostLatch();
     });
 
     if (new URLSearchParams(window.location.search).has("play")) {
