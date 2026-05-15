@@ -2116,8 +2116,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     });
     window.addEventListener("keydown", (event) => {
-      if (state.manualPaused && helpOverlay.hidden) {
+      if (!helpOverlay.hidden) {
+        setHelpOpen(false);
+        helpHoldConsumed = true;
+        return;
+      }
+      if (state.manualPaused) {
         setManualPause(false);
+        helpHoldConsumed = true;
         return;
       }
       keys.add(event.code);
@@ -2142,14 +2148,26 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
         }
       }
-      if (event.code === "Escape") {
-        if (!helpOverlay.hidden) setHelpOpen(false);
-        else if (state.running) setManualPause(true);
+      if (event.code === "KeyH" && !event.repeat) {
+        helpHoldConsumed = false;
+        clearHelpHold();
+        helpHoldTimer = window.setTimeout(() => {
+          helpHoldConsumed = true;
+          setDebugMode(!state.debugMode);
+        }, 1200);
+      }
+      if (event.code === "Escape" && state.running) {
+        setManualPause(true);
       }
     });
     window.addEventListener("keyup", (event) => {
       keys.delete(event.code);
       if (event.code === "Space") audio.resetEmptyBoostLatch();
+      if (event.code === "KeyH") {
+        clearHelpHold();
+        if (!helpHoldConsumed) setHelpOpen(true);
+        helpHoldConsumed = false;
+      }
     });
 
     startBtn.addEventListener("click", () => {
