@@ -1436,13 +1436,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       h1.hidden = !title;
       menu.querySelector(".lead").textContent = detail;
       const resultScoreEl = document.querySelector("#resultScore");
-      if (resultScoreEl) resultScoreEl.textContent = `SCORE:${String(state.score).padStart(tuning.SCORE_MAX_DIGITS, "0")}`;
+      if (resultScoreEl) resultScoreEl.textContent = `SCORE:${state.score}`;
       startBtn.textContent = "RETRY";
     }
 
     function updateHud() {
-      const score = String(state.score).padStart(tuning.SCORE_MAX_DIGITS, "0");
-      scoreEl.textContent = `SCORE:${score}`;
+      scoreEl.textContent = `SCORE:${state.score}`;
       if (state.debugMode) {
         const loopProgress = Math.max(0, Math.min(100, Math.floor(
           ((ground.position.z - tuning.GROUND_LOOP_START_Z) / tuning.GROUND_WRAP_DISTANCE) * 100
