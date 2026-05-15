@@ -106,7 +106,7 @@ export const GUIDE_PARTICLE_SIZE = 0.1; // ガイド線と円を構成する粒1
 
 // ガイドのブースト強調
 export const GUIDE_BOOST_SCALE_GAIN = 1.2; // 全力ブースト時にガイド円の粒サイズへ加算する倍率。1+この値が最大スケール。
-export const GUIDE_BOOST_RADIUS_GAIN = 0.3; // 全力ブースト時にガイド円の直径へ加算する倍率。1+この値が最大スケール。
+export const GUIDE_BOOST_RADIUS_GAIN = 0.4; // 全力ブースト時にガイド円の直径へ加算する倍率。1+この値が最大スケール。
 
 // リング周囲の光粒
 export const SPARKLE_COUNT = 70; // 通常リング周囲の光の粒数。
