@@ -241,6 +241,7 @@
       spawnTimer: 0,
       invulnerable: 0,
       boost: 0,
+      boosting: false,
       boostFuel: 0,
       fuelDisplay: 0,
       trailSpawnCarry: 0,
@@ -1697,6 +1698,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function stepGuide() {
+      const guideActive = state.boosting;
       let nearest = null;
       let nearestZ = -Infinity;
       for (const item of pickups) {
@@ -1707,7 +1709,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           nearest = item;
         }
       }
-      if (nearest) {
+      if (nearest && guideActive) {
         const tip = new THREE.Vector3(0, 0.34, -0.95);
         ship.localToWorld(tip);
         const isRainbow = nearest.userData.rainbow;
@@ -1747,19 +1749,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           child.scale.setScalar(baseScale);
         }
         guideDisk.visible = true;
-        if (state.debugMode && state.combo >= 1) {
-          if (state.combo !== chainSpriteValue) {
-            drawChainSprite(state.combo);
-            chainSpriteValue = state.combo;
-          }
-          chainSprite.position.set(nearest.position.x, nearest.position.y, nearest.position.z);
-          chainSprite.visible = true;
-        } else {
-          chainSprite.visible = false;
-        }
       } else {
         guideTrail.visible = false;
         guideDisk.visible = false;
+      }
+      if (nearest && state.debugMode && state.combo >= 1) {
+        if (state.combo !== chainSpriteValue) {
+          drawChainSprite(state.combo);
+          chainSpriteValue = state.combo;
+        }
+        chainSprite.position.set(nearest.position.x, nearest.position.y, nearest.position.z);
+        chainSprite.visible = true;
+      } else {
         chainSprite.visible = false;
       }
     }
@@ -1875,6 +1876,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         audio.resetEmptyBoostLatch();
       }
       state.boost += ((boosting ? 1 : 0) - state.boost) * Math.min(1, dt * 7);
+      state.boosting = boosting;
       state.rainbowTimer = Math.max(0, state.rainbowTimer - dt);
       return { b: state.boost, rb: Math.min(1, state.rainbowTimer / 8), boosting };
     }
