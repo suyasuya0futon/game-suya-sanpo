@@ -19,7 +19,18 @@
     const helpClose = document.querySelector("#helpClose");
     const pauseOverlay = document.querySelector("#pauseOverlay");
 
-    document.querySelector("#helpContent").innerHTML = `リングをくぐるとブースト燃料がたまり、ブースト押しっぱなしで加速。<br>燃料切れでブーストは止まります。<br><br>スコア説明<br>・金リング・・・${tuning.NORMAL_RING_SCORE}点<br>・レインボーリング・・・${tuning.RAINBOW_RING_SCORE}点<br>ブーストしながらくぐると得点${tuning.BOOST_SCORE_MULTIPLIER}倍です。<br>さらに連続でくぐると得点にチェイン数が乗算されます。`;
+    document.querySelector("#helpContent").innerHTML = [
+      "リングをくぐると得点が入ると同時に、ブースト燃料が補充されます。",
+      "ブースト中は速く移動できます。",
+      "また、ブースト中はガイド円が表示され、くぐり易くなります。",
+      "機体の輪っかが燃料タンクです。空になるとブーストはできません。",
+      "障害物に当たるとゲームオーバーです。<br>",
+      "<big>スコア説明</big>",
+      `・金リング・・・${tuning.NORMAL_RING_SCORE}点`,
+      `・レインボーリング・・・${tuning.RAINBOW_RING_SCORE}点`,
+      `・ブーストしながらくぐる・・・× ${tuning.BOOST_SCORE_MULTIPLIER}倍`,
+      "・連続でくぐる・・・× チェイン数倍",
+    ].join("<br>");
 
     function refreshPauseState() {
       const helpOpen = !helpOverlay.hidden;
@@ -2209,8 +2220,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       audio.resetEmptyBoostLatch();
     });
 
-    if (new URLSearchParams(window.location.search).has("play")) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("play")) {
       resetGame();
+    }
+    if (urlParams.has("help")) {
+      setHelpOpen(true);
     }
 
     updateHud();

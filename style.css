@@ -548,7 +548,7 @@
     }
 
     .help-content p {
-      margin: 0;
+      margin-top: 20px;
       font-family: "Noto Serif JP", serif;
       font-size: 13px;
       line-height: 1.85;
