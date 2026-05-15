@@ -97,11 +97,11 @@
       line-height: 1;
       letter-spacing: 0;
       font-variant-numeric: tabular-nums;
-      color: rgba(220, 235, 255, 0.92);
+      color: rgba(220, 235, 255, 0.7);
       text-shadow:
-        0 0 4px rgba(255, 255, 255, 0.55),
-        0 0 10px rgba(180, 215, 255, 0.45),
-        0 0 20px rgba(140, 195, 255, 0.32);
+        0 0 4px rgba(255, 255, 255, 0.4),
+        0 0 10px rgba(180, 215, 255, 0.35),
+        0 0 20px rgba(140, 195, 255, 0.25);
     }
 
     .debug-info {
@@ -196,11 +196,11 @@
       line-height: 1;
       letter-spacing: 0.04em;
       font-variant-numeric: tabular-nums;
-      color: rgba(220, 235, 255, 0.95);
+      color: rgba(220, 235, 255, 0.77);
       text-shadow:
-        0 0 6px rgba(255, 255, 255, 0.7),
-        0 0 18px rgba(180, 215, 255, 0.55),
-        0 0 32px rgba(140, 195, 255, 0.38),
+        0 0 6px rgba(255, 255, 255, 0.5),
+        0 0 18px rgba(180, 215, 255, 0.4),
+        0 0 32px rgba(140, 195, 255, 0.28),
         0 2px 22px rgba(2, 8, 24, 0.72);
     }
 
