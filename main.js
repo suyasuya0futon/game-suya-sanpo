@@ -1437,6 +1437,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       menu.querySelector(".lead").textContent = detail;
       const resultScoreEl = document.querySelector("#resultScore");
       if (resultScoreEl) resultScoreEl.textContent = `SCORE:${state.score}`;
+      const xShareEl = document.querySelector("#xShare");
+      if (xShareEl) {
+        const shareText = `「Oyasumi Sanpo」で ${state.score} 点獲得しました。`;
+        const shareUrl = window.location.origin + window.location.pathname;
+        xShareEl.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+      }
       startBtn.textContent = "RETRY";
     }
 
