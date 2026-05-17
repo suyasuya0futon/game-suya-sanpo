@@ -1440,8 +1440,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const xShareEl = document.querySelector("#xShare");
       if (xShareEl) {
         const shareUrl = window.location.origin + window.location.pathname + "?help";
-        const shareText = `「Oyasumi Sanpo」で ${state.score} 点獲得しました。\n${shareUrl}\n#OyasumiSanpo`;
-        xShareEl.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+        const shareText = `OyasumiSanpo で ${state.score} 点獲得しました。\n#OyasumiSanpo`;
+        xShareEl.href = `https://x.com/intent/post?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
       }
       startBtn.textContent = "RETRY";
     }
