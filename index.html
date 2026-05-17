@@ -45,6 +45,15 @@
     <section class="center" id="menu">
       <h1>OyasumiSanpo</h1>
       <strong class="result-score" id="resultScore">SCORE:0</strong>
+      <div class="result-rank" id="resultRank" hidden></div>
+      <div class="result-name-action" id="resultNameAction" hidden>
+        <button class="name-action-btn" id="openNameInput">名前を入力する</button>
+      </div>
+      <div class="result-name-form" id="resultNameForm" hidden>
+        <input type="text" id="nameInput" maxlength="16" pattern="[A-Za-z0-9]+" placeholder="英数字 1〜16 文字">
+        <button class="primary" id="submitName">登録</button>
+        <span class="name-error" id="nameError" hidden>英数字 1〜16 文字で入力してください</span>
+      </div>
       <p class="lead">薄暗い夕暮れから星空へ、光のリングをくぐりながら<br>静かに浮遊する空の散歩です。</p>
       <div class="share">
         <span class="share-label">スコアを投稿する</span>
@@ -77,6 +86,19 @@
     <div>
       <div class="pause-title">PAUSE</div>
       <div class="pause-sub">PRESS ANY KEY</div>
+    </div>
+  </div>
+
+  <div class="ranking-overlay" id="rankingOverlay" hidden>
+    <button class="help help-close" id="rankingClose" aria-label="閉じる">✖</button>
+    <div class="ranking-content">
+      <h2>ランキング</h2>
+      <table class="ranking-table">
+        <thead>
+          <tr><th>順位</th><th>スコア</th><th>ループ</th><th>名前</th></tr>
+        </thead>
+        <tbody id="rankingTableBody"></tbody>
+      </table>
     </div>
   </div>
 

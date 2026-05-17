@@ -1,6 +1,7 @@
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
     import { createAudioSystem } from "./audio.js";
     import * as tuning from "./tuning.js";
+    import { submitScore, getMyRank, getTopRanking, setName } from "./supabase.js";
 
     const canvas = document.querySelector("#game");
     const scoreEl = document.querySelector("#score");
@@ -272,7 +273,10 @@
       crashCameraDuration: 2.2,
       crashCameraActive: false,
       crashCameraStartPosition: new THREE.Vector3(),
-      crashCameraStartTarget: new THREE.Vector3()
+      crashCameraStartTarget: new THREE.Vector3(),
+      currentScoreId: null,
+      currentScoreCreatedAt: null,
+      currentSubmitSeq: 0
     };
 
     const input = new THREE.Vector2();
@@ -1390,7 +1394,91 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       particles.push(p);
     }
 
+    const rankingOverlay = document.querySelector("#rankingOverlay");
+    const rankingClose = document.querySelector("#rankingClose");
+    const rankingTableBody = document.querySelector("#rankingTableBody");
+    const resultRankEl = document.querySelector("#resultRank");
+    const resultNameAction = document.querySelector("#resultNameAction");
+    const resultNameForm = document.querySelector("#resultNameForm");
+    const openNameInputBtn = document.querySelector("#openNameInput");
+    const submitNameBtn = document.querySelector("#submitName");
+    const nameInputEl = document.querySelector("#nameInput");
+    const nameErrorEl = document.querySelector("#nameError");
+    const NAME_PATTERN = /^[A-Za-z0-9]{1,16}$/;
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[c]);
+    }
+
+    function resetRankingUi() {
+      state.currentScoreId = null;
+      state.currentScoreCreatedAt = null;
+      state.currentSubmitSeq += 1;
+      resultRankEl.hidden = true;
+      resultRankEl.textContent = "";
+      resultNameAction.hidden = true;
+      resultNameForm.hidden = true;
+      nameErrorEl.hidden = true;
+      nameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
+      nameInputEl.value = "";
+    }
+
+    async function openRanking() {
+      try {
+        const list = await getTopRanking(10);
+        rankingTableBody.innerHTML = list
+          .map(
+            row => `<tr>`
+              + `<td>${row.rank}</td>`
+              + `<td>${row.score}</td>`
+              + `<td>${row.loop_count}</td>`
+              + `<td>${escapeHtml(row.name)}</td>`
+              + `</tr>`
+          )
+          .join("");
+        rankingOverlay.hidden = false;
+      } catch (e) {
+        console.warn("ランキング取得失敗", e);
+      }
+    }
+
+    rankingClose.addEventListener("click", () => {
+      rankingOverlay.hidden = true;
+    });
+    rankingOverlay.addEventListener("click", (event) => {
+      if (event.target === rankingOverlay) rankingOverlay.hidden = true;
+    });
+
+    openNameInputBtn.addEventListener("click", () => {
+      resultNameAction.hidden = true;
+      resultNameForm.hidden = false;
+      nameInputEl.focus();
+    });
+
+    submitNameBtn.addEventListener("click", async () => {
+      const name = nameInputEl.value.trim();
+      if (!NAME_PATTERN.test(name)) {
+        nameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
+        nameErrorEl.hidden = false;
+        return;
+      }
+      nameErrorEl.hidden = true;
+      if (!state.currentScoreId) return;
+      try {
+        await setName(state.currentScoreId, name);
+        resultNameForm.hidden = true;
+        await openRanking();
+      } catch (e) {
+        console.warn("名前登録失敗", e);
+        nameErrorEl.textContent = "登録に失敗しました";
+        nameErrorEl.hidden = false;
+      }
+    });
+
     function resetGame() {
+      resetRankingUi();
       resetObjects();
       state.running = true;
       audio.startBgm();
@@ -1425,10 +1513,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       updateHud();
     }
 
-    function endGame(title, detail) {
+    async function endGame(title, detail) {
       state.running = false;
       audio.stopBgm();
       state.ended = true;
+      resetRankingUi();
       menu.hidden = false;
       menu.classList.add("is-result");
       const h1 = menu.querySelector("h1");
@@ -1444,6 +1533,27 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         xShareEl.href = `https://x.com/intent/post?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
       }
       startBtn.textContent = "RETRY";
+
+      const seq = state.currentSubmitSeq;
+      const snapScore = state.score;
+      const snapLoop = state.loopCount;
+      try {
+        const result = await submitScore({ score: snapScore, loopCount: snapLoop });
+        if (seq !== state.currentSubmitSeq) return;
+        if (!result) return;
+        const { id, createdAt } = result;
+        state.currentScoreId = id;
+        state.currentScoreCreatedAt = createdAt;
+        const rank = await getMyRank({ id, score: snapScore, loopCount: snapLoop, createdAt });
+        if (seq !== state.currentSubmitSeq) return;
+        resultRankEl.textContent = `${rank} 位`;
+        resultRankEl.hidden = false;
+        if (rank <= 10) {
+          resultNameAction.hidden = false;
+        }
+      } catch (e) {
+        console.warn("Supabase通信失敗、ランキングは表示しません", e);
+      }
     }
 
     function updateHud() {
@@ -2132,6 +2242,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     });
     window.addEventListener("keydown", (event) => {
+      if (!rankingOverlay.hidden) {
+        rankingOverlay.hidden = true;
+        helpHoldConsumed = true;
+        return;
+      }
       if (!helpOverlay.hidden) {
         setHelpOpen(false);
         helpHoldConsumed = true;
@@ -2231,6 +2346,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
     if (urlParams.has("help")) {
       setHelpOpen(true);
+    }
+    if (urlParams.has("rank")) {
+      openRanking();
     }
 
     updateHud();
