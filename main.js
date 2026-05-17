@@ -19,6 +19,7 @@
     const helpOverlay = document.querySelector("#helpOverlay");
     const helpClose = document.querySelector("#helpClose");
     const pauseOverlay = document.querySelector("#pauseOverlay");
+    const rankingOverlay = document.querySelector("#rankingOverlay");
 
     document.querySelector("#helpContent").innerHTML = [
       "リングをくぐると得点が入ると同時に、ブースト燃料が補充されます。",
@@ -35,9 +36,11 @@
 
     function refreshPauseState() {
       const helpOpen = !helpOverlay.hidden;
+      const rankingOpen = !rankingOverlay.hidden;
+      const overlayOpen = helpOpen || rankingOpen;
       const wasPaused = state.paused;
-      state.paused = state.manualPaused || helpOpen;
-      pauseOverlay.hidden = !(state.manualPaused && !helpOpen);
+      state.paused = state.manualPaused || overlayOpen;
+      pauseOverlay.hidden = !(state.manualPaused && !overlayOpen);
       if (state.running && state.paused !== wasPaused) {
         if (state.paused) audio.stopBgm();
         else audio.startBgm();
@@ -1394,7 +1397,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       particles.push(p);
     }
 
-    const rankingOverlay = document.querySelector("#rankingOverlay");
     const rankingClose = document.querySelector("#rankingClose");
     const rankingTableBody = document.querySelector("#rankingTableBody");
     const resultRankEl = document.querySelector("#resultRank");
@@ -1405,6 +1407,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const nameInputEl = document.querySelector("#nameInput");
     const nameErrorEl = document.querySelector("#nameError");
     const NAME_PATTERN = /^[A-Za-z0-9]{1,16}$/;
+    let nameSubmitPending = false;
 
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, c => ({
@@ -1416,6 +1419,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.currentScoreId = null;
       state.currentScoreCreatedAt = null;
       state.currentSubmitSeq += 1;
+      nameSubmitPending = false;
+      submitNameBtn.disabled = false;
       resultRankEl.hidden = true;
       resultRankEl.textContent = "";
       resultNameAction.hidden = true;
@@ -1423,6 +1428,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       nameErrorEl.hidden = true;
       nameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
       nameInputEl.value = "";
+    }
+
+    function closeRanking() {
+      rankingOverlay.hidden = true;
+      refreshPauseState();
     }
 
     async function openRanking() {
@@ -1439,16 +1449,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           )
           .join("");
         rankingOverlay.hidden = false;
+        refreshPauseState();
       } catch (e) {
         console.warn("ランキング取得失敗", e);
       }
     }
 
-    rankingClose.addEventListener("click", () => {
-      rankingOverlay.hidden = true;
-    });
+    rankingClose.addEventListener("click", closeRanking);
     rankingOverlay.addEventListener("click", (event) => {
-      if (event.target === rankingOverlay) rankingOverlay.hidden = true;
+      if (event.target === rankingOverlay) closeRanking();
     });
 
     openNameInputBtn.addEventListener("click", () => {
@@ -1458,6 +1467,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
 
     submitNameBtn.addEventListener("click", async () => {
+      if (nameSubmitPending) return;
       const name = nameInputEl.value.trim();
       if (!NAME_PATTERN.test(name)) {
         nameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
@@ -1466,6 +1476,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       nameErrorEl.hidden = true;
       if (!state.currentScoreId) return;
+      nameSubmitPending = true;
+      submitNameBtn.disabled = true;
       try {
         await setName(state.currentScoreId, name);
         resultNameForm.hidden = true;
@@ -1474,6 +1486,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         console.warn("名前登録失敗", e);
         nameErrorEl.textContent = "登録に失敗しました";
         nameErrorEl.hidden = false;
+      } finally {
+        nameSubmitPending = false;
+        submitNameBtn.disabled = false;
       }
     });
 
@@ -2243,7 +2258,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
     window.addEventListener("keydown", (event) => {
       if (!rankingOverlay.hidden) {
-        rankingOverlay.hidden = true;
+        closeRanking();
         helpHoldConsumed = true;
         return;
       }
@@ -2341,14 +2356,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
 
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("play")) {
-      resetGame();
-    }
-    if (urlParams.has("help")) {
-      setHelpOpen(true);
-    }
     if (urlParams.has("rank")) {
       openRanking();
+    } else {
+      if (urlParams.has("play")) {
+        resetGame();
+      }
+      if (urlParams.has("help")) {
+        setHelpOpen(true);
+      }
     }
 
     updateHud();
