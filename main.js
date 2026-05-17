@@ -1436,8 +1436,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     async function openRanking() {
+      rankingTableBody.innerHTML = `<tr><td class="ranking-message" colspan="4">読み込み中...</td></tr>`;
+      rankingOverlay.hidden = false;
+      refreshPauseState();
       try {
         const list = await getTopRanking(10);
+        if (!list || list.length === 0) {
+          rankingTableBody.innerHTML = `<tr><td class="ranking-message" colspan="4">まだランキングがありません</td></tr>`;
+          return;
+        }
         rankingTableBody.innerHTML = list
           .map(
             row => `<tr>`
@@ -1448,10 +1455,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
               + `</tr>`
           )
           .join("");
-        rankingOverlay.hidden = false;
-        refreshPauseState();
       } catch (e) {
         console.warn("ランキング取得失敗", e);
+        rankingTableBody.innerHTML = `<tr><td class="ranking-message" colspan="4">ランキングを取得できませんでした</td></tr>`;
       }
     }
 

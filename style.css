@@ -668,6 +668,12 @@
       word-break: break-all;
     }
 
+    .ranking-table .ranking-message {
+      padding: 18px 8px;
+      text-align: center;
+      color: rgba(246, 251, 255, 0.68);
+    }
+
     .result-rank {
       font-family: "Noto Sans", Arial, sans-serif;
       font-size: clamp(18px, 2.4vw, 24px);
