@@ -2264,22 +2264,26 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
     window.addEventListener("keydown", (event) => {
       if (!rankingOverlay.hidden) {
+        if (event.repeat) return;
         closeRanking();
         helpHoldConsumed = true;
         return;
       }
       if (!helpOverlay.hidden) {
+        if (event.repeat) return;
         setHelpOpen(false);
         helpHoldConsumed = true;
         return;
       }
       if (state.manualPaused) {
+        if (event.repeat) return;
         setManualPause(false);
         helpHoldConsumed = true;
         return;
       }
       keys.add(event.code);
       if (event.code === "Space") event.preventDefault();
+      if (event.repeat) return;
       if (event.code === "KeyR" && state.debugMode) resetGame();
       if (event.code === "KeyP" && state.debugMode) {
         state.autopilot = !state.autopilot;
@@ -2300,7 +2304,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
         }
       }
-      if (event.code === "KeyH" && !event.repeat) {
+      if (event.code === "KeyH") {
         helpHoldConsumed = false;
         clearHelpHold();
         helpHoldTimer = window.setTimeout(() => {
