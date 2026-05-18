@@ -301,6 +301,10 @@
       display: flex;
     }
 
+    .center.is-ranking-mode .share {
+      display: none;
+    }
+
     .share-link {
       display: inline-grid;
       place-items: center;
@@ -594,6 +598,7 @@
       margin: 0;
       vertical-align: middle;
       filter: none;
+      transform: translateY(-0.08em);
     }
 
     .ranking-button:focus-visible {

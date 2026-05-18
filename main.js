@@ -1409,9 +1409,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (mode === "ranking") {
         startBtn.innerHTML = `${CROWN_SVG}RANKING`;
         startBtn.dataset.action = "ranking";
+        menu.classList.add("is-ranking-mode");
       } else {
         startBtn.textContent = "RETRY";
         startBtn.dataset.action = "retry";
+        menu.classList.remove("is-ranking-mode");
       }
     }
 
