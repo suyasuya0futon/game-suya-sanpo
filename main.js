@@ -1399,10 +1399,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     const rankingClose = document.querySelector("#rankingClose");
     const rankingTableBody = document.querySelector("#rankingTableBody");
+    const rankingAction = document.querySelector("#rankingAction");
+    const rankingSubmitBtn = document.querySelector("#rankingSubmitName");
+    const rankingNameErrorEl = document.querySelector("#rankingNameError");
     const resultRankEntry = document.querySelector("#resultRankEntry");
     const resultRankEl = document.querySelector("#resultRank");
     const openRankingTopBtn = document.querySelector("#openRankingTop");
     const NAME_PATTERN = /^[A-Za-z0-9]{1,16}$/;
+    let rankingSubmitPending = false;
     const CROWN_SVG = `<svg class="rank-crown" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 12h14v2H5v-2z"/></svg>`;
 
     function setStartButton(mode) {
@@ -1447,61 +1451,50 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function renderRankingRow(row, editingId) {
       const isSelf = row.id === editingId;
       const nameCell = isSelf
-        ? `<td class="ranking-name-edit name-form">`
-          + `<input id="rankingNameInput" maxlength="16" pattern="[A-Za-z0-9]+">`
-          + `<button id="rankingSubmitName" class="primary name-submit">OK</button>`
-          + `<div class="name-error" id="rankingNameError" hidden></div>`
-          + `</td>`
+        ? `<td class="ranking-name-edit"><input id="rankingNameInput" maxlength="16" pattern="[A-Za-z0-9]+"></td>`
         : `<td>${escapeHtml(row.name)}</td>`;
       const cls = isSelf ? ' class="ranking-self"' : '';
       return `<tr${cls}><td>${row.rank}</td><td>${row.score}</td><td>${row.loop_count}</td>${nameCell}</tr>`;
     }
 
+    async function doSubmitRankingName() {
+      if (rankingSubmitPending) return;
+      const input = document.querySelector("#rankingNameInput");
+      if (!input || !state.currentScoreId) return;
+      const name = input.value.trim();
+      if (!NAME_PATTERN.test(name)) {
+        rankingNameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
+        rankingNameErrorEl.hidden = false;
+        return;
+      }
+      rankingNameErrorEl.hidden = true;
+      rankingSubmitPending = true;
+      rankingSubmitBtn.disabled = true;
+      try {
+        await setName(state.currentScoreId, name);
+        closeRanking();
+      } catch (e) {
+        console.warn("名前登録失敗", e);
+        rankingNameErrorEl.textContent = "登録に失敗しました";
+        rankingNameErrorEl.hidden = false;
+      } finally {
+        rankingSubmitPending = false;
+        rankingSubmitBtn.disabled = false;
+      }
+    }
+
     function attachRankingNameEditHandlers() {
       const input = document.querySelector("#rankingNameInput");
-      const submit = document.querySelector("#rankingSubmitName");
-      const errorEl = document.querySelector("#rankingNameError");
-      if (!input || !submit || !errorEl) return;
-      let pending = false;
-
-      async function doSubmit() {
-        if (pending) return;
-        const name = input.value.trim();
-        if (!NAME_PATTERN.test(name)) {
-          errorEl.textContent = "英数字 1〜16 文字で入力してください";
-          errorEl.hidden = false;
-          return;
-        }
-        errorEl.hidden = true;
-        if (!state.currentScoreId) return;
-        pending = true;
-        submit.disabled = true;
-        try {
-          await setName(state.currentScoreId, name);
-          const tr = submit.closest("tr");
-          const td = tr.querySelector(".ranking-name-edit");
-          const newTd = document.createElement("td");
-          newTd.textContent = name;
-          td.replaceWith(newTd);
-          state.currentScoreId = null;
-          setStartButton("retry");
-        } catch (e) {
-          console.warn("名前登録失敗", e);
-          errorEl.textContent = "登録に失敗しました";
-          errorEl.hidden = false;
-          pending = false;
-          submit.disabled = false;
-        }
-      }
-
-      submit.addEventListener("click", doSubmit);
+      if (!input) return;
       input.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") { event.preventDefault(); doSubmit(); }
+        if (event.key === "Enter") { event.preventDefault(); doSubmitRankingName(); }
       });
     }
 
     async function openRanking({ allowNameEdit = false } = {}) {
       rankingTableBody.innerHTML = `<tr><td class="ranking-message" colspan="4">読み込み中...</td></tr>`;
+      rankingAction.hidden = true;
+      rankingNameErrorEl.hidden = true;
       rankingOverlay.hidden = false;
       refreshPauseState();
       try {
@@ -1512,7 +1505,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         }
         const editingId = (allowNameEdit && state.currentScoreId) ? state.currentScoreId : null;
         rankingTableBody.innerHTML = list.map(row => renderRankingRow(row, editingId)).join("");
-        if (editingId) attachRankingNameEditHandlers();
+        if (editingId) {
+          attachRankingNameEditHandlers();
+          rankingAction.hidden = false;
+        }
       } catch (e) {
         console.warn("ランキング取得失敗", e);
         rankingTableBody.innerHTML = `<tr><td class="ranking-message" colspan="4">ランキングを取得できませんでした</td></tr>`;
@@ -1524,6 +1520,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (event.target === rankingOverlay) closeRanking();
     });
     openRankingTopBtn.addEventListener("click", () => openRanking({ allowNameEdit: false }));
+    rankingSubmitBtn.addEventListener("click", doSubmitRankingName);
 
     function resetGame() {
       resetRankingUi();
@@ -2299,7 +2296,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     window.addEventListener("keydown", (event) => {
       if (!rankingOverlay.hidden) {
         if (event.repeat) return;
-        if (event.target && event.target.id === "rankingNameInput" && event.key !== "Escape") return;
+        const targetId = event.target && event.target.id;
+        if ((targetId === "rankingNameInput" || targetId === "rankingSubmitName") && event.key !== "Escape") return;
         closeRanking();
         helpHoldConsumed = true;
         return;
