@@ -216,6 +216,28 @@
       filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
     }
 
+    .result-rank.is-rainbow-rank .rank-rainbow-text {
+      background: linear-gradient(90deg, #ff6b9d, #ffd166, #7cff6b, #46e6ff, #b78cff, #ff6b9d);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: rainbow-rank 2.4s linear infinite;
+    }
+
+    .result-rank.is-rainbow-rank .rank-crown {
+      color: #fff7c8;
+      filter:
+        drop-shadow(0 0 8px rgba(255, 245, 180, 0.75))
+        drop-shadow(0 0 18px rgba(120, 220, 255, 0.35));
+    }
+
+    @keyframes rainbow-rank {
+      to {
+        background-position: 300% 0;
+      }
+    }
+
     .result-rank-entry {
       display: flex;
       align-items: center;

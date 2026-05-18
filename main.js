@@ -1435,6 +1435,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       resultRankEntry.hidden = true;
       resultRankEl.hidden = true;
       resultRankEl.textContent = "";
+      resultRankEl.classList.remove("is-rainbow-rank");
       setStartButton("retry");
       reopenRankingBtn.hidden = true;
     }
@@ -1604,9 +1605,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const rankNumber = Number(rank);
         const isTopTen = rankNumber <= 10;
         if (isTopTen) {
-          resultRankEl.innerHTML = `RANK ${CROWN_SVG}${rankNumber}`;
+          resultRankEl.classList.add("is-rainbow-rank");
+          resultRankEl.innerHTML = `<span class="rank-rainbow-text">RANK</span> ${CROWN_SVG}<span class="rank-rainbow-text">${rankNumber}</span>`;
           setStartButton("ranking");
         } else {
+          resultRankEl.classList.remove("is-rainbow-rank");
           resultRankEl.textContent = `RANK ${rankNumber}`;
         }
         resultRankEntry.hidden = false;
