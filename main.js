@@ -1407,7 +1407,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function setStartButton(mode) {
       if (mode === "ranking") {
-        startBtn.textContent = "RANKING";
+        startBtn.innerHTML = `${CROWN_SVG}RANKING`;
         startBtn.dataset.action = "ranking";
       } else {
         startBtn.textContent = "RETRY";

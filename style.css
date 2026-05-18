@@ -581,6 +581,21 @@
       display: none;
     }
 
+    #start {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    #start .rank-crown {
+      width: 1.1em;
+      height: 1.1em;
+      margin: 0;
+      vertical-align: middle;
+      filter: none;
+    }
+
     .ranking-button:focus-visible {
       border-color: rgba(255, 255, 255, 0.6);
     }
