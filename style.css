@@ -625,11 +625,16 @@
 
     .ranking-content h2 {
       margin: 0 0 16px;
-      font-family: "Noto Serif JP", serif;
-      font-size: 18px;
-      font-weight: 500;
-      letter-spacing: 0.08em;
+      font-family: "Press Start 2P", system-ui, monospace;
+      font-size: clamp(18px, 3.2vw, 28px);
+      font-weight: 400;
+      letter-spacing: 0;
       text-align: center;
+      color: rgba(220, 235, 255, 0.86);
+      text-shadow:
+        0 0 6px rgba(255, 255, 255, 0.38),
+        0 0 18px rgba(180, 215, 255, 0.3),
+        0 2px 18px rgba(2, 8, 24, 0.7);
     }
 
     .ranking-table {
@@ -640,9 +645,11 @@
     }
 
     .ranking-table th {
-      font-family: "Noto Sans", Arial, sans-serif;
-      font-weight: 500;
-      font-size: 12px;
+      font-family: "Press Start 2P", system-ui, monospace;
+      font-weight: 400;
+      font-size: clamp(7px, 0.9vw, 9px);
+      line-height: 1.6;
+      letter-spacing: 0;
       color: rgba(246, 251, 255, 0.65);
       padding: 6px 8px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.16);
@@ -650,10 +657,16 @@
     }
 
     .ranking-table td {
-      font-family: "Noto Sans", Arial, sans-serif;
-      font-size: 14px;
-      padding: 6px 8px;
+      font-family: "Press Start 2P", system-ui, monospace;
+      font-size: clamp(8px, 1.05vw, 11px);
+      line-height: 1.8;
+      letter-spacing: 0;
+      padding: 7px 8px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-shadow:
+        0 0 4px rgba(255, 255, 255, 0.28),
+        0 0 12px rgba(180, 215, 255, 0.22),
+        0 2px 14px rgba(2, 8, 24, 0.62);
     }
 
     .ranking-table td:nth-child(1),
