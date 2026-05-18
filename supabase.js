@@ -35,7 +35,7 @@ export async function getMyRank({ id, score, loopCount, createdAt }) {
 export async function getTopRanking(limit = 10) {
   const { data, error } = await supabase
     .from("public_rankings")
-    .select("rank, score, loop_count, name")
+    .select("id, rank, score, loop_count, name")
     .order("rank", { ascending: true })
     .limit(limit);
   if (error) throw error;

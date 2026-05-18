@@ -1401,13 +1401,19 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const rankingTableBody = document.querySelector("#rankingTableBody");
     const resultRankEntry = document.querySelector("#resultRankEntry");
     const resultRankEl = document.querySelector("#resultRank");
-    const resultNameForm = document.querySelector("#resultNameForm");
-    const submitNameBtn = document.querySelector("#submitName");
-    const nameInputEl = document.querySelector("#nameInput");
-    const nameErrorEl = document.querySelector("#nameError");
+    const openRankingTopBtn = document.querySelector("#openRankingTop");
     const NAME_PATTERN = /^[A-Za-z0-9]{1,16}$/;
     const CROWN_SVG = `<svg class="rank-crown" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 12h14v2H5v-2z"/></svg>`;
-    let nameSubmitPending = false;
+
+    function setStartButton(mode) {
+      if (mode === "ranking") {
+        startBtn.textContent = "RANKING";
+        startBtn.dataset.action = "ranking";
+      } else {
+        startBtn.textContent = "RETRY";
+        startBtn.dataset.action = "retry";
+      }
+    }
 
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, c => ({
@@ -1419,23 +1425,80 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.currentScoreId = null;
       state.currentScoreCreatedAt = null;
       state.currentSubmitSeq += 1;
-      nameSubmitPending = false;
-      submitNameBtn.disabled = false;
       resultRankEntry.hidden = true;
       resultRankEl.hidden = true;
       resultRankEl.textContent = "";
-      resultNameForm.hidden = true;
-      nameErrorEl.hidden = true;
-      nameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
-      nameInputEl.value = "";
+      setStartButton("retry");
     }
 
     function closeRanking() {
       rankingOverlay.hidden = true;
+      // currentScoreId が残っているのは編集モードで開いて未登録のまま閉じたケースのみ
+      // (登録成功時は doSubmit が先に null + RETRY 化している)
+      if (state.currentScoreId) {
+        state.currentScoreId = null;
+        setStartButton("retry");
+      }
       refreshPauseState();
     }
 
-    async function openRanking() {
+    function renderRankingRow(row, editingId) {
+      const isSelf = row.id === editingId;
+      const nameCell = isSelf
+        ? `<td class="ranking-name-edit name-form">`
+          + `<input id="rankingNameInput" maxlength="16" pattern="[A-Za-z0-9]+">`
+          + `<button id="rankingSubmitName" class="primary name-submit">OK</button>`
+          + `<div class="name-error" id="rankingNameError" hidden></div>`
+          + `</td>`
+        : `<td>${escapeHtml(row.name)}</td>`;
+      const cls = isSelf ? ' class="ranking-self"' : '';
+      return `<tr${cls}><td>${row.rank}</td><td>${row.score}</td><td>${row.loop_count}</td>${nameCell}</tr>`;
+    }
+
+    function attachRankingNameEditHandlers() {
+      const input = document.querySelector("#rankingNameInput");
+      const submit = document.querySelector("#rankingSubmitName");
+      const errorEl = document.querySelector("#rankingNameError");
+      if (!input || !submit || !errorEl) return;
+      let pending = false;
+
+      async function doSubmit() {
+        if (pending) return;
+        const name = input.value.trim();
+        if (!NAME_PATTERN.test(name)) {
+          errorEl.textContent = "英数字 1〜16 文字で入力してください";
+          errorEl.hidden = false;
+          return;
+        }
+        errorEl.hidden = true;
+        if (!state.currentScoreId) return;
+        pending = true;
+        submit.disabled = true;
+        try {
+          await setName(state.currentScoreId, name);
+          const tr = submit.closest("tr");
+          const td = tr.querySelector(".ranking-name-edit");
+          const newTd = document.createElement("td");
+          newTd.textContent = name;
+          td.replaceWith(newTd);
+          state.currentScoreId = null;
+          setStartButton("retry");
+        } catch (e) {
+          console.warn("名前登録失敗", e);
+          errorEl.textContent = "登録に失敗しました";
+          errorEl.hidden = false;
+          pending = false;
+          submit.disabled = false;
+        }
+      }
+
+      submit.addEventListener("click", doSubmit);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") { event.preventDefault(); doSubmit(); }
+      });
+    }
+
+    async function openRanking({ allowNameEdit = false } = {}) {
       rankingTableBody.innerHTML = `<tr><td class="ranking-message" colspan="4">読み込み中...</td></tr>`;
       rankingOverlay.hidden = false;
       refreshPauseState();
@@ -1445,16 +1508,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           rankingTableBody.innerHTML = `<tr><td class="ranking-message" colspan="4">まだランキングがありません</td></tr>`;
           return;
         }
-        rankingTableBody.innerHTML = list
-          .map(
-            row => `<tr>`
-              + `<td>${row.rank}</td>`
-              + `<td>${row.score}</td>`
-              + `<td>${row.loop_count}</td>`
-              + `<td>${escapeHtml(row.name)}</td>`
-              + `</tr>`
-          )
-          .join("");
+        const editingId = (allowNameEdit && state.currentScoreId) ? state.currentScoreId : null;
+        rankingTableBody.innerHTML = list.map(row => renderRankingRow(row, editingId)).join("");
+        if (editingId) attachRankingNameEditHandlers();
       } catch (e) {
         console.warn("ランキング取得失敗", e);
         rankingTableBody.innerHTML = `<tr><td class="ranking-message" colspan="4">ランキングを取得できませんでした</td></tr>`;
@@ -1465,32 +1521,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     rankingOverlay.addEventListener("click", (event) => {
       if (event.target === rankingOverlay) closeRanking();
     });
-
-    submitNameBtn.addEventListener("click", async () => {
-      if (nameSubmitPending) return;
-      const name = nameInputEl.value.trim();
-      if (!NAME_PATTERN.test(name)) {
-        nameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
-        nameErrorEl.hidden = false;
-        return;
-      }
-      nameErrorEl.hidden = true;
-      if (!state.currentScoreId) return;
-      nameSubmitPending = true;
-      submitNameBtn.disabled = true;
-      try {
-        await setName(state.currentScoreId, name);
-        resultNameForm.hidden = true;
-        await openRanking();
-      } catch (e) {
-        console.warn("名前登録失敗", e);
-        nameErrorEl.textContent = "登録に失敗しました";
-        nameErrorEl.hidden = false;
-      } finally {
-        nameSubmitPending = false;
-        submitNameBtn.disabled = false;
-      }
-    });
+    openRankingTopBtn.addEventListener("click", () => openRanking({ allowNameEdit: false }));
 
     function resetGame() {
       resetRankingUi();
@@ -1522,6 +1553,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.crashCameraActive = false;
       camera.up.set(0, 1, 0);
       menu.classList.remove("is-result");
+      openRankingTopBtn.hidden = true;
       ship.position.set(0, 26, 7);
       ship.rotation.set(0, 0, 0);
       menu.hidden = true;
@@ -1535,6 +1567,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       resetRankingUi();
       menu.hidden = false;
       menu.classList.add("is-result");
+      openRankingTopBtn.hidden = true;
       const h1 = menu.querySelector("h1");
       h1.textContent = title;
       h1.hidden = !title;
@@ -1547,7 +1580,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const shareText = `OyasumiSanpo で ${state.score} 点獲得しました。\n#OyasumiSanpo`;
         xShareEl.href = `https://x.com/intent/post?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
       }
-      startBtn.textContent = "RETRY";
+      setStartButton("retry");
 
       const seq = state.currentSubmitSeq;
       const snapScore = state.score;
@@ -1565,12 +1598,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const isTopTen = rankNumber <= 10;
         if (isTopTen) {
           resultRankEl.innerHTML = `RANK ${CROWN_SVG}${rankNumber}`;
+          setStartButton("ranking");
         } else {
           resultRankEl.textContent = `RANK ${rankNumber}`;
         }
         resultRankEntry.hidden = false;
         resultRankEl.hidden = false;
-        if (isTopTen) resultNameForm.hidden = false;
       } catch (e) {
         console.warn("Supabase通信失敗、ランキングは表示しません", e);
       }
@@ -2264,6 +2297,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     window.addEventListener("keydown", (event) => {
       if (!rankingOverlay.hidden) {
         if (event.repeat) return;
+        if (event.target && event.target.id === "rankingNameInput" && event.key !== "Escape") return;
         closeRanking();
         helpHoldConsumed = true;
         return;
@@ -2326,6 +2360,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
 
     startBtn.addEventListener("click", () => {
+      if (startBtn.dataset.action === "ranking") {
+        openRanking({ allowNameEdit: true });
+        return;
+      }
       resetGame();
       if (!state.muted) audio.resume();
     });
@@ -2366,7 +2404,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("rank")) {
-      openRanking();
+      openRanking({ allowNameEdit: false });
     } else {
       if (urlParams.has("play")) {
         resetGame();
