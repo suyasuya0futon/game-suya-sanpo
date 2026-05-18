@@ -687,15 +687,6 @@
       color: rgba(246, 251, 255, 0.68);
     }
 
-    .result-rank {
-      font-family: "Noto Sans", Arial, sans-serif;
-      font-size: clamp(18px, 2.4vw, 24px);
-      font-weight: 500;
-      color: rgba(246, 251, 255, 0.88);
-      letter-spacing: 0.05em;
-      text-shadow: 0 2px 16px rgba(2, 8, 24, 0.6);
-    }
-
     .result-name-action,
     .result-name-form {
       display: flex;
