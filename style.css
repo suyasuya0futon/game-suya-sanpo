@@ -216,8 +216,16 @@
       filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
     }
 
-    .center.is-result .result-name-action {
-      margin-top: -22px;
+    .result-rank-entry {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(10px, 2vw, 18px);
+      flex-wrap: wrap;
+    }
+
+    .result-rank-entry[hidden] {
+      display: none;
     }
 
     .lead {
@@ -699,52 +707,49 @@
       color: rgba(246, 251, 255, 0.68);
     }
 
-    .result-name-action,
     .result-name-form {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 7px;
       flex-wrap: wrap;
     }
 
-    .result-name-action[hidden],
     .result-name-form[hidden] {
       display: none;
     }
 
-    .name-action-btn {
-      background: transparent;
-      border: 0;
-      color: rgba(246, 251, 255, 0.78);
-      font-family: "Noto Sans", Arial, sans-serif;
-      font-size: 13px;
-      text-decoration: underline;
-      text-decoration-thickness: 1px;
-      text-underline-offset: 3px;
-      cursor: pointer;
-      padding: 6px 10px;
-      transition: color 160ms ease;
-    }
-
-    .name-action-btn:hover {
-      color: #fff;
+    .name-label {
+      font-family: "Press Start 2P", system-ui, monospace;
+      font-size: clamp(8px, 1vw, 11px);
+      line-height: 1;
+      color: rgba(220, 235, 255, 0.68);
+      text-shadow: 0 2px 14px rgba(2, 8, 24, 0.62);
     }
 
     .result-name-form input {
-      font-family: "Noto Sans", Arial, sans-serif;
-      font-size: 14px;
-      padding: 8px 12px;
-      border-radius: 999px;
+      width: clamp(120px, 17vw, 170px);
+      min-height: 34px;
+      font-family: "Press Start 2P", system-ui, monospace;
+      font-size: 10px;
+      padding: 0 10px;
+      border-radius: 0;
       border: 1px solid rgba(255, 255, 255, 0.5);
       background: rgba(255, 255, 255, 0.08);
       color: rgba(246, 251, 255, 0.95);
       outline: none;
-      min-width: 200px;
     }
 
     .result-name-form input:focus {
       border-color: rgba(255, 255, 255, 0.85);
+    }
+
+    .result-name-form .name-submit {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 0;
+      font-family: "Press Start 2P", system-ui, monospace;
+      font-size: 10px;
     }
 
     .name-error {

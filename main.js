@@ -1399,10 +1399,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     const rankingClose = document.querySelector("#rankingClose");
     const rankingTableBody = document.querySelector("#rankingTableBody");
+    const resultRankEntry = document.querySelector("#resultRankEntry");
     const resultRankEl = document.querySelector("#resultRank");
-    const resultNameAction = document.querySelector("#resultNameAction");
     const resultNameForm = document.querySelector("#resultNameForm");
-    const openNameInputBtn = document.querySelector("#openNameInput");
     const submitNameBtn = document.querySelector("#submitName");
     const nameInputEl = document.querySelector("#nameInput");
     const nameErrorEl = document.querySelector("#nameError");
@@ -1422,9 +1421,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.currentSubmitSeq += 1;
       nameSubmitPending = false;
       submitNameBtn.disabled = false;
+      resultRankEntry.hidden = true;
       resultRankEl.hidden = true;
       resultRankEl.textContent = "";
-      resultNameAction.hidden = true;
       resultNameForm.hidden = true;
       nameErrorEl.hidden = true;
       nameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
@@ -1465,12 +1464,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     rankingClose.addEventListener("click", closeRanking);
     rankingOverlay.addEventListener("click", (event) => {
       if (event.target === rankingOverlay) closeRanking();
-    });
-
-    openNameInputBtn.addEventListener("click", () => {
-      resultNameAction.hidden = true;
-      resultNameForm.hidden = false;
-      nameInputEl.focus();
     });
 
     submitNameBtn.addEventListener("click", async () => {
@@ -1575,8 +1568,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         } else {
           resultRankEl.textContent = `RANK ${rankNumber}`;
         }
+        resultRankEntry.hidden = false;
         resultRankEl.hidden = false;
-        if (isTopTen) resultNameAction.hidden = false;
+        if (isTopTen) resultNameForm.hidden = false;
       } catch (e) {
         console.warn("Supabase通信失敗、ランキングは表示しません", e);
       }
