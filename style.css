@@ -208,7 +208,7 @@
       display: block;
     }
 
-    .result-rank .rank-crown {
+    .rank-crown {
       width: 1.3em;
       height: 1.3em;
       margin: -0.3em 0.1em -0.15em;
@@ -655,6 +655,10 @@
         0 0 6px rgba(255, 255, 255, 0.38),
         0 0 18px rgba(180, 215, 255, 0.3),
         0 2px 18px rgba(2, 8, 24, 0.7);
+    }
+
+    .ranking-content h2 .rank-crown {
+      margin-right: 0.22em;
     }
 
     .ranking-table {
