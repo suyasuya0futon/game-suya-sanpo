@@ -577,6 +577,10 @@
       transform: translateY(-1px);
     }
 
+    .ranking-button[hidden] {
+      display: none;
+    }
+
     .ranking-button:focus-visible {
       border-color: rgba(255, 255, 255, 0.6);
     }
