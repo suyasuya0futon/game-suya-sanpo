@@ -696,6 +696,11 @@
       flex-wrap: wrap;
     }
 
+    .result-name-action[hidden],
+    .result-name-form[hidden] {
+      display: none;
+    }
+
     .name-action-btn {
       background: transparent;
       border: 0;
