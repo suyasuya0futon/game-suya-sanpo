@@ -1569,12 +1569,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         const rank = await getMyRank({ id, score: snapScore, loopCount: snapLoop, createdAt });
         if (seq !== state.currentSubmitSeq) return;
         const rankNumber = Number(rank);
-        const rankText = `RANK ${rankNumber}`;
         const isTopTen = rankNumber <= 10;
         if (isTopTen) {
-          resultRankEl.innerHTML = `${CROWN_SVG}${rankText}`;
+          resultRankEl.innerHTML = `RANK ${CROWN_SVG}${rankNumber}`;
         } else {
-          resultRankEl.textContent = rankText;
+          resultRankEl.textContent = `RANK ${rankNumber}`;
         }
         resultRankEl.hidden = false;
         if (isTopTen) resultNameAction.hidden = false;
