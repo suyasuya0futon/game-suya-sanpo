@@ -1567,7 +1567,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         state.currentScoreCreatedAt = createdAt;
         const rank = await getMyRank({ id, score: snapScore, loopCount: snapLoop, createdAt });
         if (seq !== state.currentSubmitSeq) return;
-        resultRankEl.textContent = `RANK #${rank}`;
+        resultRankEl.textContent = `RANK ${rank}`;
         resultRankEl.hidden = false;
         if (rank <= 10) {
           resultNameAction.hidden = false;
