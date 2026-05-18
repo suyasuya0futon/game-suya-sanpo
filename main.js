@@ -1405,6 +1405,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const resultRankEntry = document.querySelector("#resultRankEntry");
     const resultRankEl = document.querySelector("#resultRank");
     const openRankingTopBtn = document.querySelector("#openRankingTop");
+    const reopenRankingBtn = document.querySelector("#reopenRanking");
     const NAME_PATTERN = /^[A-Za-z0-9]{1,16}$/;
     let rankingSubmitPending = false;
     const CROWN_SVG = `<svg class="rank-crown" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 12h14v2H5v-2z"/></svg>`;
@@ -1435,15 +1436,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       resultRankEl.hidden = true;
       resultRankEl.textContent = "";
       setStartButton("retry");
+      reopenRankingBtn.hidden = true;
     }
 
     function closeRanking() {
       rankingOverlay.hidden = true;
-      // currentScoreId が残っているのは編集モードで開いて未登録のまま閉じたケースのみ
-      // (登録成功時は doSubmit が先に null + RETRY 化している)
+      // 編集モードで開いていた場合 (未登録キャンセル / OK 成功どちらも)、
+      // 主ボタンを RETRY にしつつ RANKING 再オープンボタンを横に表示する
       if (state.currentScoreId) {
         state.currentScoreId = null;
         setStartButton("retry");
+        reopenRankingBtn.hidden = false;
       }
       refreshPauseState();
     }
@@ -1517,9 +1520,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     rankingClose.addEventListener("click", closeRanking);
     rankingOverlay.addEventListener("click", (event) => {
-      if (event.target === rankingOverlay) closeRanking();
+      if (event.target !== rankingOverlay) return;
+      // 名前編集モード中は背景クリック/タップでは閉じない
+      if (state.currentScoreId) return;
+      closeRanking();
     });
     openRankingTopBtn.addEventListener("click", () => openRanking({ allowNameEdit: false }));
+    reopenRankingBtn.addEventListener("click", () => openRanking({ allowNameEdit: false }));
     rankingSubmitBtn.addEventListener("click", doSubmitRankingName);
 
     function resetGame() {
@@ -2296,8 +2303,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     window.addEventListener("keydown", (event) => {
       if (!rankingOverlay.hidden) {
         if (event.repeat) return;
-        const targetId = event.target && event.target.id;
-        if ((targetId === "rankingNameInput" || targetId === "rankingSubmitName") && event.key !== "Escape") return;
+        // 名前編集モード中は Escape 以外のキーでは閉じない
+        if (state.currentScoreId && event.key !== "Escape") {
+          helpHoldConsumed = true;
+          return;
+        }
         closeRanking();
         helpHoldConsumed = true;
         return;

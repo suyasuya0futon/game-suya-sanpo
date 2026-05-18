@@ -585,20 +585,26 @@
       display: none;
     }
 
-    #start {
+    #start,
+    #reopenRanking {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 2px;
     }
 
-    #start .rank-crown {
+    #start .rank-crown,
+    #reopenRanking .rank-crown {
       width: 1.1em;
       height: 1.1em;
       margin: 0;
       vertical-align: middle;
       filter: none;
       transform: translateY(-0.08em);
+    }
+
+    #reopenRanking[hidden] {
+      display: none;
     }
 
     .ranking-button:focus-visible {
@@ -800,14 +806,6 @@
 
     .ranking-action[hidden] {
       display: none;
-    }
-
-    .ranking-action .name-submit {
-      min-height: 32px;
-      padding: 0 24px;
-      border-radius: 999px;
-      font-family: "Press Start 2P", system-ui, monospace;
-      font-size: 11px;
     }
 
     .name-error {
