@@ -1407,6 +1407,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const nameInputEl = document.querySelector("#nameInput");
     const nameErrorEl = document.querySelector("#nameError");
     const NAME_PATTERN = /^[A-Za-z0-9]{1,16}$/;
+    const CROWN_SVG = `<svg class="rank-crown" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 12h14v2H5v-2z"/></svg>`;
     let nameSubmitPending = false;
 
     function escapeHtml(s) {
@@ -1567,11 +1568,16 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         state.currentScoreCreatedAt = createdAt;
         const rank = await getMyRank({ id, score: snapScore, loopCount: snapLoop, createdAt });
         if (seq !== state.currentSubmitSeq) return;
-        resultRankEl.textContent = `RANK ${rank}`;
-        resultRankEl.hidden = false;
-        if (rank <= 10) {
-          resultNameAction.hidden = false;
+        const rankNumber = Number(rank);
+        const rankText = `RANK ${rankNumber}`;
+        const isTopTen = rankNumber <= 10;
+        if (isTopTen) {
+          resultRankEl.innerHTML = `${CROWN_SVG}${rankText}`;
+        } else {
+          resultRankEl.textContent = rankText;
         }
+        resultRankEl.hidden = false;
+        if (isTopTen) resultNameAction.hidden = false;
       } catch (e) {
         console.warn("Supabase通信失敗、ランキングは表示しません", e);
       }
