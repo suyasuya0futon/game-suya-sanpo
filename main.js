@@ -1467,7 +1467,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (!input || !state.currentScoreId) return;
       const name = input.value.trim();
       if (!NAME_PATTERN.test(name)) {
-        rankingNameErrorEl.textContent = "英数字 1〜16 文字で入力してください";
+        rankingNameErrorEl.textContent = "半角英数字16字以内で入力してください";
         rankingNameErrorEl.hidden = false;
         return;
       }
@@ -1476,7 +1476,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       rankingSubmitBtn.disabled = true;
       try {
         await setName(state.currentScoreId, name);
-        closeRanking();
+        state.currentScoreId = null;
+        setStartButton("retry");
+        reopenRankingBtn.hidden = false;
+        await openRanking({ allowNameEdit: false });
       } catch (e) {
         console.warn("名前登録失敗", e);
         rankingNameErrorEl.textContent = "登録に失敗しました";
