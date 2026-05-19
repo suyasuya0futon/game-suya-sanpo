@@ -39,13 +39,19 @@
         <span id="debugStats" class="debug-info" hidden></span>
         <span id="debugAuto" class="debug-info" hidden></span>
       </div>
+      <button class="ranking-button" id="openRankingTop" aria-label="ランキングを見る">
+        <svg class="rank-crown" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 12h14v2H5v-2z"/></svg>
+      </button>
       <button class="help" id="help" aria-label="遊び方">？</button>
     </section>
 
     <section class="center" id="menu">
       <h1>OyasumiSanpo</h1>
-      <strong class="result-score" id="resultScore">SCORE:0</strong>
       <p class="lead">薄暗い夕暮れから星空へ、光のリングをくぐりながら<br>静かに浮遊する空の散歩です。</p>
+      <div class="result-rank-entry" id="resultRankEntry" hidden>
+        <div class="result-score result-rank" id="resultRank" hidden></div>
+      </div>
+      <strong class="result-score" id="resultScore">SCORE:0</strong>
       <div class="share">
         <span class="share-label">スコアを投稿する</span>
         <a class="share-link" id="xShare" target="_blank" rel="noopener" aria-label="Xに投稿する">
@@ -53,6 +59,10 @@
         </a>
       </div>
       <div class="actions">
+        <button class="primary" id="reopenRanking" hidden>
+          <svg class="rank-crown" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 12h14v2H5v-2z"/></svg>
+          RANKING
+        </button>
         <button class="primary" id="start">START</button>
       </div>
       <label class="bgm-toggle">
@@ -77,6 +87,26 @@
     <div>
       <div class="pause-title">PAUSE</div>
       <div class="pause-sub">PRESS ANY KEY</div>
+    </div>
+  </div>
+
+  <div class="ranking-overlay" id="rankingOverlay" hidden>
+    <button class="help help-close" id="rankingClose" aria-label="閉じる">✖</button>
+    <div class="ranking-content">
+      <h2>
+        <svg class="rank-crown" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 12h14v2H5v-2z"/></svg>
+        RANKING
+      </h2>
+      <table class="ranking-table">
+        <thead>
+          <tr><th>RANK</th><th>SCORE</th><th>LOOP</th><th>NAME</th></tr>
+        </thead>
+        <tbody id="rankingTableBody"></tbody>
+      </table>
+      <div class="ranking-action" id="rankingAction" hidden>
+        <button class="primary name-submit" id="rankingSubmitName">OK</button>
+        <div class="name-error" id="rankingNameError" hidden></div>
+      </div>
     </div>
   </div>
 
