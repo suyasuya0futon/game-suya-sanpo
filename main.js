@@ -1477,7 +1477,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function renderRankingRow(row, editingId) {
       const isSelf = row.id === editingId;
       const nameCell = isSelf
-        ? `<td class="ranking-name-edit"><input id="rankingNameInput" maxlength="16" pattern="[A-Za-z0-9]+" autocomplete="off"></td>`
+        ? `<td class="ranking-name-edit"><input id="rankingNameInput" maxlength="16" pattern="[A-Za-z0-9]+" autocomplete="off" value="anonymous"></td>`
         : `<td>${escapeHtml(row.name)}</td>`;
       const cls = isSelf ? ' class="ranking-self"' : '';
       return `<tr${cls}><td>${row.rank}</td><td>${row.score}</td><td>${row.loop_count}</td>${nameCell}</tr>`;
