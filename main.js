@@ -2228,8 +2228,6 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function updateTrailParticles(dt, boosting) {
-      const baseTrailTarget = Math.floor(state.boostFuel * tuning.TRAIL_PER_BOOST_SECOND);
-      const trailTarget = state.trail ? Math.min(tuning.TRAIL_MAX, baseTrailTarget) : 0;
       let aliveTrail = 0;
       for (const p of particles) if (p.userData.trail) aliveTrail += 1;
       if (boosting && state.trail) {
@@ -2240,27 +2238,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
         for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(Math.max(0.75, state.boost));
       } else {
-        const deficit = trailTarget - aliveTrail;
-        if (deficit > 0) {
-          state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE;
-          const toSpawn = Math.min(deficit, Math.floor(state.trailSpawnCarry));
-          state.trailSpawnCarry -= toSpawn;
-          state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
-          for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(state.boost);
-        } else if (deficit < 0) {
-          state.trailSpawnCarry = 0;
-          let toShorten = -deficit;
-          for (let i = 0; i < particles.length && toShorten > 0; i += 1) {
-            const p = particles[i];
-            if (p.userData.trail && p.userData.life > 0.35) {
-              p.userData.life = 0.35;
-              p.userData.maxLife = 0.35;
-              toShorten -= 1;
-            }
-          }
-        } else {
-          state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
-        }
+        state.trailSpawnCarry = 0;
       }
     }
 

@@ -161,7 +161,6 @@ export const SCORE_MAX_DIGITS = 7; // スコアの最大桁数（HUDのゼロ詰
 export const SCORE_MAX = 10 ** SCORE_MAX_DIGITS - 1; // スコアの上限値（9999999）。これ以上は加算してもクランプされる。
 
 // 噴射粒の生成数
-export const TRAIL_PER_BOOST_SECOND = 10; // 燃料1秒ぶんを通常時の光の粒何個として見せるか。
 export const TRAIL_SPAWN_RATE = 30; // 光の粒を1秒あたり何個ペースで生成するか。
 export const BOOST_TRAIL_MULTIPLIER = 100; // ブースト中の噴射粒の発生倍率。
 export const TRAIL_MAX = 500; // 同時に残せる光の粒の最大数。
