@@ -209,22 +209,30 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   function emptyBoostBuzz() {
     if (state.muted || audioCtx.state !== "running") return;
     const start = audioCtx.currentTime;
-    function beep(when, freq, dur) {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "square";
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.0001, when);
-      gain.gain.linearRampToValueAtTime(0.022, when + 0.012);
-      gain.gain.linearRampToValueAtTime(0.02, when + dur - 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start(when);
-      osc.stop(when + dur + 0.02);
+    const dur = 0.55;
+    const bufferSize = Math.floor(audioCtx.sampleRate * dur);
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i += 1) {
+      data[i] = Math.random() * 2 - 1;
     }
-    beep(start, 70, 0.12);
-    beep(start + 0.16, 70, 0.16);
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(800, start);
+    filter.frequency.exponentialRampToValueAtTime(2600, start + dur);
+    filter.Q.value = 0.9;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+    gain.gain.setValueAtTime(0.18, start + dur * 0.35);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGain);
+    noise.start(start);
+    noise.stop(start + dur + 0.02);
   }
 
   function playEmptyBoostOnce() {
