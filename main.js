@@ -2422,15 +2422,21 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
     stick.addEventListener("pointerup", clearStick);
     stick.addEventListener("pointercancel", clearStick);
-    touchBoost.addEventListener("pointerdown", () => keys.add("Space"));
-    touchBoost.addEventListener("pointerup", () => {
+    let boostTouchId = null;
+    touchBoost.addEventListener("pointerdown", (event) => {
+      boostTouchId = event.pointerId;
+      touchBoost.setPointerCapture(boostTouchId);
+      keys.add("Space");
+    });
+    function clearTouchBoost(event) {
+      if (boostTouchId !== null && event.pointerId !== boostTouchId) return;
+      boostTouchId = null;
       keys.delete("Space");
       audio.resetEmptyBoostLatch();
-    });
-    touchBoost.addEventListener("pointercancel", () => {
-      keys.delete("Space");
-      audio.resetEmptyBoostLatch();
-    });
+    }
+    touchBoost.addEventListener("pointerup", clearTouchBoost);
+    touchBoost.addEventListener("pointercancel", clearTouchBoost);
+    touchBoost.addEventListener("lostpointercapture", clearTouchBoost);
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("rank")) {
