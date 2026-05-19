@@ -244,6 +244,7 @@
       justify-content: center;
       gap: clamp(10px, 2vw, 18px);
       flex-wrap: wrap;
+      margin-top: 10px;
     }
 
     .result-rank-entry[hidden] {
