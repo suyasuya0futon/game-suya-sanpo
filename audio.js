@@ -209,7 +209,7 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   function emptyBoostBuzz() {
     if (state.muted || audioCtx.state !== "running") return;
     const start = audioCtx.currentTime;
-    const dur = 0.55;
+    const dur = 0.33;
     const bufferSize = Math.floor(audioCtx.sampleRate * dur);
     const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
@@ -220,13 +220,13 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
     noise.buffer = noiseBuffer;
     const filter = audioCtx.createBiquadFilter();
     filter.type = "bandpass";
-    filter.frequency.setValueAtTime(800, start);
-    filter.frequency.exponentialRampToValueAtTime(2600, start + dur);
-    filter.Q.value = 0.9;
+    filter.frequency.setValueAtTime(1100, start);
+    filter.frequency.exponentialRampToValueAtTime(3400, start + dur);
+    filter.Q.value = 1.1;
     const gain = audioCtx.createGain();
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.linearRampToValueAtTime(0.12, start + 0.02);
-    gain.gain.setValueAtTime(0.12, start + dur * 0.35);
+    gain.gain.setValueAtTime(0.08, start + dur * 0.28);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
     noise.connect(filter);
     filter.connect(gain);
