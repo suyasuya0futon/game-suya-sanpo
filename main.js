@@ -1568,6 +1568,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       updateHud();
     }
 
+    function buildXShareHref(score, rank = null) {
+      const shareUrl = window.location.origin + window.location.pathname + "?help";
+      const shareText = rank !== null
+        ? `「OyasumiSanpo」で👑${rank}位[${score}点]を獲得しました。\n#OyasumiSanpo`
+        : `「OyasumiSanpo」で[${score}点]を獲得しました。\n#OyasumiSanpo`;
+      return `https://x.com/intent/post?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+    }
+
     async function endGame(title, detail) {
       state.running = false;
       audio.stopBgm();
@@ -1583,11 +1591,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const resultScoreEl = document.querySelector("#resultScore");
       if (resultScoreEl) resultScoreEl.textContent = `SCORE:${state.score}`;
       const xShareEl = document.querySelector("#xShare");
-      if (xShareEl) {
-        const shareUrl = window.location.origin + window.location.pathname + "?help";
-        const shareText = `OyasumiSanpo で ${state.score} 点獲得しました。\n#OyasumiSanpo`;
-        xShareEl.href = `https://x.com/intent/post?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-      }
+      // ランキング通信が遅い/失敗した場合でも共有できるよう、まずスコアのみで用意する。
+      if (xShareEl) xShareEl.href = buildXShareHref(state.score);
       setStartButton("retry");
 
       const seq = state.currentSubmitSeq;
@@ -1614,8 +1619,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         }
         resultRankEntry.hidden = false;
         resultRankEl.hidden = false;
+        const xShareEl = document.querySelector("#xShare");
+        if (xShareEl) xShareEl.href = buildXShareHref(snapScore, rankNumber);
       } catch (e) {
-        console.warn("Supabase通信失敗、ランキングは表示しません", e);
+        console.warn("通信失敗、ランキングは表示しません", e);
       }
     }
 
