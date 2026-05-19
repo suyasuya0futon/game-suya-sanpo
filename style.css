@@ -45,6 +45,14 @@
       appearance: none;
     }
 
+    button,
+    a,
+    label,
+    input[type="checkbox"],
+    input[type="radio"] {
+      touch-action: none;
+    }
+
     #game {
       position: fixed;
       inset: 0;
@@ -526,7 +534,7 @@
 
     .sound {
       pointer-events: auto;
-      touch-action: manipulation;
+      touch-action: none;
       width: 46px;
       min-width: 46px;
       height: 46px;
@@ -563,7 +571,7 @@
 
     .help {
       pointer-events: auto;
-      touch-action: manipulation;
+      touch-action: none;
       width: 46px;
       min-width: 46px;
       height: 46px;
@@ -589,7 +597,7 @@
 
     .ranking-button {
       pointer-events: auto;
-      touch-action: manipulation;
+      touch-action: none;
       width: 46px;
       min-width: 46px;
       height: 46px;
@@ -826,6 +834,7 @@
       background: rgba(255, 255, 255, 0.08);
       color: rgba(246, 251, 255, 0.95);
       outline: none;
+      touch-action: manipulation;
       user-select: text;
       -webkit-user-select: text;
       -webkit-touch-callout: default;
