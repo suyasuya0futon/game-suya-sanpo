@@ -1114,6 +1114,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const rainbowSparkleMaterial = new THREE.PointsMaterial({
       map: sparkleTexture,
       color: 0xffffff,
+      vertexColors: true,
       size: tuning.RAINBOW_SPARKLE_SIZE,
       transparent: true,
       opacity: 0.72,
@@ -1123,12 +1124,15 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       blending: THREE.AdditiveBlending,
       sizeAttenuation: true
     });
-    function createSparkleRing(count = tuning.SPARKLE_COUNT, material = sparkleMaterial) {
+    function createSparkleRing(count = tuning.SPARKLE_COUNT, material = sparkleMaterial, opts = {}) {
       const positions = new Float32Array(count * 3);
       const phase = new Float32Array(count);
       const baseAngle = new Float32Array(count);
       const baseRadius = new Float32Array(count);
       const angularSpeed = new Float32Array(count);
+      const colors = opts.rainbow ? new Float32Array(count * 3) : null;
+      const tmpColor = colors ? new THREE.Color() : null;
+      const hueOffset = opts.hueOffset ?? 0;
       for (let i = 0; i < count; i += 1) {
         const a = (i / count) * Math.PI * 2 + Math.random() * tuning.SPARKLE_RING_ANGLE_RANDOM;
         const r = tuning.SPARKLE_RING_RADIUS + (Math.random() - 0.5) * tuning.SPARKLE_RING_RADIUS_RANDOM;
@@ -1139,9 +1143,16 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         positions[i * 3] = Math.cos(a) * r;
         positions[i * 3 + 1] = Math.sin(a) * r;
         positions[i * 3 + 2] = (Math.random() - 0.5) * tuning.SPARKLE_RING_Z_RANDOM;
+        if (colors) {
+          tmpColor.setHSL((hueOffset + i / count) % 1, 1.0, 0.55);
+          colors[i * 3] = tmpColor.r;
+          colors[i * 3 + 1] = tmpColor.g;
+          colors[i * 3 + 2] = tmpColor.b;
+        }
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      if (colors) geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
       const points = new THREE.Points(geo, material);
       points.userData.phase = phase;
       points.userData.baseAngle = baseAngle;
@@ -1246,16 +1257,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       let ringMat;
       let haloMat;
       if (isRainbow) {
-        const tint = new THREE.Color().setHSL(hue, 1.0, 0.58);
         haloMat = rainbowSparkleMaterial.clone();
-        haloMat.color.set(0xffffff).lerp(tint, 0.92);
       } else {
         ringMat = pickupMat.clone();
         ringMat.transparent = true;
         haloMat = sparkleMaterial.clone();
       }
       const halo = isRainbow
-        ? createSparkleRing(tuning.RAINBOW_SPARKLE_COUNT, haloMat)
+        ? createSparkleRing(tuning.RAINBOW_SPARKLE_COUNT, haloMat, { rainbow: true, hueOffset: hue })
         : createSparkleRing(tuning.SPARKLE_COUNT, haloMat);
       const ring = isRainbow ? createRainbowPickupRing(hue) : new THREE.Mesh(pickupGeo, ringMat);
       const lightColor = isRainbow ? 0xffffff : 0xffd35a;
@@ -1367,15 +1376,20 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       particles.push(p);
     }
 
+    const rainbowBurstHueSteps = 12;
+    const rainbowBurstColor = new THREE.Color();
     function burstRing(item, color, count = 24) {
       const isRainbow = item.userData.rainbow;
       const ringRadius = isRainbow ? tuning.RAINBOW_RING_RADIUS : tuning.PICKUP_RING_RADIUS;
-      const mat = getBurstMaterial(color);
+      const sharedMat = isRainbow ? null : getBurstMaterial(color);
       for (let i = 0; i < count; i += 1) {
         const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * tuning.RING_BURST_ANGLE_RANDOM;
         const radial = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
         const radius = ringRadius + (Math.random() - 0.5) * tuning.RING_BURST_RADIUS_RANDOM;
-        const p = new THREE.Mesh(burstRingGeometry, mat);
+        const particleMat = isRainbow
+          ? getBurstMaterial(rainbowBurstColor.setHSL(Math.floor((i / count) * rainbowBurstHueSteps) / rainbowBurstHueSteps, 1.0, 0.58).getHex())
+          : sharedMat;
+        const p = new THREE.Mesh(burstRingGeometry, particleMat);
         p.position.set(
           item.position.x + radial.x * radius,
           item.position.y + radial.y * radius,
