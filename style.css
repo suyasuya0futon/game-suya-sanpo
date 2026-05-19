@@ -802,7 +802,7 @@
     }
 
     .ranking-name-edit input {
-      width: clamp(120px, 18vw, 180px);
+      width: clamp(160px, 18vw, 180px);
       min-height: 28px;
       font-family: "Press Start 2P", system-ui, monospace;
       font-size: 10px;

@@ -1571,7 +1571,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function buildXShareHref(score, rank = null) {
       const shareUrl = window.location.origin + window.location.pathname + "?help";
       const shareText = rank !== null
-        ? `OyasumiSanpoで「${rank <= 10 ? "👑" : ""}${rank}位」になりました。\nスコアは「${score}点」でした。\n#OyasumiSanpo`
+        ? `OyasumiSanpoで「${rank}位」になりました${rank <= 10 ? "👑" : "。"}\nスコアは「${score}点」でした。\n#OyasumiSanpo`
         : `OyasumiSanpoで遊びました。\nスコアは${score}点でした。\n#OyasumiSanpo`;
       return `https://x.com/intent/post?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
     }
