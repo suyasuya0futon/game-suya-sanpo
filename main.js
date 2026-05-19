@@ -1204,8 +1204,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       });
     }
     const trailGeo = new THREE.SphereGeometry(0.035, 8, 6);
-    const trailColors = [0xfffbe6, 0xffe49a, 0xffc870];
-    const boostTrailColors = [0xfff8c0, 0xffd66b, 0xff9a2a];
+    const trailColors = [0xffe49a];
+    const boostTrailColors = [0xffd66b];
 
     const colorNormal = {
       body: new THREE.Color(0x6fb0ff),
@@ -2233,7 +2233,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (boosting && state.trail) {
         state.trailSpawnCarry += dt * tuning.TRAIL_SPAWN_RATE * tuning.BOOST_TRAIL_MULTIPLIER;
         const room = Math.max(0, tuning.TRAIL_MAX - aliveTrail);
-        const toSpawn = Math.min(room, Math.floor(state.trailSpawnCarry));
+        const toSpawn = Math.min(room, Math.floor(state.trailSpawnCarry), 6);
         state.trailSpawnCarry -= toSpawn;
         state.trailSpawnCarry = Math.min(state.trailSpawnCarry, 0.95);
         for (let s = 0; s < toSpawn; s += 1) spawnOneTrail(Math.max(0.75, state.boost));
