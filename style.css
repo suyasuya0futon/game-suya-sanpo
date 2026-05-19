@@ -13,8 +13,14 @@
       --help-width: min(440px, calc(100vw - 48px));
     }
 
-    * {
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     html,
@@ -34,6 +40,8 @@
     button {
       font: inherit;
       color: inherit;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     #game {
@@ -817,6 +825,9 @@
       background: rgba(255, 255, 255, 0.08);
       color: rgba(246, 251, 255, 0.95);
       outline: none;
+      user-select: text;
+      -webkit-user-select: text;
+      -webkit-touch-callout: default;
     }
 
     .ranking-name-edit input:focus {
@@ -903,6 +914,10 @@
       display: none;
       justify-content: flex-start;
       pointer-events: none;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .stick,
@@ -912,6 +927,9 @@
       background: var(--panel);
       backdrop-filter: blur(8px);
       touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .stick {

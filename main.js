@@ -21,6 +21,19 @@
     const pauseOverlay = document.querySelector("#pauseOverlay");
     const rankingOverlay = document.querySelector("#rankingOverlay");
 
+    function blockTouchDefault(event) {
+      if (event.target?.closest?.("input, textarea, [contenteditable='true']")) return;
+      event.preventDefault();
+    }
+
+    function preventCancelableDefault(event) {
+      if (event.cancelable) event.preventDefault();
+    }
+
+    document.addEventListener("selectstart", blockTouchDefault);
+    document.addEventListener("dragstart", blockTouchDefault);
+    document.addEventListener("contextmenu", blockTouchDefault);
+
     document.querySelector("#helpContent").innerHTML = [
       "リングをくぐると得点が入ると同時に、ブースト燃料が補充されます。",
       "ブースト中は速く移動できます。",
@@ -2400,11 +2413,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     let touchId = null;
     stick.addEventListener("pointerdown", (event) => {
+      preventCancelableDefault(event);
       touchId = event.pointerId;
       stick.setPointerCapture(touchId);
     });
     stick.addEventListener("pointermove", (event) => {
       if (event.pointerId !== touchId) return;
+      preventCancelableDefault(event);
       const rect = stick.getBoundingClientRect();
       const x = event.clientX - rect.left - rect.width / 2;
       const y = event.clientY - rect.top - rect.height / 2;
@@ -2416,6 +2431,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
     function clearStick(event) {
       if (touchId !== null && event.pointerId !== touchId) return;
+      preventCancelableDefault(event);
       touchId = null;
       touchInput.set(0, 0);
       knob.style.transform = "translate(0, 0)";
@@ -2424,12 +2440,18 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     stick.addEventListener("pointercancel", clearStick);
     let boostTouchId = null;
     touchBoost.addEventListener("pointerdown", (event) => {
+      preventCancelableDefault(event);
       boostTouchId = event.pointerId;
       touchBoost.setPointerCapture(boostTouchId);
       keys.add("Space");
     });
+    touchBoost.addEventListener("pointermove", (event) => {
+      if (event.pointerId !== boostTouchId) return;
+      preventCancelableDefault(event);
+    });
     function clearTouchBoost(event) {
       if (boostTouchId !== null && event.pointerId !== boostTouchId) return;
+      preventCancelableDefault(event);
       boostTouchId = null;
       keys.delete("Space");
       audio.resetEmptyBoostLatch();
