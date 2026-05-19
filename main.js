@@ -1303,10 +1303,27 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       pickups.push(pickup);
     }
 
+    const burstGeometry = new THREE.BoxGeometry(0.09, 0.09, 0.09);
+    const burstRingGeometry = new THREE.BoxGeometry(
+      tuning.RING_BURST_PARTICLE_SIZE,
+      tuning.RING_BURST_PARTICLE_SIZE,
+      tuning.RING_BURST_PARTICLE_SIZE
+    );
+    const burstMaterialCache = new Map();
+    function getBurstMaterial(color) {
+      const key = new THREE.Color(color).getHex();
+      let mat = burstMaterialCache.get(key);
+      if (!mat) {
+        mat = new THREE.MeshBasicMaterial({ color: key });
+        burstMaterialCache.set(key, mat);
+      }
+      return mat;
+    }
+
     function burst(position, color, count = 14, velocityBias = null) {
-      const mat = new THREE.MeshBasicMaterial({ color });
+      const mat = getBurstMaterial(color);
       for (let i = 0; i < count; i += 1) {
-        const p = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.09), mat);
+        const p = new THREE.Mesh(burstGeometry, mat);
         p.position.copy(position);
         p.userData.velocity = new THREE.Vector3(
           (Math.random() - 0.5) * 8,
@@ -1353,16 +1370,12 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     function burstRing(item, color, count = 24) {
       const isRainbow = item.userData.rainbow;
       const ringRadius = isRainbow ? tuning.RAINBOW_RING_RADIUS : tuning.PICKUP_RING_RADIUS;
-      const mat = new THREE.MeshBasicMaterial({ color });
+      const mat = getBurstMaterial(color);
       for (let i = 0; i < count; i += 1) {
         const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * tuning.RING_BURST_ANGLE_RANDOM;
         const radial = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
         const radius = ringRadius + (Math.random() - 0.5) * tuning.RING_BURST_RADIUS_RANDOM;
-        const p = new THREE.Mesh(new THREE.BoxGeometry(
-          tuning.RING_BURST_PARTICLE_SIZE,
-          tuning.RING_BURST_PARTICLE_SIZE,
-          tuning.RING_BURST_PARTICLE_SIZE
-        ), mat);
+        const p = new THREE.Mesh(burstRingGeometry, mat);
         p.position.set(
           item.position.x + radial.x * radius,
           item.position.y + radial.y * radius,
