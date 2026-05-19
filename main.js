@@ -1606,10 +1606,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       try {
         const result = await submitScore({ score: snapScore, loopCount: snapLoop });
         if (seq !== state.currentSubmitSeq) return;
-        if (!result) {
-          menu.classList.remove("is-ranking-pending");
-          return;
-        }
+        if (!result) return;
         const { id, createdAt } = result;
         state.currentScoreId = id;
         state.currentScoreCreatedAt = createdAt;
@@ -1627,12 +1624,14 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         }
         resultRankEntry.hidden = false;
         resultRankEl.hidden = false;
-        menu.classList.remove("is-ranking-pending");
         const xShareEl = document.querySelector("#xShare");
         if (xShareEl) xShareEl.href = buildXShareHref(snapScore, rankNumber);
       } catch (e) {
         console.warn("通信失敗、ランキングは表示しません", e);
-        menu.classList.remove("is-ranking-pending");
+      } finally {
+        if (seq === state.currentSubmitSeq) {
+          menu.classList.remove("is-ranking-pending");
+        }
       }
     }
 
