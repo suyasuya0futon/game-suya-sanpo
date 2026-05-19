@@ -1303,7 +1303,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       pickups.push(pickup);
     }
 
-    function burst(position, color, count = 14) {
+    function burst(position, color, count = 14, velocityBias = null) {
       const mat = new THREE.MeshBasicMaterial({ color });
       for (let i = 0; i < count; i += 1) {
         const p = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.09), mat);
@@ -1313,10 +1313,17 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           Math.random() * 5,
           (Math.random() - 0.5) * 8
         );
+        if (velocityBias) p.userData.velocity.add(velocityBias);
         p.userData.life = 0.55 + Math.random() * 0.35;
         scene.add(p);
         particles.push(p);
       }
+    }
+
+    function emitExhaustPuff() {
+      const puffPos = new THREE.Vector3(ship.position.x, ship.position.y - 0.5, ship.position.z + 1.0);
+      const bias = new THREE.Vector3(0, 0.2, 6);
+      burst(puffPos, 0xdfe6ee, 16, bias);
     }
 
     function spawnAtmosphereSpark(intensity = 1) {
@@ -2095,9 +2102,9 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const boosting = wantsBoost && (state.boostFuel > 0 || debugBoosting);
       if (boosting && !debugBoosting) {
         state.boostFuel = Math.max(0, state.boostFuel - dt);
-        if (state.boostFuel <= 0) audio.playEmptyBoostOnce();
+        if (state.boostFuel <= 0 && audio.playEmptyBoostOnce()) emitExhaustPuff();
       } else if (wantsBoost && !debugBoosting) {
-        audio.playEmptyBoostOnce();
+        if (audio.playEmptyBoostOnce()) emitExhaustPuff();
       } else {
         audio.resetEmptyBoostLatch();
       }

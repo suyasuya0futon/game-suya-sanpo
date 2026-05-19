@@ -236,9 +236,10 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
   }
 
   function playEmptyBoostOnce() {
-    if (boostEmptyLatched) return;
+    if (boostEmptyLatched) return false;
     boostEmptyLatched = true;
     emptyBoostBuzz();
+    return true;
   }
 
   function resetEmptyBoostLatch() {
