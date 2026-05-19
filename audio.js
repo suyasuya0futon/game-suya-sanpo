@@ -225,8 +225,8 @@ export function createAudioSystem({ camera, soundBtn, bgmToggle, state }) {
     filter.Q.value = 0.9;
     const gain = audioCtx.createGain();
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
-    gain.gain.setValueAtTime(0.18, start + dur * 0.35);
+    gain.gain.linearRampToValueAtTime(0.12, start + 0.02);
+    gain.gain.setValueAtTime(0.12, start + dur * 0.35);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
     noise.connect(filter);
     filter.connect(gain);
