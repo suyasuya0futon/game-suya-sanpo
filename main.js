@@ -271,7 +271,7 @@
       manualPaused: false,
       loopCount: 1,
       score: 0,
-      combo: 0,
+      combo: 1,
       speed: 17,
       distance: 0,
       spawnTimer: 0,
@@ -1562,7 +1562,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       state.running = true;
       audio.startBgm();
       state.score = 0;
-      state.combo = 0;
+      state.combo = 1;
       state.loopCount = 1;
       updateLoopDisplay();
       applySnowMode(false);
@@ -1722,11 +1722,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       if (item.userData.collected) return;
       item.userData.collected = true;
       state.rings += 1;
-      state.combo += 1;
       const isRainbow = item.userData.rainbow;
       const ringScore = isRainbow ? tuning.RAINBOW_RING_SCORE : tuning.NORMAL_RING_SCORE;
       const scoreBoostMul = state.boost > 0.5 ? tuning.BOOST_SCORE_MULTIPLIER : 1;
       state.score = Math.min(tuning.SCORE_MAX, state.score + Math.floor(ringScore * scoreBoostMul * state.combo));
+      state.combo += 1;
       const rewardMultiplier = isRainbow ? tuning.RAINBOW_RING_MULTIPLIER : 1;
       state.boostFuel = Math.min(tuning.FUEL_DISK_MAX_DIAMETER, state.boostFuel + tuning.BOOST_FUEL_PER_RING * rewardMultiplier);
       audio.resetEmptyBoostLatch();
@@ -1905,7 +1905,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         }
         if (!item.userData.collected && !item.userData.missed && item.position.z >= ship.position.z) {
           item.userData.missed = true;
-          state.combo = 0;
+          state.combo = 1;
         }
         if (item.position.z > 36) {
           if (halo && halo.geometry) halo.geometry.dispose();
@@ -1918,7 +1918,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           if (halo && halo.material) halo.material.dispose();
           scene.remove(item);
           pickups.splice(i, 1);
-          if (!item.userData.collected) state.combo = 0;
+          if (!item.userData.collected) state.combo = 1;
         }
       }
     }
@@ -1979,7 +1979,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         guideTrail.visible = false;
         guideDisk.visible = false;
       }
-      if (nearest && state.debugMode && state.combo >= 1) {
+      if (nearest && state.debugMode) {
         if (state.combo !== chainSpriteValue) {
           drawChainSprite(state.combo);
           chainSpriteValue = state.combo;
