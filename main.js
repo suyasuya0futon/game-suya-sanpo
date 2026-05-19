@@ -30,9 +30,19 @@
       if (event.cancelable) event.preventDefault();
     }
 
+    function blockGameplayTouchDefault(event) {
+      const target = event.target;
+      if (target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+      if (target?.closest?.("button:not(.boost), a, label")) return;
+      if (target?.closest?.(".help-overlay, .ranking-overlay")) return;
+      preventCancelableDefault(event);
+    }
+
     document.addEventListener("selectstart", blockTouchDefault);
     document.addEventListener("dragstart", blockTouchDefault);
     document.addEventListener("contextmenu", blockTouchDefault);
+    document.addEventListener("touchstart", blockGameplayTouchDefault, { passive: false });
+    document.addEventListener("touchmove", blockGameplayTouchDefault, { passive: false });
 
     document.querySelector("#helpContent").innerHTML = [
       "リングをくぐると得点が入り、ブースト燃料が少し補充されます。",
