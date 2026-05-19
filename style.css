@@ -847,8 +847,8 @@
       left: 4px;
       top: 50%;
       transform: translateY(-50%);
-      color: rgba(255, 235, 180, 0.85);
-      font-size: 0.8em;
+      color: rgba(34, 204, 34, 0.85);
+      font-size: 1.0em;
     }
 
     .credits {
