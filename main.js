@@ -33,8 +33,6 @@
     const devAuth = document.querySelector("#devAuth");
     const devAuthForm = document.querySelector("#devAuthForm");
     const devAuthStatus = document.querySelector("#devAuthStatus");
-    const devAuthEmail = document.querySelector("#devAuthEmail");
-    const devAuthPassword = document.querySelector("#devAuthPassword");
     const devAuthSubmit = document.querySelector("#devAuthSubmit");
     const devAuthSignOut = document.querySelector("#devAuthSignOut");
     const devAuthError = document.querySelector("#devAuthError");
@@ -72,21 +70,15 @@
       const seq = ++devAuthUiSeq;
       const signedIn = !!session?.user;
       devAuth.classList.toggle("is-signed-in", signedIn);
-      devAuthStatus.textContent = signedIn ? "SIGNED" : "DEV";
-      devAuthEmail.hidden = signedIn;
-      devAuthPassword.hidden = signedIn;
+      devAuthStatus.hidden = true;
       devAuthSubmit.hidden = signedIn;
       devAuthSignOut.hidden = !signedIn;
       devAuthError.hidden = true;
       devAuthError.textContent = "";
-      if (signedIn) {
-        devAuthEmail.value = "";
-        devAuthPassword.value = "";
-      }
       if (!signedIn) return;
       try {
         const isDeveloper = await getDeveloperStatus();
-        if (seq === devAuthUiSeq) devAuthStatus.textContent = isDeveloper ? "DEV ✦" : "SIGNED";
+        if (seq === devAuthUiSeq) devAuthStatus.hidden = !isDeveloper;
       } catch (e) {
         console.warn("開発者権限を確認できません", e);
         if (seq === devAuthUiSeq) {
@@ -114,7 +106,7 @@
       devAuthError.hidden = true;
       devAuthSubmit.disabled = true;
       try {
-        await setDevAuthUi(await signInDeveloper(devAuthEmail.value.trim(), devAuthPassword.value));
+        await signInDeveloper(`${window.location.origin}${window.location.pathname}?dev`);
       } catch (e) {
         console.warn("開発者ログイン失敗", e);
         devAuthError.textContent = "sign in failed";

@@ -28,10 +28,13 @@ export function onDeveloperAuthChange(callback) {
   return data.subscription;
 }
 
-export async function signInDeveloper(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+export async function signInDeveloper(redirectTo) {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "github",
+    options: { redirectTo }
+  });
   if (error) throw error;
-  return data.session;
+  return data;
 }
 
 export async function signOutDeveloper() {

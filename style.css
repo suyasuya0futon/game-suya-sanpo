@@ -890,80 +890,68 @@
     }
 
     .dev-auth {
-      position: fixed;
-      right: 12px;
-      bottom: 12px;
-      z-index: 20;
-      width: min(280px, calc(100vw - 24px));
-      padding: 10px;
-      border: 1px solid rgba(158, 232, 255, 0.28);
-      background: rgba(8, 16, 30, 0.72);
-      backdrop-filter: blur(14px);
-      color: rgba(246, 251, 255, 0.88);
-      box-shadow: 0 10px 26px rgba(2, 8, 24, 0.36);
+      position: relative;
+      pointer-events: auto;
     }
 
-    .dev-auth[hidden] {
+    .dev-auth[hidden],
+    .dev-auth-mark[hidden] {
       display: none;
     }
 
     .dev-auth-form {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
-      gap: 6px;
+      display: flex;
       align-items: center;
+      gap: 8px;
     }
 
-    .dev-auth.is-signed-in .dev-auth-form {
-      grid-template-columns: auto 1fr;
-    }
-
-    .dev-auth strong {
-      font-family: "Press Start 2P", system-ui, monospace;
-      font-size: 9px;
+    .dev-auth-mark {
       color: #9ee8ff;
-      text-shadow:
-        0 0 5px rgba(158, 232, 255, 0.72),
-        0 0 14px rgba(120, 205, 255, 0.42);
-    }
-
-    .dev-auth input {
-      min-width: 0;
-      height: 28px;
-      padding: 0 7px;
-      border-radius: 0;
-      border: 1px solid rgba(255, 255, 255, 0.32);
-      background: rgba(255, 255, 255, 0.08);
-      color: rgba(246, 251, 255, 0.94);
-      outline: none;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    .dev-auth input:focus {
-      border-color: rgba(158, 232, 255, 0.72);
+      font-size: 18px;
+      line-height: 1;
+      text-shadow: 0 0 10px rgba(158, 232, 255, 0.62);
     }
 
     .dev-auth button {
-      height: 28px;
-      padding: 0 9px;
-      border: 1px solid rgba(158, 232, 255, 0.42);
-      background: rgba(158, 232, 255, 0.12);
+      min-width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(8, 16, 30, 0.62);
       color: rgba(246, 251, 255, 0.9);
-      font-family: "Press Start 2P", system-ui, monospace;
-      font-size: 8px;
+      box-shadow: 0 0 14px rgba(158, 232, 255, 0.22);
       cursor: pointer;
+    }
+
+    .dev-auth-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    #devAuthSignOut {
+      width: auto;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-family: "Noto Sans", Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0;
     }
 
     .dev-auth button:disabled {
       opacity: 0.55;
-      cursor: wait;
     }
 
     .dev-auth-error {
-      margin-top: 7px;
-      font-size: 11px;
+      position: absolute;
+      left: 0;
+      top: 42px;
+      white-space: nowrap;
       color: #ff7a90;
+      font-size: 11px;
     }
 
     .ranking-table tr.ranking-self td:first-child {
