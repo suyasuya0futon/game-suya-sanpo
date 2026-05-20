@@ -1468,6 +1468,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     const NAME_PATTERN = /^[A-Za-z0-9]{1,16}$/;
     let rankingSubmitPending = false;
     const CROWN_SVG = `<svg class="rank-crown" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8zm2 12h14v2H5v-2z"/></svg>`;
+    const DEVELOPER_MARK = `<span class="ranking-dev-mark" title="Developer" role="img" aria-label="Developer">✦</span>`;
 
     function setStartButton(mode) {
       if (mode === "ranking") {
@@ -1485,6 +1486,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       return String(s).replace(/[&<>"']/g, c => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       })[c]);
+    }
+
+    function renderRankingName(row) {
+      const mark = row.is_developer ? DEVELOPER_MARK : "";
+      return `<span class="ranking-name-display"><span class="ranking-player-name">${escapeHtml(row.name || "anonymous")}</span>${mark}</span>`;
     }
 
     function resetRankingUi() {
@@ -1514,9 +1520,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
 
     function renderRankingRow(row, editingId) {
       const isSelf = row.id === editingId;
+      const mark = row.is_developer ? DEVELOPER_MARK : "";
       const nameCell = isSelf
-        ? `<td class="ranking-name-edit"><input id="rankingNameInput" maxlength="16" pattern="[A-Za-z0-9]+" autocomplete="off" value="anonymous"></td>`
-        : `<td>${escapeHtml(row.name)}</td>`;
+        ? `<td class="ranking-name-edit"><span class="ranking-name-display"><input id="rankingNameInput" maxlength="16" pattern="[A-Za-z0-9]+" autocomplete="off" value="${escapeHtml(row.name || "anonymous")}">${mark}</span></td>`
+        : `<td>${renderRankingName(row)}</td>`;
       const cls = isSelf ? ' class="ranking-self"' : '';
       return `<tr${cls}><td>${row.rank}</td><td>${row.score}</td><td>${row.loop_count}</td>${nameCell}</tr>`;
     }

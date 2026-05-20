@@ -817,6 +817,32 @@
       word-break: break-all;
     }
 
+    .ranking-name-display {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.45em;
+      max-width: 100%;
+      vertical-align: middle;
+    }
+
+    .ranking-player-name {
+      min-width: 0;
+      word-break: break-all;
+    }
+
+    .ranking-dev-mark {
+      flex: 0 0 auto;
+      color: #9ee8ff;
+      font-size: 1.15em;
+      line-height: 1;
+      text-shadow:
+        0 0 5px rgba(158, 232, 255, 0.72),
+        0 0 14px rgba(120, 205, 255, 0.42),
+        0 2px 12px rgba(2, 8, 24, 0.72);
+      transform: translateY(-0.05em);
+    }
+
     .ranking-table .ranking-message {
       padding: 18px 8px;
       text-align: center;

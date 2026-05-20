@@ -6,6 +6,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const TOKEN_STORAGE_KEY = "oyasumi-sanpo-score-tokens";
+const RANKING_COLUMNS = "id, rank, score, loop_count, name";
+const RANKING_COLUMNS_WITH_DEVELOPER = `${RANKING_COLUMNS}, is_developer`;
 
 export async function submitScore({ score, loopCount }) {
   const { data, error } = await supabase.rpc("submit_score", {
@@ -33,13 +35,34 @@ export async function getMyRank({ id, score, loopCount, createdAt }) {
 }
 
 export async function getTopRanking(limit = 10) {
+  const withDeveloper = await fetchTopRanking(RANKING_COLUMNS_WITH_DEVELOPER, limit);
+  if (!withDeveloper.error) return normalizeRankingRows(withDeveloper.data);
+  if (!isMissingDeveloperColumnError(withDeveloper.error)) throw withDeveloper.error;
+
+  const withoutDeveloper = await fetchTopRanking(RANKING_COLUMNS, limit);
+  if (withoutDeveloper.error) throw withoutDeveloper.error;
+  return normalizeRankingRows(withoutDeveloper.data);
+}
+
+async function fetchTopRanking(columns, limit) {
   const { data, error } = await supabase
     .from("public_rankings")
-    .select("id, rank, score, loop_count, name")
+    .select(columns)
     .order("rank", { ascending: true })
     .limit(limit);
-  if (error) throw error;
-  return data;
+  return { data, error };
+}
+
+function normalizeRankingRows(rows) {
+  return (rows || []).map(row => ({
+    ...row,
+    is_developer: row.is_developer === true
+  }));
+}
+
+function isMissingDeveloperColumnError(error) {
+  const text = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`;
+  return text.includes("is_developer");
 }
 
 export async function setName(scoreId, name) {
