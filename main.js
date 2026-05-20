@@ -22,7 +22,7 @@
     const rankingOverlay = document.querySelector("#rankingOverlay");
 
     function blockTouchDefault(event) {
-      if (event.target?.closest?.("input, textarea, [contenteditable='true']")) return;
+      if (isTextEntryTarget(event.target)) return;
       event.preventDefault();
     }
 
@@ -2366,11 +2366,11 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     });
     window.addEventListener("keydown", (event) => {
-      if (isTextEntryTarget(event.target) && event.key !== "Escape") return;
+      if (isTextEntryTarget(event.target) && event.code !== "Escape") return;
       if (!rankingOverlay.hidden) {
         if (event.repeat) return;
         // 名前編集モード中は Escape 以外のキーでは閉じない
-        if (state.currentScoreId && event.key !== "Escape") {
+        if (state.currentScoreId && event.code !== "Escape") {
           helpHoldConsumed = true;
           return;
         }
