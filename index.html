@@ -144,6 +144,17 @@
     </div>
   </div>
 
+  <div class="dev-auth" id="devAuth" hidden>
+    <form class="dev-auth-form" id="devAuthForm">
+      <strong id="devAuthStatus">DEV</strong>
+      <input id="devAuthEmail" type="email" autocomplete="email" placeholder="email">
+      <input id="devAuthPassword" type="password" autocomplete="current-password" placeholder="password">
+      <button type="submit" id="devAuthSubmit">OK</button>
+      <button type="button" id="devAuthSignOut" hidden>OUT</button>
+    </form>
+    <div class="dev-auth-error" id="devAuthError" hidden></div>
+  </div>
+
   <script type="module" src="./main.js"></script>
 </body>
 </html>

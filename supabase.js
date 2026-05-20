@@ -9,6 +9,36 @@ const TOKEN_STORAGE_KEY = "oyasumi-sanpo-score-tokens";
 const RANKING_COLUMNS = "id, rank, score, loop_count, name";
 const RANKING_COLUMNS_WITH_DEVELOPER = `${RANKING_COLUMNS}, is_developer`;
 
+export async function getDeveloperSession() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  return data.session;
+}
+
+export async function getDeveloperStatus() {
+  const { data, error } = await supabase.rpc("is_developer");
+  if (error) throw error;
+  return data === true;
+}
+
+export function onDeveloperAuthChange(callback) {
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    callback(session);
+  });
+  return data.subscription;
+}
+
+export async function signInDeveloper(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data.session;
+}
+
+export async function signOutDeveloper() {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
+
 export async function submitScore({ score, loopCount }) {
   const { data, error } = await supabase.rpc("submit_score", {
     p_score: score,

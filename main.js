@@ -1,7 +1,17 @@
     import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
     import { createAudioSystem } from "./audio.js";
     import * as tuning from "./tuning.js";
-    import { submitScore, getMyRank, getTopRanking, setName } from "./supabase.js";
+    import {
+      submitScore,
+      getMyRank,
+      getTopRanking,
+      setName,
+      getDeveloperSession,
+      getDeveloperStatus,
+      onDeveloperAuthChange,
+      signInDeveloper,
+      signOutDeveloper
+    } from "./supabase.js";
 
     const canvas = document.querySelector("#game");
     const scoreEl = document.querySelector("#score");
@@ -20,6 +30,14 @@
     const helpClose = document.querySelector("#helpClose");
     const pauseOverlay = document.querySelector("#pauseOverlay");
     const rankingOverlay = document.querySelector("#rankingOverlay");
+    const devAuth = document.querySelector("#devAuth");
+    const devAuthForm = document.querySelector("#devAuthForm");
+    const devAuthStatus = document.querySelector("#devAuthStatus");
+    const devAuthEmail = document.querySelector("#devAuthEmail");
+    const devAuthPassword = document.querySelector("#devAuthPassword");
+    const devAuthSubmit = document.querySelector("#devAuthSubmit");
+    const devAuthSignOut = document.querySelector("#devAuthSignOut");
+    const devAuthError = document.querySelector("#devAuthError");
 
     function blockTouchDefault(event) {
       if (isTextEntryTarget(event.target)) return;
@@ -47,6 +65,78 @@
     document.addEventListener("contextmenu", blockTouchDefault);
     document.addEventListener("touchstart", blockGameplayTouchDefault, { passive: false });
     document.addEventListener("touchmove", blockGameplayTouchDefault, { passive: false });
+
+    let devAuthUiSeq = 0;
+
+    async function setDevAuthUi(session) {
+      const seq = ++devAuthUiSeq;
+      const signedIn = !!session?.user;
+      devAuth.classList.toggle("is-signed-in", signedIn);
+      devAuthStatus.textContent = signedIn ? "SIGNED" : "DEV";
+      devAuthEmail.hidden = signedIn;
+      devAuthPassword.hidden = signedIn;
+      devAuthSubmit.hidden = signedIn;
+      devAuthSignOut.hidden = !signedIn;
+      devAuthError.hidden = true;
+      devAuthError.textContent = "";
+      if (signedIn) {
+        devAuthEmail.value = "";
+        devAuthPassword.value = "";
+      }
+      if (!signedIn) return;
+      try {
+        const isDeveloper = await getDeveloperStatus();
+        if (seq === devAuthUiSeq) devAuthStatus.textContent = isDeveloper ? "DEV ✦" : "SIGNED";
+      } catch (e) {
+        console.warn("開発者権限を確認できません", e);
+        if (seq === devAuthUiSeq) {
+          devAuthError.textContent = "status error";
+          devAuthError.hidden = false;
+        }
+      }
+    }
+
+    async function initDevAuth(urlParams) {
+      if (!urlParams.has("dev")) return;
+      devAuth.hidden = false;
+      try {
+        await setDevAuthUi(await getDeveloperSession());
+        onDeveloperAuthChange(setDevAuthUi);
+      } catch (e) {
+        console.warn("開発者ログイン状態を取得できません", e);
+        devAuthError.textContent = "session error";
+        devAuthError.hidden = false;
+      }
+    }
+
+    devAuthForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      devAuthError.hidden = true;
+      devAuthSubmit.disabled = true;
+      try {
+        await setDevAuthUi(await signInDeveloper(devAuthEmail.value.trim(), devAuthPassword.value));
+      } catch (e) {
+        console.warn("開発者ログイン失敗", e);
+        devAuthError.textContent = "sign in failed";
+        devAuthError.hidden = false;
+      } finally {
+        devAuthSubmit.disabled = false;
+      }
+    });
+
+    devAuthSignOut.addEventListener("click", async () => {
+      devAuthSignOut.disabled = true;
+      try {
+        await signOutDeveloper();
+        await setDevAuthUi(null);
+      } catch (e) {
+        console.warn("開発者ログアウト失敗", e);
+        devAuthError.textContent = "sign out failed";
+        devAuthError.hidden = false;
+      } finally {
+        devAuthSignOut.disabled = false;
+      }
+    });
 
     document.querySelector("#helpContent").innerHTML = [
       "リングをくぐると得点が入り、ブースト燃料が少し補充されます。",
@@ -2498,6 +2588,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     touchBoost.addEventListener("lostpointercapture", clearTouchBoost);
 
     const urlParams = new URLSearchParams(window.location.search);
+    initDevAuth(urlParams);
     if (urlParams.has("rank")) {
       openRanking({ allowNameEdit: false });
     } else {
