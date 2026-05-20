@@ -2419,7 +2419,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
     window.addEventListener("keyup", (event) => {
       keys.delete(event.code);
-      if (isTextEntryTarget(event.target)) {
+      if (isTextEntryTarget(event.target) || !rankingOverlay.hidden) {
         if (event.code === "KeyH") clearHelpHold();
         return;
       }
