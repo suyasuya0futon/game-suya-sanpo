@@ -1554,7 +1554,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       const input = document.querySelector("#rankingNameInput");
       if (!input) return;
       input.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") { event.preventDefault(); doSubmitRankingName(); }
+        if (event.key === "Enter") event.preventDefault();
       });
     }
 
