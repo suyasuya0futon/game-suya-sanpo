@@ -32,9 +32,8 @@
     const rankingOverlay = document.querySelector("#rankingOverlay");
     const devAuth = document.querySelector("#devAuth");
     const devAuthForm = document.querySelector("#devAuthForm");
-    const devAuthStatus = document.querySelector("#devAuthStatus");
+    const devAuthBadge = document.querySelector("#devAuthBadge");
     const devAuthSubmit = document.querySelector("#devAuthSubmit");
-    const devAuthSignOut = document.querySelector("#devAuthSignOut");
     const devAuthError = document.querySelector("#devAuthError");
 
     function blockTouchDefault(event) {
@@ -65,20 +64,22 @@
     document.addEventListener("touchmove", blockGameplayTouchDefault, { passive: false });
 
     let devAuthUiSeq = 0;
+    let devAuthSession = null;
 
     async function setDevAuthUi(session) {
       const seq = ++devAuthUiSeq;
       const signedIn = !!session?.user;
+      devAuthSession = session;
       devAuth.classList.toggle("is-signed-in", signedIn);
-      devAuthStatus.hidden = true;
-      devAuthSubmit.hidden = signedIn;
-      devAuthSignOut.hidden = !signedIn;
+      devAuthSubmit.disabled = false;
+      devAuthSubmit.setAttribute("aria-label", signedIn ? "GitHubログアウト" : "GitHubでログイン");
+      devAuthBadge.hidden = true;
       devAuthError.hidden = true;
       devAuthError.textContent = "";
       if (!signedIn) return;
       try {
         const isDeveloper = await getDeveloperStatus();
-        if (seq === devAuthUiSeq) devAuthStatus.hidden = !isDeveloper;
+        if (seq === devAuthUiSeq) devAuthBadge.hidden = !isDeveloper;
       } catch (e) {
         console.warn("開発者権限を確認できません", e);
         if (seq === devAuthUiSeq) {
@@ -106,27 +107,18 @@
       devAuthError.hidden = true;
       devAuthSubmit.disabled = true;
       try {
-        await signInDeveloper(`${window.location.origin}${window.location.pathname}?dev`);
+        if (devAuthSession?.user) {
+          await signOutDeveloper();
+          await setDevAuthUi(null);
+        } else {
+          await signInDeveloper(`${window.location.origin}${window.location.pathname}?dev`);
+        }
       } catch (e) {
-        console.warn("開発者ログイン失敗", e);
-        devAuthError.textContent = "sign in failed";
+        console.warn("開発者ログイン操作に失敗", e);
+        devAuthError.textContent = "auth failed";
         devAuthError.hidden = false;
       } finally {
         devAuthSubmit.disabled = false;
-      }
-    });
-
-    devAuthSignOut.addEventListener("click", async () => {
-      devAuthSignOut.disabled = true;
-      try {
-        await signOutDeveloper();
-        await setDevAuthUi(null);
-      } catch (e) {
-        console.warn("開発者ログアウト失敗", e);
-        devAuthError.textContent = "sign out failed";
-        devAuthError.hidden = false;
-      } finally {
-        devAuthSignOut.disabled = false;
       }
     });
 

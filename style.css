@@ -895,24 +895,17 @@
     }
 
     .dev-auth[hidden],
-    .dev-auth-mark[hidden] {
+    .dev-auth-badge[hidden] {
       display: none;
     }
 
     .dev-auth-form {
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-
-    .dev-auth-mark {
-      color: #9ee8ff;
-      font-size: 18px;
-      line-height: 1;
-      text-shadow: 0 0 10px rgba(158, 232, 255, 0.62);
     }
 
     .dev-auth button {
+      position: relative;
       min-width: 36px;
       height: 36px;
       display: grid;
@@ -931,14 +924,18 @@
       height: 18px;
     }
 
-    #devAuthSignOut {
-      width: auto;
-      padding: 0 12px;
-      border-radius: 999px;
-      font-family: "Noto Sans", Arial, sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0;
+    .dev-auth-badge {
+      position: absolute;
+      right: -4px;
+      top: -5px;
+      color: #9ee8ff;
+      font-size: 14px;
+      line-height: 1;
+      pointer-events: none;
+      text-shadow:
+        0 0 5px rgba(158, 232, 255, 0.82),
+        0 0 12px rgba(120, 205, 255, 0.5),
+        0 1px 6px rgba(2, 8, 24, 0.7);
     }
 
     .dev-auth button:disabled {
