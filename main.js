@@ -172,35 +172,7 @@
       refreshPauseState();
     }
 
-    let helpHoldTimer = null;
-    let helpHoldConsumed = false;
-    function clearHelpHold() {
-      if (helpHoldTimer !== null) {
-        window.clearTimeout(helpHoldTimer);
-        helpHoldTimer = null;
-      }
-    }
-    helpBtn.addEventListener("pointerdown", (event) => {
-      helpHoldConsumed = false;
-      helpBtn.setPointerCapture(event.pointerId);
-      clearHelpHold();
-      helpHoldTimer = window.setTimeout(() => {
-        helpHoldConsumed = true;
-        setDebugMode(!state.debugMode);
-        helpBtn.blur();
-      }, 1200);
-    });
-    helpBtn.addEventListener("pointerup", clearHelpHold);
-    helpBtn.addEventListener("pointercancel", clearHelpHold);
-    helpBtn.addEventListener("pointerleave", clearHelpHold);
-    helpBtn.addEventListener("click", (event) => {
-      if (helpHoldConsumed) {
-        event.preventDefault();
-        helpHoldConsumed = false;
-        return;
-      }
-      setHelpOpen(true);
-    });
+    helpBtn.addEventListener("click", () => setHelpOpen(true));
     helpClose.addEventListener("click", () => setHelpOpen(false));
     helpOverlay.addEventListener("click", (event) => {
       if (event.target === helpOverlay) setHelpOpen(false);
@@ -2461,28 +2433,32 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         if (event.repeat) return;
         // 名前編集モード中は Escape 以外のキーでは閉じない
         if (state.currentScoreId && event.code !== "Escape") {
-          helpHoldConsumed = true;
           return;
         }
         closeRanking();
-        helpHoldConsumed = true;
         return;
       }
       if (!helpOverlay.hidden) {
         if (event.repeat) return;
         setHelpOpen(false);
-        helpHoldConsumed = true;
         return;
       }
       if (state.manualPaused) {
         if (event.repeat) return;
         setManualPause(false);
-        helpHoldConsumed = true;
+        return;
+      }
+      if (event.code === "Space") event.preventDefault();
+      if (event.repeat) return;
+      if (event.code === "KeyH") {
+        setHelpOpen(true);
+        return;
+      }
+      if (event.code === "Escape" && state.running) {
+        setManualPause(true);
         return;
       }
       keys.add(event.code);
-      if (event.code === "Space") event.preventDefault();
-      if (event.repeat) return;
       if (event.code === "KeyR" && state.debugMode) resetGame();
       if (event.code === "KeyP" && state.debugMode) {
         state.autopilot = !state.autopilot;
@@ -2503,30 +2479,13 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           }
         }
       }
-      if (event.code === "KeyH") {
-        helpHoldConsumed = false;
-        clearHelpHold();
-        helpHoldTimer = window.setTimeout(() => {
-          helpHoldConsumed = true;
-          setDebugMode(!state.debugMode);
-        }, 1200);
-      }
-      if (event.code === "Escape" && state.running) {
-        setManualPause(true);
-      }
     });
     window.addEventListener("keyup", (event) => {
       keys.delete(event.code);
       if (isTextEntryTarget(event.target) || !rankingOverlay.hidden) {
-        if (event.code === "KeyH") clearHelpHold();
         return;
       }
       if (event.code === "Space") audio.resetEmptyBoostLatch();
-      if (event.code === "KeyH") {
-        clearHelpHold();
-        if (!helpHoldConsumed) setHelpOpen(true);
-        helpHoldConsumed = false;
-      }
     });
 
     startBtn.addEventListener("click", () => {
