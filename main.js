@@ -26,13 +26,17 @@
       event.preventDefault();
     }
 
+    function isTextEntryTarget(target) {
+      return !!target?.closest?.("input, textarea, select, [contenteditable='true']");
+    }
+
     function preventCancelableDefault(event) {
       if (event.cancelable) event.preventDefault();
     }
 
     function blockGameplayTouchDefault(event) {
       const target = event.target;
-      if (target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+      if (isTextEntryTarget(target)) return;
       if (target?.closest?.("button:not(.boost), a, label")) return;
       if (target?.closest?.(".help-overlay, .ranking-overlay")) return;
       preventCancelableDefault(event);
@@ -2354,6 +2358,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
     });
     window.addEventListener("keydown", (event) => {
+      if (isTextEntryTarget(event.target) && event.key !== "Escape") return;
       if (!rankingOverlay.hidden) {
         if (event.repeat) return;
         // 名前編集モード中は Escape 以外のキーでは閉じない
@@ -2414,6 +2419,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     });
     window.addEventListener("keyup", (event) => {
       keys.delete(event.code);
+      if (isTextEntryTarget(event.target)) {
+        if (event.code === "KeyH") clearHelpHold();
+        return;
+      }
       if (event.code === "Space") audio.resetEmptyBoostLatch();
       if (event.code === "KeyH") {
         clearHelpHold();
