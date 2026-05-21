@@ -1,7 +1,11 @@
 create table if not exists public.developers (
   user_id uuid primary key,
+  display_name text not null default 'suyasuya0futon',
   created_at timestamptz not null default now()
 );
+
+alter table public.developers
+  add column if not exists display_name text not null default 'suyasuya0futon';
 
 alter table public.developers enable row level security;
 
@@ -49,6 +53,7 @@ declare
   v_cap constant integer := 100;
   v_user_id uuid := auth.uid();
   v_is_developer boolean;
+  v_developer_name text;
 begin
   if p_score is null or p_score < 0 or p_score > 9999999 then
     raise exception 'invalid score';
@@ -57,11 +62,10 @@ begin
     raise exception 'invalid loop_count';
   end if;
 
-  v_is_developer := exists (
-    select 1
-    from public.developers
-    where developers.user_id = v_user_id
-  );
+  select developers.display_name into v_developer_name
+  from public.developers
+  where developers.user_id = v_user_id;
+  v_is_developer := v_developer_name is not null;
 
   -- 並行 submit を直列化
   perform pg_advisory_xact_lock(742031);
@@ -87,8 +91,8 @@ begin
     end;
   end if;
 
-  insert into public.scores (score, loop_count, user_id, is_developer)
-    values (p_score, p_loop_count, v_user_id, v_is_developer)
+  insert into public.scores (score, loop_count, user_id, is_developer, name)
+    values (p_score, p_loop_count, v_user_id, v_is_developer, case when v_is_developer then v_developer_name else null end)
     returning scores.id, scores.token, scores.created_at into v_id, v_token, v_created_at;
 
   if v_row_count >= v_cap then

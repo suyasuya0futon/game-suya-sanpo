@@ -1635,7 +1635,8 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
           return;
         }
         const editingId = (allowNameEdit && state.currentScoreId) ? state.currentScoreId : null;
-        const canEdit = !!editingId && list.some(row => row.id === editingId);
+        const editingRow = editingId ? list.find(row => row.id === editingId) : null;
+        const canEdit = !!editingRow && !editingRow.is_developer;
         rankingTableBody.innerHTML = list.map(row => renderRankingRow(row, canEdit ? editingId : null)).join("");
         if (canEdit) {
           attachRankingNameEditHandlers();
