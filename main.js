@@ -76,15 +76,22 @@
       devAuthBadge.hidden = true;
       devAuthError.hidden = true;
       devAuthError.textContent = "";
-      if (!signedIn) return;
+      if (!signedIn) {
+        setDebugMode(tuning.DEBUG_MODE);
+        return;
+      }
       try {
         const isDeveloper = await getDeveloperStatus();
-        if (seq === devAuthUiSeq) devAuthBadge.hidden = !isDeveloper;
+        if (seq === devAuthUiSeq) {
+          devAuthBadge.hidden = !isDeveloper;
+          setDebugMode(tuning.DEBUG_MODE || isDeveloper);
+        }
       } catch (e) {
         console.warn("開発者権限を確認できません", e);
         if (seq === devAuthUiSeq) {
           devAuthError.textContent = "status error";
           devAuthError.hidden = false;
+          setDebugMode(tuning.DEBUG_MODE);
         }
       }
     }
@@ -336,6 +343,7 @@
       rainbowQueue: 0,
       muted: false,
       debugMode: tuning.DEBUG_MODE,
+      debugDamage: false,
       autopilot: false,
       autoBoost: false,
       fullBoost: false,
@@ -395,8 +403,10 @@
     }
 
     function setDebugMode(enabled) {
+      const wasEnabled = state.debugMode;
       state.debugMode = enabled;
-      if (enabled) state.fullBoost = false;
+      if (!enabled) state.debugDamage = false;
+      if (enabled && !wasEnabled) state.fullBoost = false;
       document.body.classList.toggle("debug-on", enabled);
       updateHud();
       refreshLoopBuildingColor();
@@ -1757,7 +1767,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
         debugInfoEl.textContent = `Y=${Math.round(ship.position.y)}  Z=${Math.round(ground.position.z)}  SPEED=${state.speed.toFixed(1)}  LOOP=${state.loopCount}(${loopProgress}%)  SNOW=${state.snow ? "ON" : "OFF"}`;
         const diskDiameter = Math.min(state.boostFuel, tuning.FUEL_DISK_MAX_DIAMETER);
         debugStatsEl.textContent = `CHAIN=${state.combo}  FUEL/F=${state.fullBoost ? "MAX" : state.boostFuel.toFixed(2)}  DISK=${diskDiameter.toFixed(2)}`;
-        debugAutoEl.textContent = `AUTOPILOT/P=${state.autopilot ? "ON" : "OFF"}  AUTOBOOST/B=${state.autoBoost ? "ON" : "OFF"}  TRAIL/T=${state.trail ? "ON" : "OFF"}`;
+        debugAutoEl.textContent = `AUTOPILOT/P=${state.autopilot ? "ON" : "OFF"}  AUTOBOOST/B=${state.autoBoost ? "ON" : "OFF"}  DAMAGE/I=${state.debugDamage ? "ON" : "OFF"}  TRAIL/T=${state.trail ? "ON" : "OFF"}`;
         debugInfoEl.hidden = false;
         debugStatsEl.hidden = false;
         debugAutoEl.hidden = false;
@@ -1847,7 +1857,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       audio.tone(80, 0.35, "sawtooth", 0.06);
       flash.classList.add("on");
       window.setTimeout(() => flash.classList.remove("on"), 240);
-      if (state.debugMode) {
+      if (state.debugMode && !state.debugDamage) {
         state.invulnerable = 0.6;
         return;
       }
@@ -1865,7 +1875,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       audio.tone(64, 0.42, "sawtooth", 0.08);
       flash.classList.add("on");
       window.setTimeout(() => flash.classList.remove("on"), 280);
-      if (state.debugMode) {
+      if (state.debugMode && !state.debugDamage) {
         state.invulnerable = 0.9;
         ship.position.y = tuning.ATMOSPHERE_SPARK_START_Y - 8;
         return;
@@ -2454,6 +2464,10 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
       }
       if (event.code === "KeyF" && state.debugMode) {
         state.fullBoost = !state.fullBoost;
+      }
+      if (event.code === "KeyI" && state.debugMode) {
+        state.debugDamage = !state.debugDamage;
+        updateHud();
       }
       if (event.code === "KeyT" && state.debugMode) {
         state.trail = !state.trail;
