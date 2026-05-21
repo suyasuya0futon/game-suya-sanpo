@@ -166,7 +166,7 @@ export const BOOST_TRAIL_MULTIPLIER = 1; // ブースト中の噴射粒の発生
 export const TRAIL_MAX = 500; // 同時に残せる光の粒の最大数。
 
 // 噴射粒のレインボー色
-export const TRAIL_RAINBOW_TINT_MAX = 5.0; // レインボー中に噴射粒へ混ぜる虹色の最大量。
+export const TRAIL_RAINBOW_TINT_MAX = 1.0; // レインボー中に噴射粒へ混ぜる虹色の最大量。
 export const TRAIL_RAINBOW_HUE_RANDOM = 0.3; // 噴射粒の虹色をランダムにずらす幅。
 export const TRAIL_RAINBOW_SATURATION = 1.5; // 噴射粒に混ぜる虹色の彩度。
 export const TRAIL_RAINBOW_LIGHTNESS = 0.64; // 噴射粒に混ぜる虹色の明るさ。

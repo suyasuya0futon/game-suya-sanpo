@@ -1469,7 +1469,7 @@ const forestPalette = [0x173326, 0x1f4434, 0x2a563f, 0x12281d, 0x365e3c];
     }
 
     function spawnOneTrail(boostAmount = state.boost) {
-      const rbTrail = Math.min(tuning.TRAIL_RAINBOW_TINT_MAX, state.rainbowTimer / 8 * tuning.TRAIL_RAINBOW_TINT_MAX);
+      const rbTrail = THREE.MathUtils.clamp(state.rainbowTimer / 8 * tuning.TRAIL_RAINBOW_TINT_MAX, 0, 1);
       const colorIdx = Math.floor(Math.random() * trailColors.length);
       const trailColor = new THREE.Color(trailColors[colorIdx]).lerp(new THREE.Color(boostTrailColors[colorIdx]), boostAmount);
       if (rbTrail > 0) {
